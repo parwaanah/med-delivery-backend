@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "logs\\.da9c0f0f43d72cebb4968d457bfe570014ad5be4-audit.json",
+    "files": [
+        {
+            "date": 1760532325005,
+            "name": "logs\\throttler-2025-10-15.log",
+            "hash": "1b1a09189ffc14ab49d4b4f721acdcbe8ed5ce568d256637d21a3f2a90723842"
+        },
+        {
+            "date": 1760604733763,
+            "name": "logs\\throttler-2025-10-16.log",
+            "hash": "31430094f00d4c5eefd987528ec34a64cb6c2897fb760c76e431f085d18baeb0"
+        }
+    ],
+    "hashType": "sha256"
+}

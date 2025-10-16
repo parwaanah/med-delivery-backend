@@ -1,0 +1,67 @@
+[2025-10-15T12:50:28.675Z] INFO: GET /health 200 - 8ms - IP: ::1
+[2025-10-15T12:52:06.234Z] INFO: GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:52:06.281Z] INFO: GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:52:18.123Z] INFO: GET /health 200 - 0ms - IP: ::1
+[2025-10-15T12:52:18.273Z] INFO: GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:52:18.429Z] INFO: GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:52:18.585Z] INFO: GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:52:18.739Z] INFO: GET /health 200 - 0ms - IP: ::1
+[2025-10-15T12:52:18.897Z] INFO: GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:52:19.052Z] INFO: GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:52:19.191Z] INFO: GET /health 200 - 0ms - IP: ::1
+[2025-10-15T12:52:19.331Z] INFO: GET /health 429 - 2ms - IP: ::1
+[2025-10-15T12:52:19.456Z] INFO: GET /health 429 - 1ms - IP: ::1
+[2025-10-15T12:52:19.565Z] INFO: GET /health 429 - 2ms - IP: ::1
+[2025-10-15T12:52:19.672Z] INFO: GET /health 429 - 0ms - IP: ::1
+[2025-10-15T12:52:19.783Z] INFO: GET /health 429 - 1ms - IP: ::1
+[2025-10-15T12:52:19.906Z] INFO: GET /health 429 - 1ms - IP: ::1
+[2025-10-15T12:52:20.016Z] INFO: GET /health 429 - 1ms - IP: ::1
+[2025-10-15T12:52:29.263Z] INFO: GET /something 404 - 1ms - IP: ::1
+[2025-10-15T12:55:59.130Z] GET /health 200 - 5ms - IP: ::1
+[2025-10-15T12:55:59.170Z] GET /something 404 - 1ms - IP: ::1
+[2025-10-15T12:55:59.190Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:55:59.347Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:55:59.488Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:55:59.628Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:55:59.769Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:55:59.910Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:56:00.051Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:56:00.192Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:56:00.331Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T12:56:00.473Z] GET /health 429 - 2ms - IP: ::1
+[2025-10-15T12:56:00.595Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T12:56:00.706Z] GET /health 429 - 2ms - IP: ::1
+[2025-10-15T12:56:00.814Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T12:56:00.924Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T12:56:01.034Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T14:29:40.452Z] GET /health 200 - 5ms - IP: ::1
+[2025-10-15T14:29:40.786Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:40.926Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:41.082Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:41.223Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:41.363Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:41.532Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:41.672Z] GET /health 200 - 0ms - IP: ::1
+[2025-10-15T14:29:41.829Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:41.983Z] GET /health 200 - 1ms - IP: ::1
+[2025-10-15T14:29:42.141Z] GET /health 429 - 2ms - IP: ::1
+[2025-10-15T14:29:42.341Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T14:29:42.467Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T14:29:42.593Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T14:29:42.704Z] GET /health 429 - 1ms - IP: ::1
+[2025-10-15T15:26:06.897Z] POST /auth/signup 201 - 250ms - IP: ::1
+[2025-10-15T15:26:23.358Z] POST /auth/login 200 - 144ms - IP: ::1
+[2025-10-15T15:26:52.830Z] POST /auth/signup 400 - 3ms - IP: ::1
+[2025-10-15T15:29:48.778Z] POST /auth/login 200 - 137ms - IP: ::1
+[2025-10-15T15:30:21.704Z] POST /auth/login 200 - 143ms - IP: ::1
+[2025-10-15T15:32:52.573Z] POST /auth/login 200 - 158ms - IP: ::1
+[2025-10-15T15:48:12.749Z] POST /auth/login 200 - 297ms - IP: ::1
+[2025-10-15T15:51:45.942Z] POST /auth/login 200 - 168ms - IP: ::1
+[2025-10-15T15:54:39.541Z] POST /auth/login 200 - 143ms - IP: ::1
+[2025-10-15T15:55:20.864Z] GET /auth/me 401 - 3ms - IP: ::1
+[2025-10-15T15:58:27.574Z] GET /auth/me 401 - 3ms - IP: ::1
+[2025-10-15T17:22:30.173Z] GET /auth/me 401 - 20ms - IP: ::1
+[2025-10-15T17:27:44.837Z] POST /auth/login 200 - 192ms - IP: ::1
+[2025-10-15T17:28:31.101Z] GET /auth/me 401 - 4ms - IP: ::1
+[2025-10-15T17:32:51.827Z] POST /auth/login 200 - 196ms - IP: ::1
+[2025-10-15T17:33:32.121Z] GET /auth/me 200 - 44ms - IP: ::1

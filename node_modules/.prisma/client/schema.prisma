@@ -1,0 +1,224 @@
+// -------------------------
+// PRISMA CLIENT + DATABASE
+// -------------------------
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------
+// ENUMS
+// -------------------------
+enum Role {
+  admin
+  customer
+  rider
+  pharmacy
+}
+
+enum OrderStatus {
+  pending
+  awaiting_pharmacy_acceptance
+  accepted
+  picked_up
+  delivered
+  cancelled
+  rejected
+}
+
+// -------------------------
+// 🧍 USERS
+// -------------------------
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      Role      @default(customer)
+  createdAt DateTime  @default(now())
+
+  preferredPharmacyId Int?
+  preferredPharmacy   Pharmacy? @relation("PreferredPharmacy", fields: [preferredPharmacyId], references: [id])
+
+  orders       Order[]       @relation("UserOrders")
+  rider        Rider?
+  pharmacy     Pharmacy?
+  deviceToken  DeviceToken?
+  refreshToken String?       // hashed JWT refresh token
+}
+
+// -------------------------
+// 🏥 PHARMACIES
+// -------------------------
+model Pharmacy {
+  id        Int        @id @default(autoincrement())
+  name      String
+  address   String
+  phone     String
+  userId    Int?       @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medicines Medicine[]
+  orders    Order[]    @relation("PharmacyOrders")
+  createdAt DateTime   @default(now())
+
+  latitude    Float?
+  longitude   Float?
+  autoAccept  Boolean   @default(false)
+  preferredBy User[]    @relation("PreferredPharmacy")
+
+  orderRequests OrderPharmacyRequest[]
+}
+
+// -------------------------
+// 💊 MEDICINES
+// -------------------------
+model Medicine {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal      @db.Decimal(10,2)
+  stock       Int
+  pharmacyId  Int
+  pharmacy    Pharmacy     @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+  createdAt   DateTime     @default(now())
+}
+
+// -------------------------
+// 🚚 RIDERS
+// -------------------------
+model Rider {
+  id            Int       @id @default(autoincrement())
+  name          String
+  phone         String    @unique
+  vehicleNumber String
+  isAvailable   Boolean   @default(true)
+  userId        Int       @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders        Order[]   @relation("RiderOrders")
+  createdAt     DateTime  @default(now())
+
+  latitude  Float?
+  longitude Float?
+
+  riderRequests OrderRiderRequest[]
+}
+
+// -------------------------
+// 📦 ORDERS
+// -------------------------
+model Order {
+  id         Int          @id @default(autoincrement())
+  userId     Int
+  pharmacyId Int?
+  riderId    Int?
+  status     OrderStatus   @default(pending)
+  createdAt  DateTime      @default(now())
+
+  user          User       @relation("UserOrders", fields: [userId], references: [id], onDelete: Cascade)
+  pharmacy      Pharmacy?  @relation("PharmacyOrders", fields: [pharmacyId], references: [id], onDelete: SetNull)
+  rider         Rider?     @relation("RiderOrders", fields: [riderId], references: [id], onDelete: SetNull)
+  items         OrderItem[]
+  logs          OrderLog[]
+  requests      OrderPharmacyRequest[]
+  riderRequests OrderRiderRequest[]
+}
+
+// -------------------------
+// 🧾 ORDER ITEMS
+// -------------------------
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  medicineId Int
+  quantity   Int
+  price      Decimal  @db.Decimal(10,2)
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  medicine Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------
+// 🏥 ORDER ↔ PHARMACY REQUESTS
+// -------------------------
+model OrderPharmacyRequest {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  pharmacyId Int
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------
+// 🚴 ORDER ↔ RIDER REQUESTS
+// -------------------------
+model OrderRiderRequest {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  riderId   Int
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------
+// 📜 ORDER LOGS
+// -------------------------
+model OrderLog {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  actorType String
+  actorId   Int?
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------
+// 🔔 NOTIFICATIONS
+// -------------------------
+model Notification {
+  id         Int      @id @default(autoincrement())
+  targetType String
+  targetId   Int
+  title      String
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+// -------------------------
+// 📱 DEVICE TOKENS
+// -------------------------
+model DeviceToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  token     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------
+// 🧾 AUDIT LOGS
+// -------------------------
+model AuditLog {
+  id          Int       @id @default(autoincrement())
+  actorId     Int?
+  actorRole   String
+  action      String
+  targetType  String
+  targetId    Int?
+  details     Json?      // ✅ store reqId, user info, timestamp, IP, etc.
+  createdAt   DateTime   @default(now())
+}
