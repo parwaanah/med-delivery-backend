@@ -1,0 +1,347 @@
+[2025-11-02T11:01:19.712Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:01:19.776Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:01:19.779Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:01:19.780Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:01:19.780Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:01:19.781Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:01:19.782Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:01:19.783Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:01:19.783Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:01:19.784Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:01:19.785Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:01:19.785Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:01:19.786Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:01:19.787Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:01:19.787Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:01:19.788Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:01:19.788Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:01:19.789Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:01:19.790Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:01:19.790Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:01:19.791Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:01:19.791Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:01:19.792Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:01:19.792Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:01:19.793Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:01:19.793Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:01:19.794Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:01:19.795Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:01:19.795Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:01:20.302Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:01:20.304Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:01:20.305Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T11:03:39.679Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:03:39.744Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:03:39.747Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:03:39.747Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:03:39.748Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:03:39.749Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:03:39.750Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:03:39.750Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:03:39.751Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:03:39.752Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:03:39.753Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:03:39.753Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:03:39.754Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:03:39.755Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:03:39.755Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:03:39.756Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:03:39.756Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:03:39.757Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:03:39.757Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:03:39.758Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:03:39.759Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:03:39.759Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:03:39.760Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:03:39.760Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:03:39.761Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:03:39.762Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:03:39.762Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:03:39.763Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:03:39.763Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:03:40.164Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:03:40.167Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:03:40.167Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T11:03:48.040Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:03:48.103Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:03:48.106Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:03:48.106Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:03:48.107Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:03:48.107Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:03:48.108Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:03:48.109Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:03:48.110Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:03:48.110Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:03:48.111Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:03:48.112Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:03:48.112Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:03:48.113Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:03:48.113Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:03:48.114Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:03:48.114Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:03:48.115Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:03:48.116Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:03:48.116Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:03:48.117Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:03:48.117Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:03:48.117Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:03:48.118Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:03:48.118Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:03:48.119Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:03:48.119Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:03:48.120Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:03:48.121Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:03:48.751Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:03:48.754Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:03:48.754Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T11:04:22.243Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:04:22.314Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:04:22.317Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:04:22.318Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:04:22.319Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:04:22.320Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:04:22.320Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:04:22.321Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:04:22.322Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:04:22.322Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:04:22.323Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:04:22.324Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:04:22.325Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:04:22.325Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:04:22.326Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:04:22.327Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:04:22.327Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:04:22.328Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:04:22.329Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:04:22.329Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:04:22.330Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:04:22.331Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:04:22.331Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:04:22.332Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:04:22.332Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:04:22.333Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:04:22.333Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:04:22.334Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:04:22.335Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:04:22.646Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:04:22.648Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:04:22.649Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T11:09:51.973Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:09:52.037Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:09:52.040Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:09:52.041Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:09:52.041Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:09:52.042Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:09:52.043Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:09:52.044Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:09:52.044Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:09:52.045Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:09:52.045Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:09:52.046Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:09:52.047Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:09:52.047Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:09:52.048Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:09:52.048Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:09:52.049Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:09:52.050Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:09:52.050Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:09:52.051Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:09:52.051Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:09:52.052Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:09:52.052Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:09:52.053Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:09:52.053Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:09:52.054Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:09:52.054Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:09:52.055Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:09:52.055Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:09:52.360Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:09:52.363Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:09:52.363Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T11:10:19.147Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:10:19.212Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:10:19.215Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:10:19.215Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:10:19.216Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:10:19.217Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:10:19.217Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:10:19.218Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:10:19.218Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:10:19.219Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:10:19.219Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:10:19.220Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:10:19.221Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:10:19.222Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:10:19.222Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:10:19.223Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:10:19.223Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:10:19.224Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:10:19.224Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:10:19.225Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:10:19.225Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:10:19.226Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:10:19.226Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:10:19.227Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:10:19.228Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:10:19.228Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:10:19.229Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:10:19.229Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:10:19.230Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:10:19.742Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:10:19.745Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:10:19.745Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T11:16:27.775Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:16:27.841Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:16:27.844Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:16:27.844Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:16:27.845Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:16:27.845Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:16:27.846Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:16:27.847Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:16:27.847Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:16:27.848Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:16:27.848Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:16:27.849Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:16:27.850Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:16:27.850Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:16:27.851Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:16:27.851Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:16:27.851Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:16:27.852Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:16:27.852Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:16:27.853Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:16:27.853Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:16:27.854Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:16:27.854Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:16:27.855Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:16:27.855Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:16:27.856Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:16:27.856Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:16:27.857Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:16:27.857Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:16:28.165Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:16:28.168Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:16:28.168Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T11:38:41.257Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:38:41.378Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:38:41.382Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:38:41.383Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:38:41.384Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:38:41.386Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:38:41.387Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:38:41.388Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:38:41.389Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:38:41.389Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:38:41.391Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:38:41.392Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:38:41.393Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:38:41.394Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:38:41.395Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:38:41.395Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:38:41.396Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:38:41.397Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:38:41.398Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:38:41.399Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:38:41.400Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:38:41.400Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:38:41.401Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:38:41.402Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:38:41.402Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:38:41.403Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:38:41.404Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:38:41.405Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:38:41.406Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:38:43.634Z] [INFO] [Bootstrap] 🧠 Using Redis URL: redis://192.168.56.251:6379
+[2025-11-02T11:38:43.722Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T11:38:43.724Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T11:38:43.725Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T11:38:43.725Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T11:38:43.727Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T11:38:43.728Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T11:38:43.729Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T11:38:43.730Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T11:38:43.730Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T11:38:43.731Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T11:38:43.732Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T11:38:43.733Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T11:38:43.734Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T11:38:43.735Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T11:38:43.735Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T11:38:43.736Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T11:38:43.737Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T11:38:43.737Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T11:38:43.738Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T11:38:43.739Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T11:38:43.739Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T11:38:43.740Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T11:38:43.741Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T11:38:43.742Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T11:38:43.743Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T11:38:43.743Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T11:38:43.744Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T11:38:43.745Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T11:38:44.177Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T11:38:44.181Z] [INFO] [Bootstrap] 🚀 Server running at http://localhost:3001
+[2025-11-02T11:38:44.181Z] [INFO] [Bootstrap] 📘 Swagger docs available at http://localhost:3001/docs
+[2025-11-02T12:52:50.934Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T12:52:50.937Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T12:52:50.938Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T12:52:50.938Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T12:52:50.939Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T12:52:50.939Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T12:52:50.940Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T12:52:50.941Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T12:52:50.942Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T12:52:50.942Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T12:52:50.943Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T12:52:50.944Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T12:52:50.944Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T12:52:50.945Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T12:52:50.945Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T12:52:50.946Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T12:52:50.946Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T12:52:50.947Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T12:52:50.947Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T12:52:50.948Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T12:52:50.949Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T12:52:50.949Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T12:52:50.950Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T12:52:50.951Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T12:52:50.951Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T12:52:50.952Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T12:52:50.952Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T12:52:50.953Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T12:52:50.953Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T12:52:50.954Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T12:52:51.251Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:15:44.683Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:15:44.686Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:15:44.687Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:15:44.688Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:15:44.688Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:15:44.689Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:15:44.690Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:15:44.691Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:15:44.691Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:15:44.692Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:15:44.692Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:15:44.693Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:15:44.695Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:15:44.697Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:15:44.699Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:15:44.700Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:15:44.701Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:15:44.702Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:15:44.703Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:15:44.704Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:15:44.705Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:15:44.706Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:15:44.707Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:15:44.708Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:15:44.709Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:15:44.710Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:15:44.711Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:15:44.712Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:15:44.713Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:15:44.713Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:15:45.053Z] [INFO] [NestApplication] Nest application successfully started

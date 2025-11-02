@@ -1,0 +1,36 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20251101181139
+Username: ALIENWARE\OMEN
+RunAs User: ALIENWARE\OMEN
+Configuration Name: 
+Machine: ALIENWARE (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File .\auto-heal.ps1
+Process ID: 27468
+PSVersion: 5.1.26100.6899
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.6899
+BuildVersion: 10.0.26100.6899
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+[18:11:39] Detected Windows Host IP for WSL: 192.168.56.251
+[18:11:39] Configured .pgpass for passwordless PostgreSQL access.
+[18:11:39] Updated .env DATABASE_URL to 192.168.56.251
+[18:11:39] Starting Auto-Heal Sequence...
+[18:11:39] PostgreSQL running.
+[18:11:39] Redis running at redis://192.168.56.251:6379
+[18:11:41] Creating database med_delivery...
+
+[18:11:45] Database med_delivery created.
+[18:11:45] Monitoring PostgreSQL and Redis for crashes...
+PS>TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+>> $global:?
+True
+**********************
+Windows PowerShell transcript end
+End time: 20251101181352
+**********************

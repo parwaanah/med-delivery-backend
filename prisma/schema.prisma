@@ -1,0 +1,170 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+  PHARMACY
+  RIDER
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  ASSIGNED
+  OUT_FOR_DELIVERY
+  REACHED_PHARMACY
+  PICKED_UP
+  DELIVERED
+  CANCELED
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      UserRole  @default(CUSTOMER)
+  status    String?   @default("AVAILABLE")
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // soft-delete
+
+  // Relations
+  customerOrders        Order[]             @relation("CustomerOrders")
+  pharmacyOrders        Order[]             @relation("PharmacyOrders")
+  riderOrders           Order[]             @relation("RiderOrders")
+  pharmacyInventory     PharmacyInventory[] @relation("PharmacyInventoryRelation")
+  sentNotifications     Notification[]      @relation("SentNotifications")
+  receivedNotifications Notification[]      @relation("ReceivedNotifications")
+
+  sessions      Session[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]     @relation("AuditUser")
+}
+
+model Medicine {
+  id         Int                 @id @default(autoincrement())
+  name       String
+  sku        String?             @unique
+  createdAt  DateTime            @default(now())
+  inventory  PharmacyInventory[]
+  orderItems OrderItem[]
+}
+
+model PharmacyInventory {
+  id         Int      @id @default(autoincrement())
+  pharmacyId Int
+  medicineId Int
+  price      Float
+  stock      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  pharmacy User     @relation("PharmacyInventoryRelation", fields: [pharmacyId], references: [id])
+  medicine Medicine @relation(fields: [medicineId], references: [id])
+
+  @@unique([pharmacyId, medicineId])
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  customerId Int
+  pharmacyId Int
+  riderId    Int?
+  status     OrderStatus @default(PENDING)
+  totalPrice Float
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+
+  customer User         @relation("CustomerOrders", fields: [customerId], references: [id])
+  pharmacy User         @relation("PharmacyOrders", fields: [pharmacyId], references: [id])
+  rider    User?        @relation("RiderOrders", fields: [riderId], references: [id])
+  items    OrderItem[]
+  offers   OrderOffer[]
+}
+
+model OrderItem {
+  id         Int    @id @default(autoincrement())
+  orderId    Int
+  medicineId Int?
+  name       String
+  quantity   Int
+  price      Float
+
+  order    Order     @relation(fields: [orderId], references: [id])
+  medicine Medicine? @relation(fields: [medicineId], references: [id])
+}
+
+model OrderOffer {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  pharmacyId Int?
+  riderId    Int?
+  offeredTo  String // 'PHARMACY' | 'RIDER'
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, EXPIRED
+  createdAt  DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  senderId   Int?
+  receiverId Int
+  type       String
+  message    String
+  meta       Json?
+  status     String   @default("UNREAD")
+  createdAt  DateTime @default(now())
+
+  sender   User? @relation("SentNotifications", fields: [senderId], references: [id])
+  receiver User  @relation("ReceivedNotifications", fields: [receiverId], references: [id])
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+
+  user          User           @relation(fields: [userId], references: [id])
+  refreshTokens RefreshToken[] @relation("SessionToRefreshTokens") // ✅ opposite relation added
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  sessionId Int?
+  tokenHash String // store hash, never raw token
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user    User     @relation(fields: [userId], references: [id])
+  session Session? @relation("SessionToRefreshTokens", fields: [sessionId], references: [id]) // ✅ matches above
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  resource  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation("AuditUser", fields: [userId], references: [id])
+}
