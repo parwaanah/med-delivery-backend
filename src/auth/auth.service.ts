@@ -10,12 +10,14 @@ import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { UserRole } from '@prisma/client';
 import * as crypto from 'crypto';
 import { addHours } from 'date-fns';
+import { AuditService } from '../utils/audit.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private audit: AuditService,
   ) {}
 
   // REGISTER -----------------------------------------------------

@@ -50,10 +50,12 @@ const prisma_service_1 = require("../utils/prisma.service");
 const client_1 = require("@prisma/client");
 const crypto = __importStar(require("crypto"));
 const date_fns_1 = require("date-fns");
+const audit_service_1 = require("../utils/audit.service");
 let AuthService = class AuthService {
-    constructor(prisma, jwtService) {
+    constructor(prisma, jwtService, audit) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.audit = audit;
     }
     async register(data) {
         const existing = await this.prisma.user.findUnique({
@@ -181,5 +183,6 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        audit_service_1.AuditService])
 ], AuthService);

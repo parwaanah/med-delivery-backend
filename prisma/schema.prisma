@@ -51,6 +51,7 @@ model User {
   sessions      Session[]
   refreshTokens RefreshToken[]
   auditLogs     AuditLog[]     @relation("AuditUser")
+  LoginAudit    LoginAudit[]
 }
 
 model Medicine {
@@ -167,4 +168,18 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   user User? @relation("AuditUser", fields: [userId], references: [id])
+}
+
+model LoginAudit {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  email     String?
+  ip        String?
+  userAgent String?
+  eventType String // LOGIN_SUCCESS | LOGIN_FAILED | LOGOUT | TOKEN_REFRESH
+  role      String?
+  success   Boolean  @default(true)
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
 }

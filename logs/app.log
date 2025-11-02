@@ -345,3 +345,220 @@
 [2025-11-02T13:15:44.713Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
 [2025-11-02T13:15:44.713Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
 [2025-11-02T13:15:45.053Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:22:07.499Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:22:07.501Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:22:07.501Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:22:07.502Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:22:07.503Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:22:07.503Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:22:07.504Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:22:07.505Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:22:07.505Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:22:07.506Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:22:07.506Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:22:07.507Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:22:07.508Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:22:07.508Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:22:07.509Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:22:07.509Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:22:07.509Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:22:07.510Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:22:07.510Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:22:07.511Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:22:07.511Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:22:07.512Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:22:07.512Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:22:07.512Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:22:07.513Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:22:07.513Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:22:07.514Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:22:07.514Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:22:07.515Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:22:07.515Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:22:08.107Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:22:53.240Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:22:53.242Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:22:53.243Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:22:53.244Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:22:53.245Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:22:53.246Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:22:53.247Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:22:53.248Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:22:53.249Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:22:53.249Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:22:53.250Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:22:53.251Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:22:53.252Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:22:53.252Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:22:53.253Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:22:53.253Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:22:53.253Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:22:53.254Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:22:53.255Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:22:53.255Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:22:53.256Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:22:53.256Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:22:53.257Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:22:53.258Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:22:53.258Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:22:53.259Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:22:53.259Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:22:53.260Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:22:53.260Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:22:53.261Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:22:53.685Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:22:57.475Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:22:57.478Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:22:57.478Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:22:57.479Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:22:57.479Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:22:57.480Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:22:57.480Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:22:57.481Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:22:57.482Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:22:57.482Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:22:57.483Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:22:57.483Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:22:57.484Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:22:57.485Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:22:57.485Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:22:57.486Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:22:57.486Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:22:57.487Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:22:57.487Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:22:57.488Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:22:57.488Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:22:57.489Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:22:57.489Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:22:57.490Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:22:57.490Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:22:57.491Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:22:57.491Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:22:57.492Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:22:57.492Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:22:57.493Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:22:57.799Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:23:34.753Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:23:34.756Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:23:34.757Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:23:34.758Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:23:34.758Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:23:34.759Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:23:34.759Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:23:34.760Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:23:34.761Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:23:34.761Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:23:34.762Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:23:34.763Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:23:34.763Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:23:34.764Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:23:34.764Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:23:34.764Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:23:34.765Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:23:34.765Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:23:34.766Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:23:34.766Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:23:34.767Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:23:34.767Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:23:34.768Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:23:34.769Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:23:34.769Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:23:34.770Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:23:34.770Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:23:34.771Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:23:34.771Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:23:34.772Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:23:35.175Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:33:05.816Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:33:05.819Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:33:05.820Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:33:05.821Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:33:05.822Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:33:05.823Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:33:05.824Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:33:05.825Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:33:05.826Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:33:05.826Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:33:05.827Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:33:05.827Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:33:05.828Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:33:05.828Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:33:05.829Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:33:05.829Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:33:05.830Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:33:05.831Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:33:05.831Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:33:05.832Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:33:05.832Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:33:05.833Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:33:05.834Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:33:05.835Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:33:05.836Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:33:05.837Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:33:05.837Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:33:05.838Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:33:05.838Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:33:05.839Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:33:06.265Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:33:21.373Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:33:21.375Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:33:21.376Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:33:21.376Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:33:21.377Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:33:21.378Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:33:21.379Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:33:21.380Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:33:21.380Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:33:21.381Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:33:21.382Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:33:21.383Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:33:21.383Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:33:21.384Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:33:21.385Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:33:21.385Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:33:21.386Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:33:21.387Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:33:21.387Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:33:21.388Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:33:21.389Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:33:21.389Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:33:21.390Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:33:21.391Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:33:21.391Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:33:21.392Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:33:21.392Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:33:21.393Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:33:21.393Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:33:21.394Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:33:21.757Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-02T13:35:54.521Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-02T13:35:54.525Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-02T13:35:54.526Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-02T13:35:54.526Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-02T13:35:54.527Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-02T13:35:54.527Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-02T13:35:54.528Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-02T13:35:54.529Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-02T13:35:54.530Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-02T13:35:54.531Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-02T13:35:54.532Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-02T13:35:54.533Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-02T13:35:54.534Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-02T13:35:54.534Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-02T13:35:54.535Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-02T13:35:54.535Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-02T13:35:54.536Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-02T13:35:54.537Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-02T13:35:54.537Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-02T13:35:54.538Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-02T13:35:54.538Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-02T13:35:54.539Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-02T13:35:54.540Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-02T13:35:54.540Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-02T13:35:54.541Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-02T13:35:54.541Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-02T13:35:54.542Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-02T13:35:54.544Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-02T13:35:54.545Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-02T13:35:54.546Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-02T13:35:54.800Z] [INFO] [NestApplication] Nest application successfully started
