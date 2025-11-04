@@ -7,3 +7,5 @@ export declare class WsGateway implements OnGatewayConnection, OnGatewayDisconne
     notifyUser(userId: number, event: string, payload: any): void;
     broadcast(event: string, payload: any): void;
 }
+export declare class WsModule {
+}

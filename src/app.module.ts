@@ -11,6 +11,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
 import { WsGateway } from './ws/ws.gateway';
 import { NotificationService } from './utils/notification.service';
 import { UtilsModule } from './utils/utils.module'; // ✅ import here
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UtilsModule } from './utils/utils.module'; // ✅ import here
     RidersModule,
     OrdersModule,
     QueueModule,
+    AdminModule,
   ],
   providers: [WsGateway, NotificationService, GlobalLogger],
 })

@@ -30,19 +30,8 @@ export declare class AuthService {
         accessToken: string;
         refreshToken: string;
     }>;
-    revokeSession(sessionId: number): Promise<void>;
-    validateUser(userId: string | number): Promise<{
-        name: string;
-        email: string;
-        password: string;
-        role: import(".prisma/client").$Enums.UserRole;
-        id: number;
-        status: string | null;
-        latitude: number | null;
-        longitude: number | null;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
-    } | null>;
+    logout(sessionId: number): Promise<{
+        message: string;
+    }>;
     private generateToken;
 }

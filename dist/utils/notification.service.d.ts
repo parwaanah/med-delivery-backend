@@ -6,10 +6,10 @@ export declare class NotificationService {
     constructor(prisma: PrismaService, wsGateway: WsGateway);
     create(receiverId: number, type: string, message: string, meta?: any, senderId?: number): Promise<{
         message: string;
+        type: string;
         id: number;
         status: string;
         createdAt: Date;
-        type: string;
         meta: import("@prisma/client/runtime/library").JsonValue | null;
         senderId: number | null;
         receiverId: number;

@@ -58,6 +58,9 @@ let AuthService = class AuthService {
         this.audit = audit;
     }
     async register(data) {
+        if (!data.email || !data.password || !data.name) {
+            throw new common_1.BadRequestException('Name, email and password are required');
+        }
         const existing = await this.prisma.user.findUnique({
             where: { email: data.email },
         });
@@ -72,17 +75,45 @@ let AuthService = class AuthService {
                 role: data.role || client_1.UserRole.CUSTOMER,
             },
         });
+        await this.audit.log({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            eventType: 'REGISTER_SUCCESS',
+            success: true,
+        });
         return this.generateToken(user);
     }
     async login(data, ip, userAgent) {
+        if (!data.email || !data.password) {
+            throw new common_1.BadRequestException('Email and password are required');
+        }
         const user = await this.prisma.user.findUnique({
             where: { email: data.email },
         });
-        if (!user)
+        if (!user) {
+            await this.audit.log({
+                email: data.email,
+                ip,
+                userAgent,
+                eventType: 'LOGIN_FAILED',
+                success: false,
+            });
             throw new common_1.UnauthorizedException('Invalid credentials');
+        }
         const match = await bcrypt.compare(data.password, user.password);
-        if (!match)
+        if (!match) {
+            await this.audit.log({
+                userId: user.id,
+                email: user.email,
+                ip,
+                userAgent,
+                role: user.role,
+                eventType: 'LOGIN_FAILED',
+                success: false,
+            });
             throw new common_1.UnauthorizedException('Invalid credentials');
+        }
         const session = await this.prisma.session.create({
             data: {
                 userId: user.id,
@@ -104,6 +135,15 @@ let AuthService = class AuthService {
                 expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
             },
         });
+        await this.audit.log({
+            userId: user.id,
+            email: user.email,
+            ip,
+            userAgent,
+            role: user.role,
+            eventType: 'LOGIN_SUCCESS',
+            success: true,
+        });
         const accessToken = this.jwtService.sign({ sub: user.id, role: user.role }, { expiresIn: '1h' });
         return {
             accessToken,
@@ -117,13 +157,25 @@ let AuthService = class AuthService {
         };
     }
     async refreshToken(oldToken) {
+        if (!oldToken || oldToken.trim() === '') {
+            await this.audit.log({
+                eventType: 'TOKEN_REFRESH_FAILED_MISSING_TOKEN',
+                success: false,
+            });
+            throw new common_1.UnauthorizedException('Refresh token missing');
+        }
         const oldHash = crypto.createHash('sha256').update(oldToken).digest('hex');
         const existing = await this.prisma.refreshToken.findFirst({
             where: { tokenHash: oldHash, revoked: false },
             include: { session: true },
         });
-        if (!existing || !existing.session)
+        if (!existing || !existing.session) {
+            await this.audit.log({
+                eventType: 'TOKEN_REFRESH_FAILED',
+                success: false,
+            });
             throw new common_1.UnauthorizedException('Invalid refresh token');
+        }
         await this.prisma.refreshToken.update({
             where: { id: existing.id },
             data: { revoked: true },
@@ -144,15 +196,26 @@ let AuthService = class AuthService {
         const user = await this.prisma.user.findUnique({
             where: { id: existing.session.userId },
         });
-        if (!user)
+        if (!user) {
+            await this.audit.log({
+                eventType: 'TOKEN_REFRESH_FAILED_USER_NOT_FOUND',
+                success: false,
+            });
             throw new common_1.UnauthorizedException('User not found');
+        }
         const accessToken = this.jwtService.sign({ sub: user.id, role: user.role }, { expiresIn: '1h' });
+        await this.audit.log({
+            userId: user.id,
+            email: user.email,
+            eventType: 'TOKEN_REFRESH',
+            success: true,
+        });
         return {
             accessToken,
             refreshToken: newTokenRaw,
         };
     }
-    async revokeSession(sessionId) {
+    async logout(sessionId) {
         await this.prisma.session.update({
             where: { id: sessionId },
             data: { revoked: true },
@@ -161,9 +224,11 @@ let AuthService = class AuthService {
             where: { sessionId },
             data: { revoked: true },
         });
-    }
-    async validateUser(userId) {
-        return this.prisma.user.findUnique({ where: { id: Number(userId) } });
+        await this.audit.log({
+            eventType: 'LOGOUT',
+            success: true,
+        });
+        return { message: 'Logout successful' };
     }
     generateToken(user) {
         const payload = { sub: user.id, role: user.role, email: user.email };

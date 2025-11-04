@@ -20,6 +20,7 @@ const request_logger_middleware_1 = require("./common/middleware/request-logger.
 const ws_gateway_1 = require("./ws/ws.gateway");
 const notification_service_1 = require("./utils/notification.service");
 const utils_module_1 = require("./utils/utils.module");
+const admin_module_1 = require("./admin/admin.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(request_logger_middleware_1.RequestLoggerMiddleware).forRoutes('*');
@@ -37,6 +38,7 @@ exports.AppModule = AppModule = __decorate([
             riders_module_1.RidersModule,
             orders_module_1.OrdersModule,
             queue_module_1.QueueModule,
+            admin_module_1.AdminModule,
         ],
         providers: [ws_gateway_1.WsGateway, notification_service_1.NotificationService, global_logger_service_1.GlobalLogger],
     })

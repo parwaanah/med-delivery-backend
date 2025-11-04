@@ -167,7 +167,7 @@ model AuditLog {
   meta      Json?
   createdAt DateTime @default(now())
 
-  user User? @relation("AuditUser", fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 }
 
 model LoginAudit {

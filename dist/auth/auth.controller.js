@@ -17,6 +17,7 @@ const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const auth_dto_1 = require("./dto/auth.dto");
+const swagger_1 = require("@nestjs/swagger");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -29,16 +30,21 @@ let AuthController = class AuthController {
         const ua = req.headers['user-agent'] || undefined;
         return this.authService.login(dto, ip, ua);
     }
-    async refresh(refreshToken) {
-        return this.authService.refreshToken(refreshToken);
+    async refresh(dto) {
+        return this.authService.refreshToken(dto.refreshToken);
     }
     async logout(sessionId) {
-        return this.authService.revokeSession(sessionId);
+        return this.authService.logout(sessionId);
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('register'),
+    (0, swagger_1.ApiBody)({
+        type: auth_dto_1.RegisterDto,
+        description: 'Register a new user',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'User registered successfully' }),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -47,6 +53,11 @@ __decorate([
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
+    (0, swagger_1.ApiBody)({
+        type: auth_dto_1.LoginDto,
+        description: 'Authenticate user and get access + refresh tokens',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Login successful' }),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
@@ -56,14 +67,29 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('refresh'),
+    (0, swagger_1.ApiBody)({
+        type: auth_dto_1.RefreshTokenDto,
+        description: 'Use refresh token to obtain new access token',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Access token refreshed successfully' }),
     openapi.ApiResponse({ status: 201 }),
-    __param(0, (0, common_1.Body)('refreshToken')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [auth_dto_1.RefreshTokenDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "refresh", null);
 __decorate([
     (0, common_1.Post)('logout'),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                sessionId: { type: 'number', example: 1 },
+            },
+        },
+        description: 'Logout and revoke current session',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Logout successful' }),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)('sessionId')),
     __metadata("design:type", Function),
@@ -71,6 +97,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "logout", null);
 exports.AuthController = AuthController = __decorate([
+    (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], AuthController);

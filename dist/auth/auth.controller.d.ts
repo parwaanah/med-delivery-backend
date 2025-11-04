@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
@@ -23,9 +23,11 @@ export declare class AuthController {
             role: import(".prisma/client").$Enums.UserRole;
         };
     }>;
-    refresh(refreshToken: string): Promise<{
+    refresh(dto: RefreshTokenDto): Promise<{
         accessToken: string;
         refreshToken: string;
     }>;
-    logout(sessionId: number): Promise<void>;
+    logout(sessionId: number): Promise<{
+        message: string;
+    }>;
 }

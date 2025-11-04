@@ -1,0 +1,36 @@
+[2025-11-02T15:12:42.885Z] [ERROR] [ExceptionsHandler] The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+TypeError [ERR_INVALID_ARG_TYPE]: The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+    at Hash.update (node:internal/crypto/hash:115:11)
+    at AuthService.refreshToken (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.service.js:160:53)
+    at AuthController.refresh (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.controller.js:33:33)
+    at C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:38:29
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-02T15:12:58.552Z] [ERROR] [ExceptionsHandler] The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+TypeError [ERR_INVALID_ARG_TYPE]: The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+    at Hash.update (node:internal/crypto/hash:115:11)
+    at AuthService.refreshToken (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.service.js:160:53)
+    at AuthController.refresh (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.controller.js:33:33)
+    at C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:38:29
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-02T15:13:14.976Z] [ERROR] [ExceptionsHandler] The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+TypeError [ERR_INVALID_ARG_TYPE]: The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+    at Hash.update (node:internal/crypto/hash:115:11)
+    at AuthService.refreshToken (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.service.js:160:53)
+    at AuthController.refresh (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.controller.js:33:33)
+    at C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:38:29
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-02T15:13:24.040Z] [ERROR] [ExceptionsHandler] The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+TypeError [ERR_INVALID_ARG_TYPE]: The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+    at Hash.update (node:internal/crypto/hash:115:11)
+    at AuthService.refreshToken (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.service.js:160:53)
+    at AuthController.refresh (C:\Users\OMEN\med-delivery\backend\dist\auth\auth.controller.js:33:33)
+    at C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:38:29
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17

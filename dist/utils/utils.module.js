@@ -10,13 +10,15 @@ exports.UtilsModule = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("./prisma.service");
 const audit_service_1 = require("./audit.service");
+const notification_service_1 = require("./notification.service");
+const ws_gateway_1 = require("../ws/ws.gateway");
 let UtilsModule = class UtilsModule {
 };
 exports.UtilsModule = UtilsModule;
 exports.UtilsModule = UtilsModule = __decorate([
-    (0, common_1.Global)(),
     (0, common_1.Module)({
-        providers: [prisma_service_1.PrismaService, audit_service_1.AuditService],
-        exports: [prisma_service_1.PrismaService, audit_service_1.AuditService],
+        imports: [ws_gateway_1.WsModule],
+        providers: [prisma_service_1.PrismaService, audit_service_1.AuditService, notification_service_1.NotificationService],
+        exports: [prisma_service_1.PrismaService, audit_service_1.AuditService, notification_service_1.NotificationService],
     })
 ], UtilsModule);
