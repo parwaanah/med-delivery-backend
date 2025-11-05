@@ -6,29 +6,47 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...');
 
-  // 1️⃣ Clear existing data (safe for dev)
+  // 1️⃣ Safety check - don't wipe production accidentally
+  if (process.env.NODE_ENV === 'production') {
+    console.log('❌ Seeding aborted — running in production!');
+    process.exit(1);
+  }
+
+  // 2️⃣ Clear existing data only for dev
+  console.log('🧹 Clearing old data...');
   await prisma.order.deleteMany().catch(() => {});
   await prisma.user.deleteMany().catch(() => {});
 
-  // 2️⃣ Hash passwords
-  const password = await bcrypt.hash('password', 10);
+  // 3️⃣ Common password for all seeded users
+  const passwordHash = await bcrypt.hash('password', 10);
 
-  // 3️⃣ Create base users
-  const admin = await prisma.user.create({
-    data: {
-      name: 'Admin User',
-      email: 'admin@med.com',
-      password,
-      role: UserRole.ADMIN,
-    },
-  });
+  // 4️⃣ Create Super Admin
+  const superAdminEmail = 'superadmin_live@example.com';
+  const existingAdmin = await prisma.user.findUnique({ where: { email: superAdminEmail } });
 
+  if (!existingAdmin) {
+    await prisma.user.create({
+      data: {
+        name: 'Super Admin',
+        email: superAdminEmail,
+        password: await bcrypt.hash('superadmin123', 10),
+        role: UserRole.ADMIN,
+        status: 'APPROVED',
+      },
+    });
+    console.log(`✅ Super Admin created: ${superAdminEmail}`);
+  } else {
+    console.log(`ℹ️ Super Admin already exists: ${superAdminEmail}`);
+  }
+
+  // 5️⃣ Create pharmacies
   const pharmacy1 = await prisma.user.create({
     data: {
       name: 'MediCare Pharmacy',
       email: 'pharmacy1@med.com',
-      password,
+      password: passwordHash,
       role: UserRole.PHARMACY,
+      status: 'APPROVED',
     },
   });
 
@@ -36,17 +54,20 @@ async function main() {
     data: {
       name: 'Wellness Drugs',
       email: 'pharmacy2@med.com',
-      password,
+      password: passwordHash,
       role: UserRole.PHARMACY,
+      status: 'APPROVED',
     },
   });
 
+  // 6️⃣ Create riders
   const rider1 = await prisma.user.create({
     data: {
       name: 'John Rider',
       email: 'rider1@med.com',
-      password,
+      password: passwordHash,
       role: UserRole.RIDER,
+      status: 'APPROVED',
     },
   });
 
@@ -54,17 +75,20 @@ async function main() {
     data: {
       name: 'Jane Courier',
       email: 'rider2@med.com',
-      password,
+      password: passwordHash,
       role: UserRole.RIDER,
+      status: 'APPROVED',
     },
   });
 
+  // 7️⃣ Create customers
   const customer1 = await prisma.user.create({
     data: {
       name: 'Alice Customer',
       email: 'customer1@med.com',
-      password,
+      password: passwordHash,
       role: UserRole.CUSTOMER,
+      status: 'APPROVED',
     },
   });
 
@@ -72,12 +96,14 @@ async function main() {
     data: {
       name: 'Bob Buyer',
       email: 'customer2@med.com',
-      password,
+      password: passwordHash,
       role: UserRole.CUSTOMER,
+      status: 'APPROVED',
     },
   });
 
-  // 4️⃣ Mock Orders
+  // 8️⃣ Mock orders
+  console.log('🧾 Creating sample orders...');
   await prisma.order.createMany({
     data: [
       {
@@ -86,7 +112,6 @@ async function main() {
         riderId: rider1.id,
         status: 'DELIVERED',
         totalPrice: 1200,
-        createdAt: new Date(),
       },
       {
         customerId: customer2.id,
@@ -94,7 +119,6 @@ async function main() {
         riderId: rider2.id,
         status: 'OUT_FOR_DELIVERY',
         totalPrice: 800,
-        createdAt: new Date(),
       },
       {
         customerId: customer1.id,
@@ -102,12 +126,11 @@ async function main() {
         riderId: rider1.id,
         status: 'PENDING',
         totalPrice: 600,
-        createdAt: new Date(),
       },
     ],
   });
 
-  console.log('✅ Seed completed successfully!');
+  console.log('✅ Database seeded successfully!');
 }
 
 main()

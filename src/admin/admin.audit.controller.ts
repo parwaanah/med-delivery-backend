@@ -1,66 +1,60 @@
-// src/admin/admin.audit.controller.ts
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { UserRole } from '@prisma/client';
+import { Roles } from '../common/decorators/roles.decorator';
 
-@Controller('admin/audit')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
+@Roles('ADMIN')
+@Controller('admin/audit')
 export class AdminAuditController {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Fetch paginated, filterable audit logs
-   * Example: /admin/audit/logs?page=1&limit=25&userId=5&eventType=LOGIN_SUCCESS
+   * ✅ Fetch paginated or default (last 100) audit logs
    */
   @Get('logs')
   async getAuditLogs(
-    @Query('page') page = 1,
-    @Query('limit') limit = 25,
-    @Query('userId') userId?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('userId') userId?: string,
     @Query('email') email?: string,
     @Query('eventType') eventType?: string,
     @Query('role') role?: string,
-    @Query('success') success?: boolean,
+    @Query('success') success?: string,
   ) {
-    const skip = (Number(page) - 1) * Number(limit);
+    const pageNum = Number(page) > 0 ? Number(page) : 1;
+    const limitNum = Number(limit) > 0 ? Number(limit) : 100;
+    const skip = (pageNum - 1) * limitNum;
 
     const where: any = {};
     if (userId) where.userId = Number(userId);
     if (email) where.email = { contains: email, mode: 'insensitive' };
     if (eventType) where.eventType = eventType;
     if (role) where.role = role;
-    if (success !== undefined) where.success = success === true;
+    if (success !== undefined)
+      where.success = success === 'true' || success === '1';
 
     const [logs, total] = await this.prisma.$transaction([
       this.prisma.loginAudit.findMany({
         where,
         orderBy: { timestamp: 'desc' },
         skip,
-        take: Number(limit),
+        take: limitNum,
       }),
       this.prisma.loginAudit.count({ where }),
     ]);
 
     return {
-      page: Number(page),
-      limit: Number(limit),
+      page: pageNum,
+      limit: limitNum,
       total,
       logs,
     };
   }
 
   /**
-   * Simple stats endpoint — total logins, fails, etc.
+   * ✅ Simple audit statistics summary
    */
   @Get('stats')
   async getAuditStats() {
@@ -78,6 +72,7 @@ export class AdminAuditController {
       failedCount,
       successRate:
         totalEvents === 0 ? 0 : Math.round((successCount / totalEvents) * 100),
+      lastUpdated: new Date().toISOString(),
     };
   }
 }

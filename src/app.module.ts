@@ -1,5 +1,8 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PharmaciesModule } from './pharmacies/pharmacies.module';
@@ -8,15 +11,22 @@ import { OrdersModule } from './orders/orders.module';
 import { QueueModule } from './queues/queue.module';
 import { GlobalLogger } from './common/logger/global-logger.service';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
-import { WsGateway } from './ws/ws.gateway';
+import { WsModule } from './ws/ws.module';
 import { NotificationService } from './utils/notification.service';
-import { UtilsModule } from './utils/utils.module'; // ✅ import here
+import { UtilsModule } from './utils/utils.module';
 import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    UtilsModule, // ✅ provides Prisma + Audit
+
+    // ✅ Serve static dashboard from /public
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/', // base URL path
+    }),
+
+    UtilsModule,
     AuthModule,
     UsersModule,
     PharmaciesModule,
@@ -24,8 +34,9 @@ import { AdminModule } from './admin/admin.module';
     OrdersModule,
     QueueModule,
     AdminModule,
+    WsModule,
   ],
-  providers: [WsGateway, NotificationService, GlobalLogger],
+  providers: [NotificationService, GlobalLogger],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

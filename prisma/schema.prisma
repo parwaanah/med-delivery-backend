@@ -28,30 +28,34 @@ enum OrderStatus {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  role      UserRole  @default(CUSTOMER)
-  status    String?   @default("AVAILABLE")
-  latitude  Float?
-  longitude Float?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime? // soft-delete
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique
+  password   String
+  role       UserRole  @default(CUSTOMER)
+  status     String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy Int?
+  latitude   Float?
+  longitude  Float?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
-  // Relations
+  // --- Self-relation for admin approvals ---
+  approver      User?  @relation("AdminApprovals", fields: [approvedBy], references: [id])
+  approvedUsers User[] @relation("AdminApprovals")
+
+  // --- Relations ---
   customerOrders        Order[]             @relation("CustomerOrders")
   pharmacyOrders        Order[]             @relation("PharmacyOrders")
   riderOrders           Order[]             @relation("RiderOrders")
   pharmacyInventory     PharmacyInventory[] @relation("PharmacyInventoryRelation")
   sentNotifications     Notification[]      @relation("SentNotifications")
   receivedNotifications Notification[]      @relation("ReceivedNotifications")
-
-  sessions      Session[]
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]     @relation("AuditUser")
-  LoginAudit    LoginAudit[]
+  sessions              Session[]
+  refreshTokens         RefreshToken[]
+  auditLogs             AuditLog[]
+  LoginAudit            LoginAudit[]
 }
 
 model Medicine {
@@ -112,11 +116,10 @@ model OrderOffer {
   orderId    Int
   pharmacyId Int?
   riderId    Int?
-  offeredTo  String // 'PHARMACY' | 'RIDER'
-  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, EXPIRED
+  offeredTo  String
+  status     String   @default("PENDING")
   createdAt  DateTime @default(now())
-
-  order Order @relation(fields: [orderId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
 }
 
 model Notification {
@@ -143,20 +146,20 @@ model Session {
   revoked   Boolean  @default(false)
 
   user          User           @relation(fields: [userId], references: [id])
-  refreshTokens RefreshToken[] @relation("SessionToRefreshTokens") // ✅ opposite relation added
+  refreshTokens RefreshToken[] @relation("SessionToRefreshTokens")
 }
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   userId    Int
   sessionId Int?
-  tokenHash String // store hash, never raw token
+  tokenHash String
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
   expiresAt DateTime
 
   user    User     @relation(fields: [userId], references: [id])
-  session Session? @relation("SessionToRefreshTokens", fields: [sessionId], references: [id]) // ✅ matches above
+  session Session? @relation("SessionToRefreshTokens", fields: [sessionId], references: [id])
 }
 
 model AuditLog {
@@ -166,8 +169,7 @@ model AuditLog {
   resource  String?
   meta      Json?
   createdAt DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 model LoginAudit {
@@ -176,10 +178,9 @@ model LoginAudit {
   email     String?
   ip        String?
   userAgent String?
-  eventType String // LOGIN_SUCCESS | LOGIN_FAILED | LOGOUT | TOKEN_REFRESH
+  eventType String
   role      String?
   success   Boolean  @default(true)
   timestamp DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
 }

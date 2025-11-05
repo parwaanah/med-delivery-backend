@@ -1,3 +1,4 @@
+// src/common/guards/roles.guard.ts
 import {
   Injectable,
   CanActivate,
@@ -5,33 +6,35 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles =
-      this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]);
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
+    // Allow access if no roles are required
     if (!requiredRoles || requiredRoles.length === 0) return true;
 
     const { user } = context.switchToHttp().getRequest();
-
     if (!user || !user.role) {
-      throw new ForbiddenException('Access denied: no role found');
+      throw new ForbiddenException('User role not found in token');
     }
 
-    // ✅ make comparison case-insensitive
-    const userRole = user.role.toUpperCase();
-    const normalizedRoles = requiredRoles.map((r) => r.toUpperCase());
+    // ✅ Normalize both sides to lowercase for case-insensitive matching
+    const userRole = String(user.role).toLowerCase();
+    const allowed = requiredRoles.some(
+      (role) => role.toLowerCase() === userRole,
+    );
 
-    if (!normalizedRoles.includes(userRole)) {
-      throw new ForbiddenException('Access denied: insufficient role');
+    if (!allowed) {
+      throw new ForbiddenException(
+        `Access denied: requires one of [${requiredRoles.join(', ')}], but user has role "${user.role}"`,
+      );
     }
 
     return true;

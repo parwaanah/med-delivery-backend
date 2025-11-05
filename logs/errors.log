@@ -34,3 +34,159 @@ TypeError [ERR_INVALID_ARG_TYPE]: The "data" argument must be of type string or 
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-04T12:53:45.058Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.loginAudit.findMany()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.audit.controller.js:41:36
+
+  38 if (success !== undefined)
+  39     where.success = success === true;
+  40 const [logs, total] = await this.prisma.$transaction([
+→ 41     this.prisma.loginAudit.findMany({
+           where: {},
+           orderBy: {
+             timestamp: "desc"
+           },
+           take: 25,
+         + skip: Int
+         })
+
+Argument `skip` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.loginAudit.findMany()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.audit.controller.js:41:36
+
+  38 if (success !== undefined)
+  39     where.success = success === true;
+  40 const [logs, total] = await this.prisma.$transaction([
+→ 41     this.prisma.loginAudit.findMany({
+           where: {},
+           orderBy: {
+             timestamp: "desc"
+           },
+           take: 25,
+         + skip: Int
+         })
+
+Argument `skip` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+[2025-11-04T13:02:06.085Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.loginAudit.findMany()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.audit.controller.js:40:36
+
+  37 if (success !== undefined)
+  38     where.success = success === true;
+  39 const [logs, total] = await this.prisma.$transaction([
+→ 40     this.prisma.loginAudit.findMany({
+           where: {},
+           orderBy: {
+             timestamp: "desc"
+           },
+           take: 25,
+         + skip: Int
+         })
+
+Argument `skip` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.loginAudit.findMany()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.audit.controller.js:40:36
+
+  37 if (success !== undefined)
+  38     where.success = success === true;
+  39 const [logs, total] = await this.prisma.$transaction([
+→ 40     this.prisma.loginAudit.findMany({
+           where: {},
+           orderBy: {
+             timestamp: "desc"
+           },
+           take: 25,
+         + skip: Int
+         })
+
+Argument `skip` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+[2025-11-05T13:38:39.939Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.order.create()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\orders\orders.service.js:40:51
+
+  37 });
+  38 if (!pharmacy || pharmacy.role !== 'PHARMACY')
+  39     throw new common_1.NotFoundException('Pharmacy not found');
+→ 40 const order = await this.prisma.order.create({
+       data: {
+         customerId: NaN,
+         pharmacyId: 37,
+         totalPrice: 50,
+         status: "PENDING",
+         items: {
+           create: [
+             {
+               medicineId: undefined,
+               name: "Paracetamol",
+               quantity: 2,
+               price: 25
+             }
+           ]
+         },
+     +   customer: {
+     +     create: UserCreateWithoutCustomerOrdersInput | UserUncheckedCreateWithoutCustomerOrdersInput,
+     +     connectOrCreate: UserCreateOrConnectWithoutCustomerOrdersInput,
+     +     connect: UserWhereUniqueInput
+     +   }
+       },
+       include: {
+         items: true
+       }
+     })
+
+Argument `customer` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.order.create()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\orders\orders.service.js:40:51
+
+  37 });
+  38 if (!pharmacy || pharmacy.role !== 'PHARMACY')
+  39     throw new common_1.NotFoundException('Pharmacy not found');
+→ 40 const order = await this.prisma.order.create({
+       data: {
+         customerId: NaN,
+         pharmacyId: 37,
+         totalPrice: 50,
+         status: "PENDING",
+         items: {
+           create: [
+             {
+               medicineId: undefined,
+               name: "Paracetamol",
+               quantity: 2,
+               price: 25
+             }
+           ]
+         },
+     +   customer: {
+     +     create: UserCreateWithoutCustomerOrdersInput | UserUncheckedCreateWithoutCustomerOrdersInput,
+     +     connectOrCreate: UserCreateOrConnectWithoutCustomerOrdersInput,
+     +     connect: UserWhereUniqueInput
+     +   }
+       },
+       include: {
+         items: true
+       }
+     })
+
+Argument `customer` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async OrdersService.createOrder (C:\Users\OMEN\med-delivery\backend\dist\orders\orders.service.js:40:27)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17

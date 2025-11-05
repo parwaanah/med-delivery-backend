@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { PrismaService } from '../utils/prisma.service';
-import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { UserRole } from '@prisma/client';
 import * as crypto from 'crypto';
 import { addHours } from 'date-fns';
+import { PrismaService } from '../utils/prisma.service';
+import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { AuditService } from '../utils/audit.service';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -20,11 +20,9 @@ export class AuthService {
     private audit: AuditService,
   ) {}
 
-  // ------------------ REGISTER ------------------
   async register(data: RegisterDto) {
-    if (!data.email || !data.password || !data.name) {
-      throw new BadRequestException('Name, email and password are required');
-    }
+    if (!data.email || !data.password || !data.name)
+      throw new BadRequestException('Name, email, and password required');
 
     const existing = await this.prisma.user.findUnique({
       where: { email: data.email },
@@ -32,12 +30,15 @@ export class AuthService {
     if (existing) throw new BadRequestException('Email already in use');
 
     const hashed = await bcrypt.hash(data.password, 10);
+    const autoStatus = data.role === UserRole.CUSTOMER ? 'APPROVED' : 'PENDING';
+
     const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: hashed,
         role: data.role || UserRole.CUSTOMER,
+        status: autoStatus,
       },
     });
 
@@ -52,40 +53,15 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  // ------------------ LOGIN ------------------
   async login(data: LoginDto, ip?: string, userAgent?: string) {
-    if (!data.email || !data.password) {
-      throw new BadRequestException('Email and password are required');
-    }
+    const user = await this.prisma.user.findUnique({ where: { email: data.email } });
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const user = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
-
-    if (!user) {
-      await this.audit.log({
-        email: data.email,
-        ip,
-        userAgent,
-        eventType: 'LOGIN_FAILED',
-        success: false,
-      });
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (user.status !== 'APPROVED')
+      throw new UnauthorizedException('Account pending admin approval');
 
     const match = await bcrypt.compare(data.password, user.password);
-    if (!match) {
-      await this.audit.log({
-        userId: user.id,
-        email: user.email,
-        ip,
-        userAgent,
-        role: user.role,
-        eventType: 'LOGIN_FAILED',
-        success: false,
-      });
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!match) throw new UnauthorizedException('Invalid credentials');
 
     const session = await this.prisma.session.create({
       data: {
@@ -97,10 +73,7 @@ export class AuthService {
     });
 
     const refreshTokenRaw = crypto.randomBytes(32).toString('hex');
-    const refreshTokenHash = crypto
-      .createHash('sha256')
-      .update(refreshTokenRaw)
-      .digest('hex');
+    const refreshTokenHash = crypto.createHash('sha256').update(refreshTokenRaw).digest('hex');
 
     await this.prisma.refreshToken.create({
       data: {
@@ -114,53 +87,29 @@ export class AuthService {
     await this.audit.log({
       userId: user.id,
       email: user.email,
-      ip,
-      userAgent,
-      role: user.role,
       eventType: 'LOGIN_SUCCESS',
       success: true,
     });
 
-    const accessToken = this.jwtService.sign(
-      { sub: user.id, role: user.role },
-      { expiresIn: '1h' },
-    );
+    const accessToken = this.jwtService.sign({ sub: user.id, role: user.role }, { expiresIn: '1h' });
 
     return {
       accessToken,
       refreshToken: refreshTokenRaw,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
     };
   }
 
-  // ------------------ REFRESH TOKEN ------------------
   async refreshToken(oldToken: string) {
-    if (!oldToken || oldToken.trim() === '') {
-      await this.audit.log({
-        eventType: 'TOKEN_REFRESH_FAILED_MISSING_TOKEN',
-        success: false,
-      });
-      throw new UnauthorizedException('Refresh token missing');
-    }
+    if (!oldToken) throw new UnauthorizedException('Missing token');
 
     const oldHash = crypto.createHash('sha256').update(oldToken).digest('hex');
     const existing = await this.prisma.refreshToken.findFirst({
       where: { tokenHash: oldHash, revoked: false },
       include: { session: true },
     });
-
-    if (!existing || !existing.session) {
-      await this.audit.log({
-        eventType: 'TOKEN_REFRESH_FAILED',
-        success: false,
-      });
+    if (!existing || !existing.session)
       throw new UnauthorizedException('Invalid refresh token');
-    }
 
     await this.prisma.refreshToken.update({
       where: { id: existing.id },
@@ -168,11 +117,7 @@ export class AuthService {
     });
 
     const newTokenRaw = crypto.randomBytes(32).toString('hex');
-    const newTokenHash = crypto
-      .createHash('sha256')
-      .update(newTokenRaw)
-      .digest('hex');
-
+    const newTokenHash = crypto.createHash('sha256').update(newTokenRaw).digest('hex');
     await this.prisma.refreshToken.create({
       data: {
         userId: existing.session.userId,
@@ -185,64 +130,27 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { id: existing.session.userId },
     });
-    if (!user) {
-      await this.audit.log({
-        eventType: 'TOKEN_REFRESH_FAILED_USER_NOT_FOUND',
-        success: false,
-      });
-      throw new UnauthorizedException('User not found');
-    }
+    if (!user) throw new UnauthorizedException('User not found');
 
-    const accessToken = this.jwtService.sign(
-      { sub: user.id, role: user.role },
-      { expiresIn: '1h' },
-    );
-
-    await this.audit.log({
-      userId: user.id,
-      email: user.email,
-      eventType: 'TOKEN_REFRESH',
-      success: true,
-    });
-
-    return {
-      accessToken,
-      refreshToken: newTokenRaw,
-    };
+    const accessToken = this.jwtService.sign({ sub: user.id, role: user.role }, { expiresIn: '1h' });
+    return { accessToken, refreshToken: newTokenRaw };
   }
 
-  // ------------------ LOGOUT ------------------
   async logout(sessionId: number) {
     await this.prisma.session.update({
       where: { id: sessionId },
       data: { revoked: true },
     });
-
     await this.prisma.refreshToken.updateMany({
       where: { sessionId },
       data: { revoked: true },
     });
-
-    await this.audit.log({
-      eventType: 'LOGOUT',
-      success: true,
-    });
-
     return { message: 'Logout successful' };
   }
 
-  // ------------------ HELPER ------------------
   private generateToken(user: any) {
     const payload = { sub: user.id, role: user.role, email: user.email };
     const accessToken = this.jwtService.sign(payload);
-    return {
-      accessToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    };
+    return { accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
   }
 }
