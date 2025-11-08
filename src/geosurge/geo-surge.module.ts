@@ -4,9 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../utils/prisma.service';
 import { GeoSurgeService } from './geo-surge.service';
 import { GeoSurgeLiveGateway } from '../ws/geo-surge-live.gateway';
+import { GeoSurgeController } from './geo-surge.controller';
 
 @Module({
   imports: [],
+  controllers: [GeoSurgeController],
   providers: [ConfigService, PrismaService, GeoSurgeService, GeoSurgeLiveGateway],
   exports: [GeoSurgeService],
 })
