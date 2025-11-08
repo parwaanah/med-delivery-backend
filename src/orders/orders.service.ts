@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { NotificationService } from '../utils/notification.service';
@@ -11,28 +12,36 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { Queue } from 'bullmq';
 import { WsGateway } from '../ws/ws.gateway';
 import { ConfigService } from '@nestjs/config';
+import { SurgeService } from '../surge/surge.service'; // ✅ Surge Integration
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private prisma: PrismaService,
     private notify: NotificationService,
     private ws: WsGateway,
     private config: ConfigService,
+    private surge: SurgeService,
     @Inject('ORDER_ASSIGN_QUEUE') private orderAssignQueue: Queue,
   ) {}
 
-  // 🛒 Create new order
+  // 🛒 Create new order — auto-triggers surge demand
   async createOrder(customerId: number, dto: CreateOrderDto) {
-    // ✅ Safe ID validation
     if (!customerId || isNaN(Number(customerId))) {
       throw new BadRequestException('Invalid or missing customer ID.');
     }
-
-    if (!dto.items?.length)
-      throw new BadRequestException('No items provided.');
+    if (!dto.items?.length) throw new BadRequestException('No items provided.');
 
     const total = dto.items.reduce((s, it) => s + it.price * it.quantity, 0);
+
+    // ✅ Surge demand update
+    try {
+      await this.surge.incrementDemand(1);
+    } catch (err) {
+      this.logger.warn('⚠️ Surge demand update failed:', err);
+    }
 
     // ----- Direct pharmacy target -----
     if (dto.pharmacyId) {
@@ -44,19 +53,19 @@ export class OrdersService {
 
       const order = await this.prisma.order.create({
         data: {
-  customer: { connect: { id: Number(customerId) } },
-  pharmacy: { connect: { id: dto.pharmacyId } },
-  totalPrice: total,
-  status: 'PENDING',
-  items: {
-    create: dto.items.map((it) => ({
-      medicineId: it.medicineId ?? undefined,
-      name: it.name,
-      quantity: it.quantity,
-      price: it.price,
-    })),
-  },
-},
+          customer: { connect: { id: Number(customerId) } },
+          pharmacy: { connect: { id: dto.pharmacyId } },
+          totalPrice: total,
+          status: 'PENDING',
+          items: {
+            create: dto.items.map((it) => ({
+              medicineId: it.medicineId ?? undefined,
+              name: it.name,
+              quantity: it.quantity,
+              price: it.price,
+            })),
+          },
+        },
         include: { items: true },
       });
 
@@ -92,9 +101,7 @@ export class OrdersService {
         medicineId: { in: medicineIds },
         stock: { gt: 0 },
       },
-      _count: {
-        medicineId: true,
-      },
+      _count: { medicineId: true },
     });
 
     const pharmacyIds = candidates
@@ -106,19 +113,19 @@ export class OrdersService {
 
     const order = await this.prisma.order.create({
       data: {
-  customer: { connect: { id: Number(customerId) } },
-  pharmacy: { connect: { id: pharmacyIds[0] } },
-  totalPrice: total,
-  status: 'PENDING',
-  items: {
-    create: dto.items.map((it) => ({
-      medicineId: it.medicineId ?? undefined,
-      name: it.name,
-      quantity: it.quantity,
-      price: it.price,
-    })),
-  },
-},
+        customer: { connect: { id: Number(customerId) } },
+        pharmacy: { connect: { id: pharmacyIds[0] } },
+        totalPrice: total,
+        status: 'PENDING',
+        items: {
+          create: dto.items.map((it) => ({
+            medicineId: it.medicineId ?? undefined,
+            name: it.name,
+            quantity: it.quantity,
+            price: it.price,
+          })),
+        },
+      },
       include: { items: true },
     });
 
@@ -146,11 +153,7 @@ export class OrdersService {
   }
 
   // ✅ Pharmacy response
-  async pharmacyRespond(
-    pharmacyId: number,
-    orderId: number,
-    action: 'ACCEPTED' | 'REJECTED',
-  ) {
+  async pharmacyRespond(pharmacyId: number, orderId: number, action: 'ACCEPTED' | 'REJECTED') {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found.');
     if (order.status !== 'PENDING')
@@ -248,6 +251,8 @@ export class OrdersService {
         title: 'Rider Accepted',
         text: `Order #${orderId} → Rider ${riderId}`,
       });
+
+      await this.surge.recordRiderAvailability(riderId, false);
       return updated;
     }
 
@@ -276,6 +281,7 @@ export class OrdersService {
 
     if (stage === 'DELIVERED') {
       await this.prisma.user.update({ where: { id: riderId }, data: { status: 'AVAILABLE' } });
+      await this.surge.recordRiderAvailability(riderId, true);
       await this.notify.create(order.customerId, 'ORDER_DELIVERED', `Order #${orderId} delivered.`, { orderId }, riderId);
       this.notify.sendAdminToast?.({
         type: 'ok',
@@ -303,7 +309,10 @@ export class OrdersService {
 
   // ✅ Admin manual assign
   async adminAssign(orderId: number, adminId: number, riderId: number) {
-    const updated = await this.prisma.order.update({ where: { id: orderId }, data: { riderId, status: 'OUT_FOR_DELIVERY' } });
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { riderId, status: 'OUT_FOR_DELIVERY' },
+    });
     await this.prisma.user.update({ where: { id: riderId }, data: { status: 'BUSY' } });
     await this.notify.create(updated.customerId, 'ORDER_ASSIGNED_BY_ADMIN', `Order #${orderId} assigned by admin.`, { orderId }, adminId);
     this.notify.sendAdminToast?.({
@@ -314,7 +323,7 @@ export class OrdersService {
     return updated;
   }
 
-  // ✅ Orders by role/user
+  // ✅ Fetch orders by role/user
   async findByUser(userId: number, role: string) {
     if (role === 'ADMIN')
       return this.prisma.order.findMany({ include: { items: true } });

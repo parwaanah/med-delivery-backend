@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>System Health Monitor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #38bdf8;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 15px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+    }
+    .status {
+      font-weight: bold;
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    .up { background-color: #22c55e; color: #fff; }
+    .down { background-color: #ef4444; color: #fff; }
+    pre {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .timestamp { color: #94a3b8; font-size: 0.9em; margin-top: 10px; }
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🩺 System Health Dashboard</h1>
+  <p>Monitoring backend health, Redis, and database uptime every 10 seconds.</p>
+
+  <div class="card" id="healthCard">
+    <p>Loading system health...</p>
+  </div>
+
+  <footer>
+    © Medicine Delivery Platform – Enterprise Health Monitor
+  </footer>
+
+  <script>
+    async function fetchHealth() {
+      const el = document.getElementById('healthCard');
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+        const details = data.details || {};
+
+        const dbStatus = details.database?.status || 'unknown';
+        const redisStatus = details.redis?.status || 'unknown';
+        const mem = details.memory || {};
+        const uptime = details.uptime ? `${Math.floor(details.uptime)}s` : 'N/A';
+        const timestamp = details.timestamp || new Date().toISOString();
+
+        el.innerHTML = `
+          <div><b>🧠 Database:</b> <span class="status ${dbStatus === 'up' ? 'up' : 'down'}">${dbStatus}</span></div>
+          <div><b>⚡ Redis:</b> <span class="status ${redisStatus === 'up' ? 'up' : 'down'}">${redisStatus}</span></div>
+          <div><b>🕐 Uptime:</b> ${uptime}</div>
+          <div><b>💾 Memory:</b> RSS=${(mem.rss/1024/1024).toFixed(1)}MB | Heap=${(mem.heapUsed/1024/1024).toFixed(1)}MB</div>
+          <div class="timestamp">Last checked: ${new Date(timestamp).toLocaleTimeString()}</div>
+        `;
+      } catch (err) {
+        el.innerHTML = `
+          <p style="color:#f87171;">❌ Unable to fetch health data</p>
+          <pre>${err}</pre>
+        `;
+      }
+    }
+
+    fetchHealth();
+    setInterval(fetchHealth, 10000); // auto-refresh every 10s
+  </script>
+</body>
+</html>

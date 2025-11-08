@@ -190,3 +190,135 @@ Argument `customer` is missing.
     at async OrdersService.createOrder (C:\Users\OMEN\med-delivery\backend\dist\orders\orders.service.js:40:27)
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-06T15:16:35.506Z] [ERROR] [NestApplication] Error: listen EADDRINUSE: address already in use :::3001
+[2025-11-08T17:02:20.811Z] [ERROR] [NestApplication] Error: listen EADDRINUSE: address already in use :::3001
+[2025-11-08T17:46:32.864Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:47:13.593Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:47:28.596Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:47:43.596Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:47:58.598Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:48:13.614Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:48:28.615Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:48:43.623Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:48:58.626Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:49:13.637Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:49:28.642Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:49:43.648Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:49:58.650Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:50:13.650Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:50:28.659Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:50:43.665Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:50:58.672Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:51:13.680Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:51:28.681Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:51:43.692Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:51:58.693Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:52:13.704Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:52:28.709Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:52:43.711Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:52:58.718Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:53:13.720Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:53:28.727Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:53:43.730Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:53:58.736Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:54:13.746Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:54:28.757Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:54:43.768Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:54:58.777Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:55:13.780Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:55:28.783Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:55:43.792Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:55:58.798Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:56:13.812Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:56:28.825Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:56:43.839Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:56:58.850Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:57:13.856Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:57:28.865Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:57:43.881Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:57:58.896Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:58:13.912Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:58:28.920Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:58:43.921Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:58:58.925Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:59:13.930Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:59:28.937Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:59:43.945Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T17:59:58.946Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:00:13.951Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:00:28.965Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:00:43.966Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:00:58.967Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:01:13.981Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:01:28.988Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:01:43.993Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:01:58.997Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:02:13.999Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:02:29.009Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:02:44.020Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-08T18:02:59.021Z] [ERROR] [SurgeProcessor] Surge recalc error
+ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value

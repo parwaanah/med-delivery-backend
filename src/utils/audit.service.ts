@@ -1,15 +1,17 @@
 // src/utils/audit.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { AuditLiveGateway } from '../ws/audit-live.gateway';
 import { NotificationService } from './notification.service';
 
 @Injectable()
 export class AuditService {
+  private readonly logger = new Logger(AuditService.name);
+
   constructor(
-    private prisma: PrismaService,
-    private liveGateway: AuditLiveGateway,
-    private notification: NotificationService,
+    private readonly prisma: PrismaService,
+    private readonly liveGateway: AuditLiveGateway,
+    private readonly notification: NotificationService,
   ) {}
 
   async log({
@@ -29,27 +31,34 @@ export class AuditService {
     role?: string;
     success?: boolean;
   }) {
-    const record = await this.prisma.loginAudit.create({
-      data: { userId, email, ip, userAgent, eventType, role, success },
-    });
+    try {
+      const record = await this.prisma.loginAudit.create({
+        data: { userId, email, ip, userAgent, eventType, role, success },
+      });
 
-    // 🔔 broadcast audit feed live
-    this.liveGateway.emitAuditEvent({
-      type: eventType,
-      userId,
-      email,
-      role,
-      success,
-      timestamp: record.timestamp,
-    });
+      // Broadcast audit feed live
+      this.liveGateway.emitAuditEvent({
+        eventType,
+        userId,
+        email,
+        role,
+        success,
+        timestamp: record.timestamp,
+      });
 
-    // 🧩 send admin toast
-    this.notification.sendAdminToast({
-      type: success ? 'ok' : 'err',
-      title: `Audit • ${eventType}`,
-      text: `${email ?? 'unknown'} (${role ?? 'N/A'})`,
-    });
+      // Admin toast for key audit events
+      const toastType = success ? 'ok' : 'err';
+      this.notification.sendAdminToast({
+        type: toastType,
+        title: `Audit • ${eventType}`,
+        text: `${email ?? 'unknown'} (${role ?? 'N/A'})`,
+      });
 
-    return record;
+      return record;
+    } catch (err) {
+      this.logger.error('Audit log failed', err);
+      // Prevent crash if audit DB fails — optional: silent continue
+      return { error: true, message: 'Audit log failed' };
+    }
   }
 }

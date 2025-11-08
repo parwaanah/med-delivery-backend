@@ -1,71 +1,103 @@
-import Redis from 'ioredis';
+import IORedis from 'ioredis';
 
-let redisClient: Redis | null = null;
-let healthCheckInterval: NodeJS.Timeout | null = null;
+let client: IORedis | null = null;
+let heartbeatTimer: NodeJS.Timeout | null = null;
+let lastState: 'up' | 'down' | null = null;
 
 /**
- * Checks and maintains a Redis connection with auto-reconnect and heartbeat logging.
+ * Create or return existing Redis client and start a heartbeat.
+ * Safe to call multiple times — it will reuse existing client.
  */
 export async function checkRedisConnection(redisUrl: string) {
-  console.log('🔌 Initializing Redis connection...');
+  if (client && client.status === 'ready') {
+    // already connected
+    return client;
+  }
 
-  redisClient = new Redis(redisUrl, {
-    retryStrategy: (times) => {
-      const delay = Math.min(times * 500, 5000); // Gradual backoff up to 5s
-      console.warn(`🔁 Redis reconnect attempt #${times} in ${delay}ms...`);
-      return delay;
-    },
-    reconnectOnError: (err) => {
-      console.error('⚠️ Redis reconnectOnError:', err.message);
-      return true; // Always retry on network or connection errors
-    },
-  });
+  if (!client) {
+    console.log('🔌 Initializing Redis connection...');
+    client = new IORedis(redisUrl, {
+      enableReadyCheck: true,
+      retryStrategy: (times) => Math.min(times * 500, 5000),
+      maxRetriesPerRequest: null,
+    });
 
-  // When successfully connected
-  redisClient.on('connect', () => {
-    console.log(`✅ Redis Connected Successfully: ${redisUrl}`);
-  });
+    client.on('connect', () => console.log(`✅ Redis Connected: ${redisUrl}`));
+    client.on('ready', () => console.log('⚡ Redis Ready for commands'));
+    client.on('end', () => console.warn('🔴 Redis connection ended — retrying...'));
+    client.on('error', (err) => console.error('❌ Redis Error:', err?.message || err));
+  }
 
-  // When ready to accept commands
-  redisClient.on('ready', () => {
-    console.log('⚡ Redis Ready for commands');
-  });
-
-  // On disconnection
-  redisClient.on('end', () => {
-    console.warn('🔴 Redis connection closed. Awaiting reconnection...');
-  });
-
-  // On error
-  redisClient.on('error', (err) => {
-    console.error('❌ Redis Error:', err.message);
-  });
-
-  // 🔁 Heartbeat every 30 seconds
-  healthCheckInterval = setInterval(async () => {
-    try {
-      if (redisClient?.status === 'ready') {
-        await redisClient.ping();
-        console.log('💓 Redis heartbeat OK');
-      } else {
-        console.warn('💤 Redis not ready, skipping heartbeat...');
+  // start heartbeat only once
+  if (!heartbeatTimer) {
+    heartbeatTimer = setInterval(async () => {
+      if (!client) return;
+      try {
+        await client.ping();
+        if (lastState !== 'up') console.log('💓 Redis heartbeat OK');
+        lastState = 'up';
+      } catch (err) {
+        if (lastState !== 'down')
+          console.error('💀 Redis heartbeat failed:', err instanceof Error ? err.message : err);
+        lastState = 'down';
       }
-    } catch (err: any) {
-      console.error('💀 Redis heartbeat failed:', err.message);
-    }
-  }, 30000);
+    }, 30_000);
+  }
 
-  return redisClient;
+  // wait until client is ready (simple wait)
+  if (client.status !== 'ready') {
+    await new Promise<void>((resolve) => {
+      const onReady = () => {
+        client?.off('ready', onReady);
+        resolve();
+      };
+      client?.once('ready', onReady);
+      // fallback timeout
+      setTimeout(resolve, 3000);
+    });
+  }
+
+  return client;
 }
 
 /**
- * Gracefully closes Redis when the app shuts down.
+ * Ping Redis without creating a new persistent client (uses existing client).
+ * Used by health checks — throws when not available.
+ */
+export async function redisPing(redisUrl?: string) {
+  if (!client) {
+    // Try to create a short-lived client just for a ping if absolutely necessary.
+    const tmp = new IORedis(redisUrl || 'redis://127.0.0.1:6379', { enableReadyCheck: false });
+    try {
+      await tmp.ping();
+      await tmp.quit();
+      return true;
+    } catch (err) {
+      try { await tmp.disconnect(); } catch {}
+      throw err;
+    }
+  }
+  const res = await client.ping();
+  return res === 'PONG';
+}
+
+/**
+ * Close global client and stop heartbeat
  */
 export async function closeRedisConnection() {
-  if (healthCheckInterval) clearInterval(healthCheckInterval);
-  if (redisClient) {
-    console.log('🧹 Closing Redis connection gracefully...');
-    await redisClient.quit();
-    redisClient = null;
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+  if (client) {
+    console.log('🧹 Closing Redis connection...');
+    try {
+      await client.quit();
+    } catch {
+      try { client.disconnect(); } catch {}
+    } finally {
+      client = null;
+      lastState = null;
+    }
   }
 }

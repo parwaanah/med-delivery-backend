@@ -16,7 +16,7 @@ interface DbCountRow {
 
 @Controller('admin/metrics')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
+@Roles(UserRole.ADMIN, 'ADMIN', 'admin') // ✅ case-insensitive protection
 export class AdminMetricsController {
   constructor(private prisma: PrismaService) {}
 
@@ -28,6 +28,7 @@ export class AdminMetricsController {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
 
+    // ✅ Redis Ping (resilient)
     let redisPing: string;
     try {
       const { stdout } = await execAsync('redis-cli ping');
@@ -36,6 +37,7 @@ export class AdminMetricsController {
       redisPing = 'unreachable';
     }
 
+    // ✅ DB connections
     let activeConnections = 0;
     try {
       const dbSessions = (await this.prisma.$queryRawUnsafe(

@@ -1,3 +1,4 @@
+// src/auth/auth.service.ts
 import {
   Injectable,
   UnauthorizedException,
@@ -6,7 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
-import { addHours } from 'date-fns';
+import { addHours, isBefore } from 'date-fns';
 import { PrismaService } from '../utils/prisma.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { AuditService } from '../utils/audit.service';
@@ -30,14 +31,18 @@ export class AuthService {
     if (existing) throw new BadRequestException('Email already in use');
 
     const hashed = await bcrypt.hash(data.password, 10);
-    const autoStatus = data.role === UserRole.CUSTOMER ? 'APPROVED' : 'PENDING';
+
+    // ✅ Safe role handling (avoid enum mismatch)
+    const normalizedRole = (data.role as UserRole) || UserRole.CUSTOMER;
+    const isCustomer = normalizedRole === UserRole.CUSTOMER;
+    const autoStatus = isCustomer ? 'APPROVED' : 'PENDING';
 
     const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: hashed,
-        role: data.role || UserRole.CUSTOMER,
+        role: normalizedRole,
         status: autoStatus,
       },
     });
@@ -67,7 +72,7 @@ export class AuthService {
       data: {
         userId: user.id,
         ip: ip || null,
-        userAgent: userAgent || null,
+        userAgent: userAgent ? String(userAgent) : null,
         expiresAt: addHours(new Date(), 12),
       },
     });
@@ -96,6 +101,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: refreshTokenRaw,
+      sessionId: session.id,
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     };
   }
@@ -108,8 +114,21 @@ export class AuthService {
       where: { tokenHash: oldHash, revoked: false },
       include: { session: true },
     });
+
     if (!existing || !existing.session)
       throw new UnauthorizedException('Invalid refresh token');
+
+    if (existing.expiresAt && isBefore(existing.expiresAt, new Date())) {
+      await this.prisma.refreshToken.update({
+        where: { id: existing.id },
+        data: { revoked: true },
+      });
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    if (existing.session.revoked) {
+      throw new UnauthorizedException('Session revoked');
+    }
 
     await this.prisma.refreshToken.update({
       where: { id: existing.id },
@@ -133,10 +152,11 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('User not found');
 
     const accessToken = this.jwtService.sign({ sub: user.id, role: user.role }, { expiresIn: '1h' });
-    return { accessToken, refreshToken: newTokenRaw };
+    return { accessToken, refreshToken: newTokenRaw, sessionId: existing.session.id };
   }
 
   async logout(sessionId: number) {
+    if (!sessionId) throw new BadRequestException('sessionId required');
     await this.prisma.session.update({
       where: { id: sessionId },
       data: { revoked: true },
@@ -151,6 +171,9 @@ export class AuthService {
   private generateToken(user: any) {
     const payload = { sub: user.id, role: user.role, email: user.email };
     const accessToken = this.jwtService.sign(payload);
-    return { accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+    return {
+      accessToken,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    };
   }
 }

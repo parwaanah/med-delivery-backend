@@ -15,18 +15,22 @@ import { WsModule } from './ws/ws.module';
 import { NotificationService } from './utils/notification.service';
 import { UtilsModule } from './utils/utils.module';
 import { AdminModule } from './admin/admin.module';
+import { HealthModule } from './health/health.module';
+import { SurgeModule } from './surge/surge.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // ✅ Serve static dashboard from /public
+    // ✅ Serve static dashboards from /public
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/', // base URL path
     }),
 
+    // ✅ Core Modules
     UtilsModule,
+    HealthModule, // <-- ✅ added missing comma here
     AuthModule,
     UsersModule,
     PharmaciesModule,
@@ -35,6 +39,7 @@ import { AdminModule } from './admin/admin.module';
     QueueModule,
     AdminModule,
     WsModule,
+    SurgeModule
   ],
   providers: [NotificationService, GlobalLogger],
 })

@@ -25,6 +25,7 @@ enum OrderStatus {
   PICKED_UP
   DELIVERED
   CANCELED
+  PAID
 }
 
 model User {
@@ -183,4 +184,11 @@ model LoginAudit {
   success   Boolean  @default(true)
   timestamp DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
+}
+
+model SurgeEvent {
+  id         Int      @id @default(autoincrement())
+  multiplier Float
+  meta       Json?
+  createdAt  DateTime @default(now())
 }
