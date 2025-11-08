@@ -15967,3 +15967,302 @@
 [2025-11-08T18:06:35.821Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
 [2025-11-08T18:06:50.821Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
 [2025-11-08T18:07:05.834Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:07:16.200Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:07:16.207Z] [INFO] [Request] GET /admin/metrics 200 (13ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:07:20.834Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:07:35.835Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:07:50.842Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:08:05.843Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:08:17.206Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-08T18:08:17.209Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:08:17.239Z] [INFO] [Request] POST /auth/logout 201 (20ms) user=anonymous ip=::1
+[2025-11-08T18:08:20.850Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:08:35.852Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:08:50.855Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:09:05.867Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:09:20.881Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:09:35.883Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:09:50.898Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:10:05.899Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:10:20.899Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:10:35.900Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:10:50.901Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:11:05.907Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:11:20.909Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:11:35.914Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:11:50.918Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:12:05.925Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:12:20.925Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:12:35.928Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:12:50.933Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:13:05.943Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:13:20.944Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:13:35.944Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:13:50.945Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:14:05.959Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:14:20.964Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:14:35.972Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:14:50.975Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:15:05.981Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:15:21.005Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:15:36.008Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:15:51.017Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:16:06.017Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:16:21.023Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:16:36.022Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:16:51.037Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:17:06.053Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:17:21.054Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:17:36.068Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:17:51.080Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:18:06.092Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:18:21.092Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:18:36.093Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:18:51.095Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:19:06.100Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:19:21.113Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:19:36.115Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:19:51.123Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:20:06.123Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:20:21.124Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:20:36.127Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:20:51.127Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:21:06.133Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:21:21.134Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:21:36.134Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:21:51.144Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:22:06.149Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:22:21.154Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:22:36.158Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:22:51.166Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:23:06.173Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:23:21.184Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:23:36.186Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:23:51.188Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:24:06.197Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:24:21.203Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:24:36.210Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:24:51.221Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:25:06.226Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:25:21.235Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:25:36.245Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:25:51.257Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:26:06.263Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:26:21.264Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:26:36.265Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:26:42.959Z] [INFO] [Request] POST /auth/login 201 (135ms) user=anonymous ip=::1
+[2025-11-08T18:26:42.970Z] [INFO] [Request] GET /admin/surge/status 304 (5ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:26:43.033Z] [INFO] [Request] GET /admin/metrics 200 (58ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:26:43.039Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:26:43.048Z] [INFO] [Request] GET /admin/audit/logs?page=1&limit=10 200 (6ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:26:44.418Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:26:44.428Z] [INFO] [Request] GET /admin/metrics 200 (17ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:26:51.280Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:26:53.076Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:26:53.085Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:26:54.416Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:26:54.424Z] [INFO] [Request] GET /admin/metrics 200 (13ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:03.203Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:03.214Z] [INFO] [Request] GET /admin/metrics 200 (18ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:05.217Z] [INFO] [Request] GET /admin/queue/status 200 (7ms) user=anonymous ip=::1
+[2025-11-08T18:27:05.227Z] [INFO] [Request] GET /admin/metrics 200 (19ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:06.287Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:27:13.205Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:13.214Z] [INFO] [Request] GET /admin/metrics 200 (16ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:15.216Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:15.226Z] [INFO] [Request] GET /admin/metrics 200 (17ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:21.296Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:27:23.205Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:23.215Z] [INFO] [Request] GET /admin/metrics 200 (18ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:25.205Z] [INFO] [Request] GET /admin/queue/status 200 (9ms) user=anonymous ip=::1
+[2025-11-08T18:27:25.217Z] [INFO] [Request] GET /admin/metrics 200 (23ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:33.201Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:27:33.211Z] [INFO] [Request] GET /admin/metrics 200 (17ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:35.205Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:35.214Z] [INFO] [Request] GET /admin/metrics 200 (17ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:36.307Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:27:43.212Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:43.220Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:45.208Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:45.219Z] [INFO] [Request] GET /admin/metrics 200 (19ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:51.302Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:27:53.205Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:27:53.215Z] [INFO] [Request] GET /admin/metrics 200 (18ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:27:55.204Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:27:55.212Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:28:06.306Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:28:21.205Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:28:21.208Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:28:21.214Z] [INFO] [Request] GET /admin/metrics 200 (16ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:28:21.231Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:28:21.319Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:28:36.329Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:28:51.340Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:29:06.349Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:29:21.201Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:29:21.204Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:29:21.208Z] [INFO] [Request] GET /admin/metrics 200 (14ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:29:21.223Z] [INFO] [Request] GET /admin/metrics 200 (13ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:29:21.355Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:29:24.609Z] [INFO] [SurgeLiveGateway] ⚡ SurgeLiveGateway ready
+[2025-11-08T18:29:24.614Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-08T18:29:24.616Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-08T18:29:24.617Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-08T18:29:24.618Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-08T18:29:24.619Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-08T18:29:24.619Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-08T18:29:24.620Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-08T18:29:24.621Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-08T18:29:24.621Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-08T18:29:24.622Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-08T18:29:24.623Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-08T18:29:24.623Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-08T18:29:24.624Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-08T18:29:24.625Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-08T18:29:24.625Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-08T18:29:24.626Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-08T18:29:24.626Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-08T18:29:24.627Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-08T18:29:24.627Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-08T18:29:24.628Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-08T18:29:24.628Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-08T18:29:24.629Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-08T18:29:24.629Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-08T18:29:24.630Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-08T18:29:24.630Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-08T18:29:24.631Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-08T18:29:24.631Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-08T18:29:24.632Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-08T18:29:24.632Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-08T18:29:24.633Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-08T18:29:24.633Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-08T18:29:24.634Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-08T18:29:24.634Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-08T18:29:24.635Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-08T18:29:24.635Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-08T18:29:24.636Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-08T18:29:24.636Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-08T18:29:24.637Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-08T18:29:24.637Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-08T18:29:24.638Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-08T18:29:24.638Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-08T18:29:24.639Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-08T18:29:24.639Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-08T18:29:24.640Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-08T18:29:24.640Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-08T18:29:24.641Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-08T18:29:24.641Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-08T18:29:24.642Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-08T18:29:24.642Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-08T18:29:24.871Z] [INFO] [SurgeProcessor] 🚀 SurgeProcessor running every 15s
+[2025-11-08T18:29:24.873Z] [INFO] [OrdersProcessor] ✅ OrdersProcessor worker started (order_assign)
+[2025-11-08T18:29:25.173Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-08T18:29:39.884Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:29:54.894Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:30:09.897Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:30:21.225Z] [INFO] [Request] GET /admin/queue/status 200 (11ms) user=anonymous ip=::1
+[2025-11-08T18:30:21.240Z] [INFO] [Request] GET /admin/queue/status 200 (13ms) user=anonymous ip=::1
+[2025-11-08T18:30:21.257Z] [INFO] [Request] GET /admin/metrics 200 (40ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-08T18:30:21.274Z] [INFO] [Request] GET /admin/metrics 200 (16ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-08T18:30:24.899Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:30:39.900Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:30:54.909Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:31:09.914Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:31:21.202Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:31:21.205Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:31:21.210Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:31:21.224Z] [INFO] [Request] GET /admin/metrics 200 (13ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:31:24.914Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:31:39.915Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:31:54.925Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:32:09.936Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:32:21.202Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:32:21.205Z] [INFO] [Request] GET /admin/queue/status 200 (1ms) user=anonymous ip=::1
+[2025-11-08T18:32:21.211Z] [INFO] [Request] GET /admin/metrics 200 (16ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:32:21.227Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:32:24.936Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:32:39.945Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:32:54.951Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:33:09.953Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:33:21.215Z] [INFO] [Request] GET /admin/queue/status 200 (6ms) user=anonymous ip=::1
+[2025-11-08T18:33:21.218Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:33:21.226Z] [INFO] [Request] GET /admin/metrics 200 (18ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:33:21.245Z] [INFO] [Request] GET /admin/metrics 200 (18ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:33:24.953Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:33:39.954Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:33:54.955Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:34:09.962Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:34:21.207Z] [INFO] [Request] GET /admin/queue/status 200 (5ms) user=anonymous ip=::1
+[2025-11-08T18:34:21.211Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:34:21.216Z] [INFO] [Request] GET /admin/metrics 200 (17ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:34:21.235Z] [INFO] [Request] GET /admin/metrics 200 (17ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:34:24.964Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:34:39.978Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:34:54.989Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:35:09.994Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:35:21.206Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:35:21.209Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-08T18:35:21.316Z] [INFO] [Request] GET /admin/metrics 200 (114ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:35:21.336Z] [INFO] [Request] GET /admin/metrics 200 (18ms) user=superadmin_live@example.com ip=::1
+[2025-11-08T18:35:24.994Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:35:37.971Z] [INFO] [SurgeLiveGateway] ⚡ SurgeLiveGateway ready
+[2025-11-08T18:35:37.976Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-08T18:35:37.979Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-08T18:35:37.980Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-08T18:35:37.981Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-08T18:35:37.982Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-08T18:35:37.983Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-08T18:35:37.983Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-08T18:35:37.984Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-08T18:35:37.985Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-08T18:35:37.986Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-08T18:35:37.987Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-08T18:35:37.988Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-08T18:35:37.989Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-08T18:35:37.990Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-08T18:35:37.990Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-08T18:35:37.991Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-08T18:35:37.991Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-08T18:35:37.992Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-08T18:35:37.992Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-08T18:35:37.993Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-08T18:35:37.994Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-08T18:35:37.994Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-08T18:35:37.995Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-08T18:35:37.996Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-08T18:35:37.996Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-08T18:35:37.997Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-08T18:35:37.997Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-08T18:35:37.998Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-08T18:35:37.998Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-08T18:35:37.999Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-08T18:35:38.000Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-08T18:35:38.001Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-08T18:35:38.001Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-08T18:35:38.002Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-08T18:35:38.002Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-08T18:35:38.003Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-08T18:35:38.003Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-08T18:35:38.004Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-08T18:35:38.004Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-08T18:35:38.005Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-08T18:35:38.005Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-08T18:35:38.006Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-08T18:35:38.006Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-08T18:35:38.007Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-08T18:35:38.008Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-08T18:35:38.008Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-08T18:35:38.009Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-08T18:35:38.009Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-08T18:35:38.010Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-08T18:35:38.245Z] [INFO] [SurgeProcessor] 🚀 SurgeProcessor running every 15s
+[2025-11-08T18:35:38.247Z] [INFO] [OrdersProcessor] ✅ OrdersProcessor worker started (order_assign)
+[2025-11-08T18:35:38.442Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected to Redis → redis://127.0.0.1:6379
+[2025-11-08T18:35:38.487Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-08T18:35:53.254Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:36:08.268Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)
+[2025-11-08T18:36:21.215Z] [INFO] [Request] GET /admin/queue/status 200 (14ms) user=anonymous ip=::1
+[2025-11-08T18:36:21.233Z] [INFO] [Request] GET /admin/queue/status 200 (16ms) user=anonymous ip=::1
+[2025-11-08T18:36:21.249Z] [INFO] [Request] GET /admin/metrics 200 (45ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-08T18:36:21.266Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-08T18:36:23.277Z] [INFO] [SurgeService] ⚡ Surge update → x1 (demand 0, supply 1)

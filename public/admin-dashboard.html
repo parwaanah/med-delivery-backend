@@ -1,34 +1,36 @@
+<!-- public/admin-dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>💊 Medicine Delivery — Admin Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
-    body{font-family:'Segoe UI',sans-serif;background:#0b0e12;color:#f5f5f5;margin:0;min-height:100vh;}
-    header{background:#1e1f24;color:#00eaff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
-    #logoutBtn{background:#ff005c;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;font-weight:600;margin-left:12px;}
-    .tabs{background:#14171c;display:flex;justify-content:center;gap:10px;padding:10px;border-bottom:1px solid #222;}
-    .tabs button{background:#1c1f26;border:none;color:#ccc;padding:8px 14px;border-radius:5px;cursor:pointer;transition:.2s;}
-    .tabs button.active{background:#00eaff;color:#000;font-weight:bold;}
-    section{display:none;padding:16px;}section.active{display:block;}
-    h3{color:#00eaff;margin-top:0;}canvas{width:100%;height:240px;background:#16181d;border-radius:6px;}
-    table{color:#ccc;width:100%;border-collapse:collapse;}
-    .event{background:#16181d;border-left:4px solid #00ff99;padding:8px;margin-bottom:8px;border-radius:6px;}
-    #loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.9);display:flex;align-items:center;justify-content:center;z-index:9999;}
-    #loginBox{background:#111827;padding:30px;border-radius:10px;width:360px;}
-    #loginBox input{width:100%;margin:6px 0;padding:10px;background:#0b1220;color:#fff;border:1px solid #1f2937;border-radius:6px;}
-    #loginBox button{margin-top:10px;width:100%;padding:10px;border:none;background:#00eaff;color:#00111a;border-radius:6px;cursor:pointer;font-weight:600;}
+    body { font-family:'Segoe UI',sans-serif;background:#0b0e12;color:#f5f5f5;margin:0;min-height:100vh; }
+    header { background:#1e1f24;color:#00eaff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center; }
+    #logoutBtn{ background:#ff005c;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;font-weight:600;margin-left:12px; }
+    .tabs{ background:#14171c;display:flex;justify-content:center;gap:10px;padding:10px;border-bottom:1px solid #222; }
+    .tabs button{ background:#1c1f26;border:none;color:#ccc;padding:8px 14px;border-radius:5px;cursor:pointer;transition:.2s; }
+    .tabs button.active{ background:#00eaff;color:#000;font-weight:bold; }
+    section{ display:none;padding:16px; } section.active{ display:block; }
+    h3{ color:#00eaff;margin-top:0; } canvas{ width:100%;height:240px;background:#16181d;border-radius:6px; }
+    table{ color:#ccc;width:100%;border-collapse:collapse; }
+    .event{ background:#16181d;border-left:4px solid #00ff99;padding:8px;margin-bottom:8px;border-radius:6px; }
+    #loginOverlay{ position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.9);display:flex;align-items:center;justify-content:center;z-index:9999; }
+    #loginBox{ background:#111827;padding:30px;border-radius:10px;width:360px; }
+    #loginBox input{ width:100%;margin:6px 0;padding:10px;background:#0b1220;color:#fff;border:1px solid #1f2937;border-radius:6px; }
+    #loginBox button{ margin-top:10px;width:100%;padding:10px;border:none;background:#00eaff;color:#00111a;border-radius:6px;cursor:pointer;font-weight:600; }
     .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
-    .surge-panel{display:flex;gap:12px;align-items:center;margin-bottom:12px;}
-    .surge-value{font-size:32px;font-weight:700;color:#00ff99;margin-right:12px;}
-    .small{font-size:13px;color:#cbd5e1;}
-    .control{display:flex;gap:8px;align-items:center;}
-    input[type="number"]{padding:8px;border-radius:6px;border:1px solid #2b3138;background:#0b1220;color:#fff;width:120px;}
-    button.ghost{background:transparent;border:1px solid #2b3138;padding:8px 10px;border-radius:6px;color:#ccc;cursor:pointer;}
-    button.primary{background:#00eaff;color:#00111a;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;font-weight:700;}
+    #map { width:100%; height:480px; border-radius:8px; margin-top:12px; box-shadow:0 6px 18px rgba(0,0,0,0.5); }
+    .legend { background:#111827;padding:8px;border-radius:6px;color:#fff; position: absolute; right:10px; top:10px; z-index:1000; }
   </style>
 </head>
 <body>
@@ -43,13 +45,17 @@
 
   <header>
     <div>💊 Medicine Delivery — Admin Control</div>
-    <div><span id="userStatus">Not logged in</span><button id="logoutBtn" style="display:none;">Logout</button></div>
+    <div>
+      <span id="userStatus">Not logged in</span>
+      <button id="logoutBtn" style="display:none;">Logout</button>
+    </div>
   </header>
 
   <div class="tabs">
     <button data-tab="audit" class="active">Audit Logs</button>
     <button data-tab="metrics">System Metrics</button>
     <button data-tab="surge">Surge Engine</button>
+    <button data-tab="heatmap">Surge Heatmap</button>
     <button data-tab="queue">Redis Queue Monitor</button>
     <button data-tab="health">System Health</button>
   </div>
@@ -67,20 +73,22 @@
   </section>
 
   <section id="surge">
-    <h3>⚡ Surge Engine (Live)</h3>
-    <div class="surge-panel">
-      <div>
-        <div class="surge-value" id="surgeValue">x1.00</div>
-        <div class="small" id="surgeMeta">demand: 0 — supply: 0</div>
-      </div>
-      <div class="control">
-        <input id="overrideInput" type="number" step="0.1" min="1" placeholder="multiplier (e.g. 1.5)" />
-        <button id="overrideBtn" class="primary">Override</button>
-        <button id="resetBtn" class="ghost">Reset</button>
-      </div>
-    </div>
+    <h3>⚡ Surge Engine</h3>
     <canvas id="surgeChart"></canvas>
     <div id="surgeHistory" style="margin-top:12px;"></div>
+  </section>
+
+  <section id="heatmap">
+    <h3>🗺️ Surge Heatmap</h3>
+    <div style="position:relative;">
+      <div id="map"></div>
+      <div class="legend" id="mapLegend">
+        <div><b>Legend</b></div>
+        <div style="margin-top:6px;">● x1.0 — Low</div>
+        <div>● x1.5 — Medium</div>
+        <div>● x2.0 — High</div>
+      </div>
+    </div>
   </section>
 
   <section id="queue">
@@ -95,175 +103,147 @@
     <canvas id="uptimeChart"></canvas>
   </section>
 
-  <script>
-    const API = "http://localhost:3001";
-    let accessToken = localStorage.getItem("adminAccessToken");
-    let sessionId = localStorage.getItem("adminSessionId");
+<script>
+  const API = "http://localhost:3001";
+  let accessToken = localStorage.getItem("adminAccessToken");
+  document.getElementById("loginBtn").addEventListener("click", login);
+  document.getElementById("logoutBtn").addEventListener("click", logout);
+  document.querySelectorAll(".tabs button").forEach(btn => btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  }));
 
-    document.getElementById("loginBtn").addEventListener("click", login);
-    document.getElementById("logoutBtn").addEventListener("click", logout);
-    document.querySelectorAll(".tabs button").forEach(btn=>{
-      btn.addEventListener("click",()=>{
-        document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
-        document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById(btn.dataset.tab).classList.add("active");
+  async function login(){
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password })
       });
-    });
-
-    async function login(){
-      const email=document.getElementById("email").value;
-      const password=document.getElementById("password").value;
-      try{
-        const res=await fetch(`${API}/auth/login`,{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({email,password})
-        });
-        if(!res.ok)throw new Error("Login failed");
-        const data=await res.json();
-        accessToken=data.accessToken;
-        localStorage.setItem("adminAccessToken",accessToken);
-        if(data.sessionId)localStorage.setItem("adminSessionId",String(data.sessionId));
-        document.getElementById("loginOverlay").style.display="none";
-        document.getElementById("logoutBtn").style.display="inline-block";
-        document.getElementById("userStatus").innerText=data.user.email;
-        initDashboard();
-      }catch(err){alert("❌ "+err.message);}
-    }
-
-    async function logout(){
-      const sid=localStorage.getItem("adminSessionId");
-      const token=localStorage.getItem("adminAccessToken");
-      try{
-        if(sid&&token){
-          await fetch(`${API}/auth/logout`,{
-            method:"POST",
-            headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
-            body:JSON.stringify({sessionId:Number(sid)})
-          });
-        }
-      }catch{}
-      localStorage.clear();
-      document.getElementById("logoutBtn").style.display="none";
-      document.getElementById("loginOverlay").style.display="flex";
-      document.getElementById("userStatus").innerText="Not logged in";
-    }
-
-    async function apiGet(url){
-      const token=localStorage.getItem("adminAccessToken");
-      if(!token)return null;
-      const res=await fetch(`${API}${url}`,{headers:{Authorization:`Bearer ${token}`}});
-      if(res.status===401){alert("Session expired, please log in again.");logout();return null;}
-      try{return await res.json();}catch{return null;}
-    }
-
-    // --- Surge Live Graph ---
-    const surgeCtx=document.getElementById("surgeChart").getContext("2d");
-    const surgeChart=new Chart(surgeCtx,{
-      type:"line",
-      data:{labels:[],datasets:[{label:"Surge Multiplier",data:[],borderColor:"#00eaff",fill:true,backgroundColor:"rgba(0,234,255,0.15)"}]},
-      options:{plugins:{legend:{labels:{color:"#fff"}}},scales:{y:{beginAtZero:false}}}
-    });
-
-    function pushSurgePoint(mult,demand,supply){
-      const now=new Date().toLocaleTimeString();
-      surgeChart.data.labels.push(now);
-      surgeChart.data.datasets[0].data.push(mult);
-      if(surgeChart.data.labels.length>30){surgeChart.data.labels.shift();surgeChart.data.datasets[0].data.shift();}
-      surgeChart.update();
-      document.getElementById("surgeValue").innerText=`x${Number(mult).toFixed(2)}`;
-      document.getElementById("surgeMeta").innerText=`demand: ${demand} — supply: ${supply}`;
-      const hist=document.getElementById("surgeHistory");
-      hist.innerHTML=`<div class="small">x${Number(mult).toFixed(2)} • demand ${demand} • supply ${supply} • ${new Date().toLocaleTimeString()}</div>`+hist.innerHTML;
-      while(hist.children.length>8)hist.removeChild(hist.lastChild);
-    }
-
-    function connectSurgeSocket(){
-      const s=io(`${API}/surge-live`);
-      s.on("surge_update",payload=>{
-        pushSurgePoint(payload.multiplier,payload.demand,payload.supply);
-      });
-      s.on("connect_error",async()=>{
-        const stat=await apiGet("/admin/surge/status");
-        if(stat)pushSurgePoint(stat.multiplier,stat.demand,stat.supply);
-      });
-    }
-
-    document.getElementById("overrideBtn").addEventListener("click",async()=>{
-      const val=parseFloat(document.getElementById("overrideInput").value);
-      if(!val||val<1)return alert("Enter a valid multiplier >= 1");
-      const res=await fetch(`${API}/admin/surge/override`,{
-        method:"POST",
-        headers:{"Content-Type":"application/json",Authorization:`Bearer ${localStorage.getItem('adminAccessToken')}`},
-        body:JSON.stringify({multiplier:val,setBy:"admin-ui"})
-      });
-      alert(res.ok?"✅ Override applied":"❌ Override failed");
-    });
-
-    document.getElementById("resetBtn").addEventListener("click",async()=>{
-      const res=await fetch(`${API}/admin/surge/reset`,{method:"POST",headers:{Authorization:`Bearer ${localStorage.getItem('adminAccessToken')}`}});
-      alert(res.ok?"✅ Surge reset / recalculated":"❌ Reset failed");
-    });
-
-    // --- Audit + Metrics + Queue reused ---
-    const auditCtx=document.getElementById("auditChart").getContext("2d");
-    const auditChart=new Chart(auditCtx,{type:"line",data:{labels:[],datasets:[{label:"Audit Events",data:[],borderColor:"#00eaff",fill:true,backgroundColor:"rgba(0,234,255,0.2)"}]},options:{plugins:{legend:{labels:{color:"#fff"}}}}});
-    const auditFeed=document.getElementById("auditFeed");
-    function addAuditEvent(e){
-      const div=document.createElement("div");
-      div.className="event";
-      div.innerHTML=`<b>${e.eventType}</b> — ${e.email||"N/A"} (${e.role||"?"})<br><small>${new Date(e.timestamp).toLocaleTimeString()}</small>`;
-      auditFeed.prepend(div);
-      const now=new Date().toLocaleTimeString();
-      auditChart.data.labels.push(now);
-      auditChart.data.datasets[0].data.push(auditChart.data.datasets[0].data.length+1);
-      if(auditChart.data.labels.length>15){auditChart.data.labels.shift();auditChart.data.datasets[0].data.shift();}
-      auditChart.update();
-    }
-
-    const metricsCtx=document.getElementById("metricsChart").getContext("2d");
-    const metricsChart=new Chart(metricsCtx,{type:"line",data:{labels:[],datasets:[{label:"CPU",data:[],borderColor:"#00eaff"},{label:"Memory",data:[],borderColor:"#00ff99"}]},options:{plugins:{legend:{labels:{color:"#fff"}}}}});
-    async function fetchMetrics(){
-      const m=await apiGet("/admin/metrics");
-      if(!m)return;
-      const sys=m.system;
-      document.getElementById("metricsTable").innerHTML=`<tr><td>Hostname</td><td>${sys.hostname}</td></tr><tr><td>CPU Load</td><td>${sys.cpuLoad1m}</td></tr><tr><td>Memory</td><td>${sys.usedMemMB}/${sys.totalMemMB} MB</td></tr>`;
-      const now=new Date().toLocaleTimeString();
-      metricsChart.data.labels.push(now);
-      metricsChart.data.datasets[0].data.push(sys.cpuLoad1m);
-      metricsChart.data.datasets[1].data.push(sys.usedMemMB);
-      if(metricsChart.data.labels.length>10){metricsChart.data.labels.shift();metricsChart.data.datasets.forEach(d=>d.data.shift());}
-      metricsChart.update();
-    }
-
-    async function fetchQueue(){
-      const q=await apiGet("/admin/queue/status");
-      const box=document.getElementById("queueStatus");
-      if(!q?.queues){box.innerText="No data";return;}
-      box.innerHTML="";
-      Object.entries(q.queues).forEach(([name,s])=>{
-        box.innerHTML+=`<div><b>${name.toUpperCase()}</b>: Active ${s.active||0}, Waiting ${s.waiting||0}, ✅ ${s.completed||0}, ❌ ${s.failed||0}</div>`;
-      });
-    }
-
-    async function initDashboard(){
-      connectSurgeSocket();
-      const s=await apiGet('/admin/surge/status');
-      if(s)pushSurgePoint(s.multiplier,s.demand,s.supply);
-      await fetchMetrics();
-      await fetchQueue();
-      const logs=await apiGet("/admin/audit/logs?page=1&limit=10");
-      logs?.logs?.forEach(addAuditEvent);
-      setInterval(fetchMetrics,10000);
-      setInterval(fetchQueue,10000);
-    }
-
-    if(accessToken){
-      document.getElementById("loginOverlay").style.display="none";
-      document.getElementById("logoutBtn").style.display="inline-block";
+      if(!res.ok) throw new Error('Login failed');
+      const data = await res.json();
+      accessToken = data.accessToken;
+      localStorage.setItem('adminAccessToken', accessToken);
+      if (data.sessionId) localStorage.setItem('adminSessionId', String(data.sessionId));
+      document.getElementById("loginOverlay").style.display = 'none';
+      document.getElementById("logoutBtn").style.display = 'inline-block';
+      document.getElementById("userStatus").innerText = data.user.email;
       initDashboard();
-    }
-  </script>
+    } catch (err) { alert('❌ ' + err.message); }
+  }
+
+  async function logout(){
+    const sid = localStorage.getItem('adminSessionId');
+    const token = localStorage.getItem('adminAccessToken');
+    try {
+      if (sid && token) {
+        await fetch(`${API}/auth/logout`, {
+          method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+          body: JSON.stringify({ sessionId: Number(sid) }),
+        });
+      }
+    } catch {}
+    localStorage.clear();
+    document.getElementById("logoutBtn").style.display = 'none';
+    document.getElementById("loginOverlay").style.display = 'flex';
+    document.getElementById("userStatus").innerText = 'Not logged in';
+  }
+
+  async function apiGet(url) {
+    const token = localStorage.getItem('adminAccessToken');
+    if (!token) return null;
+    const res = await fetch(`${API}${url}`, { headers: { Authorization: `Bearer ${token}` }});
+    if (res.status === 401) { alert('Session expired, please log in again.'); logout(); return null; }
+    try { return await res.json(); } catch { return null; }
+  }
+
+  // ---------- MAP (Leaflet) ----------
+  const map = L.map('map', { center: [28.61, 77.20], zoom: 12 }); // default to New Delhi lat/lon if you want to change
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+  const zoneLayer = L.layerGroup().addTo(map);
+  function colorFor(mult) {
+    if (mult >= 2) return '#ff4d4f';      // high
+    if (mult >= 1.5) return '#ffb020';    // medium
+    return '#00eaff';                     // low
+  }
+  function radiusFor(mult) {
+    // radius meters
+    return Math.min(800, 150 + (mult - 1) * 500);
+  }
+
+  // socket connection for geo-surge
+  function connectGeoSocket() {
+    const s = io(`${API}/geo-surge-live`);
+    s.on('connect', () => console.log('geo socket connected'));
+    s.on('geo_update', payload => {
+      const zones = payload.zones || [];
+      // render zones
+      zoneLayer.clearLayers();
+      zones.forEach(z => {
+        const c = L.circle([z.lat, z.lon], {
+          radius: radiusFor(z.multiplier),
+          color: colorFor(z.multiplier),
+          fillColor: colorFor(z.multiplier),
+          fillOpacity: 0.25,
+          weight: 1
+        }).addTo(zoneLayer);
+        c.bindPopup(`<b>Multiplier: x${z.multiplier}</b><br/>Count: ${z.count}`);
+      });
+      if (zones.length) {
+        // center map to the hottest zone at first update
+        const hot = zones[0];
+        map.setView([hot.lat, hot.lon], 13);
+      }
+    });
+    s.on('connect_error', async () => {
+      // fallback to manual fetch (if you later add REST endpoint)
+      console.warn('geo socket connection failed');
+    });
+  }
+
+  // Minimal charts/audit/metrics reuse (kept small for brevity)
+  const auditCtx = document.getElementById("auditChart").getContext("2d");
+  const auditChart = new Chart(auditCtx, { type: "line", data: { labels: [], datasets: [{ label: "Audit Events", data: [], borderColor: "#00eaff", fill: true, backgroundColor: "rgba(0,234,255,0.2)" }] } });
+  const auditFeed = document.getElementById("auditFeed");
+  function addAuditEvent(e) {
+    const div = document.createElement('div'); div.className = 'event';
+    div.innerHTML = `<b>${e.eventType}</b> — ${e.email || 'N/A'} (${e.role || '?'})<br/><small>${new Date(e.timestamp).toLocaleTimeString()}</small>`;
+    auditFeed.prepend(div);
+  }
+  const metricsCtx = document.getElementById('metricsChart').getContext('2d');
+  const metricsChart = new Chart(metricsCtx, { type: 'line', data: { labels: [], datasets: [{ label: 'CPU', data: [] }, { label: 'Memory', data: [] }] } });
+
+  async function fetchMetrics() {
+    const m = await apiGet('/admin/metrics'); if (!m) return;
+    const sys = m.system;
+    document.getElementById('metricsTable').innerHTML = `<tr><td>Hostname</td><td>${sys.hostname}</td></tr><tr><td>CPU Load</td><td>${sys.cpuLoad1m}</td></tr><tr><td>Memory</td><td>${sys.usedMemMB}/${sys.totalMemMB} MB</td></tr>`;
+  }
+  async function fetchQueue() {
+    const q = await apiGet('/admin/queue/status'); const box = document.getElementById('queueStatus');
+    if (!q?.queues) { box.innerText = 'No data'; return; }
+    box.innerHTML = ''; Object.entries(q.queues).forEach(([name, s]) => {
+      box.innerHTML += `<div><b>${name.toUpperCase()}</b>: Active ${s.active||0}, Waiting ${s.waiting||0}, ✅ ${s.completed||0}, ❌ ${s.failed||0}</div>`;
+    });
+  }
+
+  async function initDashboard(){
+    connectGeoSocket();
+    await fetchMetrics();
+    await fetchQueue();
+    const logs = await apiGet('/admin/audit/logs?page=1&limit=10');
+    logs?.logs?.forEach(addAuditEvent);
+    setInterval(fetchMetrics, 10000); setInterval(fetchQueue, 10000);
+  }
+
+  if (accessToken) {
+    document.getElementById("loginOverlay").style.display = 'none';
+    document.getElementById("logoutBtn").style.display = 'inline-block';
+    initDashboard();
+  }
+</script>
 </body>
 </html>

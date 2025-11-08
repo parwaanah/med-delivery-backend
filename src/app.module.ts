@@ -17,6 +17,7 @@ import { UtilsModule } from './utils/utils.module';
 import { AdminModule } from './admin/admin.module';
 import { HealthModule } from './health/health.module';
 import { SurgeModule } from './surge/surge.module';
+import { GeoSurgeModule } from './geosurge/geo-surge.module';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { SurgeModule } from './surge/surge.module';
     QueueModule,
     AdminModule,
     WsModule,
-    SurgeModule
+    SurgeModule,
+    GeoSurgeModule
   ],
   providers: [NotificationService, GlobalLogger],
 })

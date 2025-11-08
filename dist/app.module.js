@@ -25,6 +25,7 @@ const utils_module_1 = require("./utils/utils.module");
 const admin_module_1 = require("./admin/admin.module");
 const health_module_1 = require("./health/health.module");
 const surge_module_1 = require("./surge/surge.module");
+const geo_surge_module_1 = require("./geosurge/geo-surge.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(request_logger_middleware_1.RequestLoggerMiddleware).forRoutes('*');
@@ -49,7 +50,8 @@ exports.AppModule = AppModule = __decorate([
             queue_module_1.QueueModule,
             admin_module_1.AdminModule,
             ws_module_1.WsModule,
-            surge_module_1.SurgeModule
+            surge_module_1.SurgeModule,
+            geo_surge_module_1.GeoSurgeModule
         ],
         providers: [notification_service_1.NotificationService, global_logger_service_1.GlobalLogger],
     })
