@@ -5,15 +5,16 @@ import { OrdersController } from './orders.controller';
 import { PrismaService } from '../utils/prisma.service';
 import { NotificationService } from '../utils/notification.service';
 import { WsGateway } from '../ws/ws.gateway';
-import { QueueModule } from '../queues/queue.module';
-import { SurgeModule } from '../surge/surge.module'; // ✅ import SurgeModule
-import { UtilsModule } from '../utils/utils.module';
+import { ConfigService } from '@nestjs/config';
+import { SurgeModule } from '../surge/surge.module';
+import { GeoSurgeModule } from '../geosurge/geo-surge.module'; // ✅ import GeoSurgeModule
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
-    UtilsModule, // gives Prisma + Notification + Audit
-    QueueModule, // gives ORDER_ASSIGN_QUEUE
-    SurgeModule, // ✅ provides SurgeService
+    BullModule.registerQueue({ name: 'order_assign' }),
+    SurgeModule,
+    GeoSurgeModule, // ✅ make GeoSurgeService available here
   ],
   controllers: [OrdersController],
   providers: [
@@ -21,6 +22,7 @@ import { UtilsModule } from '../utils/utils.module';
     PrismaService,
     NotificationService,
     WsGateway,
+    ConfigService,
   ],
   exports: [OrdersService],
 })
