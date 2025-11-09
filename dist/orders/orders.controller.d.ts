@@ -67,17 +67,17 @@ export declare class OrdersController {
         riderId: number | null;
     })[]>;
     pharmacyRespond(req: any, orderId: string, dto: RespondOfferDto): Promise<{
-        ok: boolean;
-        assigned?: undefined;
-        offeredTo?: undefined;
+        status: import(".prisma/client").$Enums.OrderStatus;
+        createdAt: Date;
+        id: number;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        pharmacyId: number;
+        totalPrice: number;
+        customerId: number;
+        riderId: number | null;
     } | {
         ok: boolean;
-        assigned: boolean;
-        offeredTo?: undefined;
-    } | {
-        ok: boolean;
-        offeredTo: number[];
-        assigned?: undefined;
     }>;
     riderRespond(req: any, orderId: string, dto: RespondOfferDto): Promise<{
         status: import(".prisma/client").$Enums.OrderStatus;

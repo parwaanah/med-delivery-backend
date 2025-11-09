@@ -17,6 +17,7 @@ let UtilsModule = class UtilsModule {
 };
 exports.UtilsModule = UtilsModule;
 exports.UtilsModule = UtilsModule = __decorate([
+    (0, common_1.Global)(),
     (0, common_1.Module)({
         imports: [ws_module_1.WsModule],
         providers: [

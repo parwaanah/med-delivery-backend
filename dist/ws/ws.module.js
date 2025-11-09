@@ -8,17 +8,24 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WsModule = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
+const prisma_service_1 = require("../utils/prisma.service");
 const ws_gateway_1 = require("./ws.gateway");
 const audit_live_gateway_1 = require("./audit-live.gateway");
 const rider_live_gateway_1 = require("./rider-live.gateway");
 const surge_live_gateway_1 = require("./surge-live.gateway");
-const prisma_service_1 = require("../utils/prisma.service");
 let WsModule = class WsModule {
 };
 exports.WsModule = WsModule;
 exports.WsModule = WsModule = __decorate([
     (0, common_1.Global)(),
     (0, common_1.Module)({
+        imports: [
+            jwt_1.JwtModule.register({
+                secret: process.env.JWT_SECRET || 'supersecretkey',
+                signOptions: { expiresIn: '1h' },
+            }),
+        ],
         providers: [
             prisma_service_1.PrismaService,
             ws_gateway_1.WsGateway,

@@ -20,11 +20,9 @@ const rider_dto_1 = require("./dto/rider.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
-const surge_service_1 = require("../surge/surge.service");
 let RidersController = class RidersController {
-    constructor(ridersService, surge) {
+    constructor(ridersService) {
         this.ridersService = ridersService;
-        this.surge = surge;
     }
     findAll() {
         return this.ridersService.findAll();
@@ -38,19 +36,14 @@ let RidersController = class RidersController {
     update(id, dto) {
         return this.ridersService.update(Number(id), dto);
     }
+    updateStatus(id, dto) {
+        return this.ridersService.updateStatus(Number(id), dto);
+    }
+    async updateLocation(id, body) {
+        return this.ridersService.updateLocation(Number(id), body.lat, body.lon);
+    }
     remove(id) {
         return this.ridersService.remove(Number(id));
-    }
-    async updateStatus(id, dto) {
-        const result = await this.ridersService.updateStatus(Number(id), dto);
-        try {
-            const isAvailable = dto.status?.toUpperCase() === 'AVAILABLE';
-            await this.surge.recordRiderAvailability(Number(id), isAvailable);
-        }
-        catch (err) {
-            console.error('⚠️ Surge supply update failed:', err);
-        }
-        return result;
     }
 };
 exports.RidersController = RidersController;
@@ -91,6 +84,26 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], RidersController.prototype, "update", null);
 __decorate([
+    (0, common_1.Patch)(':id/status'),
+    (0, roles_decorator_1.Roles)('admin', 'rider'),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, rider_dto_1.UpdateStatusDto]),
+    __metadata("design:returntype", void 0)
+], RidersController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Patch)(':id/location'),
+    (0, roles_decorator_1.Roles)('rider', 'admin'),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], RidersController.prototype, "updateLocation", null);
+__decorate([
     (0, common_1.Delete)(':id'),
     (0, roles_decorator_1.Roles)('admin'),
     openapi.ApiResponse({ status: 200 }),
@@ -99,19 +112,8 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], RidersController.prototype, "remove", null);
-__decorate([
-    (0, common_1.Patch)(':id/status'),
-    (0, roles_decorator_1.Roles)('admin', 'rider'),
-    openapi.ApiResponse({ status: 200 }),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, rider_dto_1.UpdateStatusDto]),
-    __metadata("design:returntype", Promise)
-], RidersController.prototype, "updateStatus", null);
 exports.RidersController = RidersController = __decorate([
     (0, common_1.Controller)('riders'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    __metadata("design:paramtypes", [riders_service_1.RidersService,
-        surge_service_1.SurgeService])
+    __metadata("design:paramtypes", [riders_service_1.RidersService])
 ], RidersController);

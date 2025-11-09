@@ -6,6 +6,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -13,24 +14,37 @@ import { Logger } from '@nestjs/common';
 })
 export class AuditLiveGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server!: Server; // ✅ fixed: definite assignment assertion
+  server!: Server;
 
   private readonly logger = new Logger(AuditLiveGateway.name);
 
+  constructor(private readonly jwt: JwtService) {}
+
   handleConnection(client: Socket) {
-    this.logger.log(`🟢 Admin connected: ${client.id}`);
+    try {
+      const token = client.handshake.headers['authorization']?.toString().split(' ')[1];
+      if (!token) {
+        this.logger.warn(`❌ Connection rejected: Missing token`);
+        client.disconnect(true);
+        return;
+      }
+
+      const decoded = this.jwt.verify(token);
+      this.logger.log(`🟢 ${decoded.role} connected: ${client.id}`);
+      client.emit('welcome', { event: 'connected', role: decoded.role, userId: decoded.sub });
+    } catch (err: any) {
+      this.logger.warn(`❌ Invalid token: ${err.message}`);
+      client.disconnect(true);
+    }
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`🔴 Admin disconnected: ${client.id}`);
+    this.logger.log(`🔴 Disconnected: ${client.id}`);
   }
 
-  /**
-   * 🔔 Emit audit events to all connected clients
-   */
   emitAuditEvent(event: any) {
     if (!this.server) return;
     this.server.emit('audit_event', event);
-    this.logger.debug(`📡 Emitted audit event: ${JSON.stringify(event)}`);
+    this.logger.debug(`📡 Audit event → ${JSON.stringify(event)}`);
   }
 }

@@ -104,146 +104,148 @@
   </section>
 
 <script>
-  const API = "http://localhost:3001";
-  let accessToken = localStorage.getItem("adminAccessToken");
-  document.getElementById("loginBtn").addEventListener("click", login);
-  document.getElementById("logoutBtn").addEventListener("click", logout);
-  document.querySelectorAll(".tabs button").forEach(btn => btn.addEventListener("click", () => {
-    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(btn.dataset.tab).classList.add("active");
-  }));
+const API = "http://localhost:3001";
+let accessToken = localStorage.getItem("adminAccessToken");
 
-  async function login(){
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ email, password })
-      });
-      if(!res.ok) throw new Error('Login failed');
-      const data = await res.json();
-      accessToken = data.accessToken;
-      localStorage.setItem('adminAccessToken', accessToken);
-      if (data.sessionId) localStorage.setItem('adminSessionId', String(data.sessionId));
-      document.getElementById("loginOverlay").style.display = 'none';
-      document.getElementById("logoutBtn").style.display = 'inline-block';
-      document.getElementById("userStatus").innerText = data.user.email;
-      initDashboard();
-    } catch (err) { alert('❌ ' + err.message); }
-  }
+document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("logoutBtn").addEventListener("click", logout);
+document.querySelectorAll(".tabs button").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(btn.dataset.tab).classList.add("active");
+}));
 
-  async function logout(){
-    const sid = localStorage.getItem('adminSessionId');
-    const token = localStorage.getItem('adminAccessToken');
-    try {
-      if (sid && token) {
-        await fetch(`${API}/auth/logout`, {
-          method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
-          body: JSON.stringify({ sessionId: Number(sid) }),
-        });
-      }
-    } catch {}
-    localStorage.clear();
-    document.getElementById("logoutBtn").style.display = 'none';
-    document.getElementById("loginOverlay").style.display = 'flex';
-    document.getElementById("userStatus").innerText = 'Not logged in';
-  }
-
-  async function apiGet(url) {
-    const token = localStorage.getItem('adminAccessToken');
-    if (!token) return null;
-    const res = await fetch(`${API}${url}`, { headers: { Authorization: `Bearer ${token}` }});
-    if (res.status === 401) { alert('Session expired, please log in again.'); logout(); return null; }
-    try { return await res.json(); } catch { return null; }
-  }
-
-  // ---------- MAP (Leaflet) ----------
-  const map = L.map('map', { center: [28.61, 77.20], zoom: 12 }); // default to New Delhi lat/lon if you want to change
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-  const zoneLayer = L.layerGroup().addTo(map);
-  function colorFor(mult) {
-    if (mult >= 2) return '#ff4d4f';      // high
-    if (mult >= 1.5) return '#ffb020';    // medium
-    return '#00eaff';                     // low
-  }
-  function radiusFor(mult) {
-    // radius meters
-    return Math.min(800, 150 + (mult - 1) * 500);
-  }
-
-  // socket connection for geo-surge
-  function connectGeoSocket() {
-    const s = io(`${API}/geo-surge-live`);
-    s.on('connect', () => console.log('geo socket connected'));
-    s.on('geo_update', payload => {
-      const zones = payload.zones || [];
-      // render zones
-      zoneLayer.clearLayers();
-      zones.forEach(z => {
-        const c = L.circle([z.lat, z.lon], {
-          radius: radiusFor(z.multiplier),
-          color: colorFor(z.multiplier),
-          fillColor: colorFor(z.multiplier),
-          fillOpacity: 0.25,
-          weight: 1
-        }).addTo(zoneLayer);
-        c.bindPopup(`<b>Multiplier: x${z.multiplier}</b><br/>Count: ${z.count}`);
-      });
-      if (zones.length) {
-        // center map to the hottest zone at first update
-        const hot = zones[0];
-        map.setView([hot.lat, hot.lon], 13);
-      }
+async function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password })
     });
-    s.on('connect_error', async () => {
-      // fallback to manual fetch (if you later add REST endpoint)
-      console.warn('geo socket connection failed');
-    });
-  }
-
-  // Minimal charts/audit/metrics reuse (kept small for brevity)
-  const auditCtx = document.getElementById("auditChart").getContext("2d");
-  const auditChart = new Chart(auditCtx, { type: "line", data: { labels: [], datasets: [{ label: "Audit Events", data: [], borderColor: "#00eaff", fill: true, backgroundColor: "rgba(0,234,255,0.2)" }] } });
-  const auditFeed = document.getElementById("auditFeed");
-  function addAuditEvent(e) {
-    const div = document.createElement('div'); div.className = 'event';
-    div.innerHTML = `<b>${e.eventType}</b> — ${e.email || 'N/A'} (${e.role || '?'})<br/><small>${new Date(e.timestamp).toLocaleTimeString()}</small>`;
-    auditFeed.prepend(div);
-  }
-  const metricsCtx = document.getElementById('metricsChart').getContext('2d');
-  const metricsChart = new Chart(metricsCtx, { type: 'line', data: { labels: [], datasets: [{ label: 'CPU', data: [] }, { label: 'Memory', data: [] }] } });
-
-  async function fetchMetrics() {
-    const m = await apiGet('/admin/metrics'); if (!m) return;
-    const sys = m.system;
-    document.getElementById('metricsTable').innerHTML = `<tr><td>Hostname</td><td>${sys.hostname}</td></tr><tr><td>CPU Load</td><td>${sys.cpuLoad1m}</td></tr><tr><td>Memory</td><td>${sys.usedMemMB}/${sys.totalMemMB} MB</td></tr>`;
-  }
-  async function fetchQueue() {
-    const q = await apiGet('/admin/queue/status'); const box = document.getElementById('queueStatus');
-    if (!q?.queues) { box.innerText = 'No data'; return; }
-    box.innerHTML = ''; Object.entries(q.queues).forEach(([name, s]) => {
-      box.innerHTML += `<div><b>${name.toUpperCase()}</b>: Active ${s.active||0}, Waiting ${s.waiting||0}, ✅ ${s.completed||0}, ❌ ${s.failed||0}</div>`;
-    });
-  }
-
-  async function initDashboard(){
-    connectGeoSocket();
-    await fetchMetrics();
-    await fetchQueue();
-    const logs = await apiGet('/admin/audit/logs?page=1&limit=10');
-    logs?.logs?.forEach(addAuditEvent);
-    setInterval(fetchMetrics, 10000); setInterval(fetchQueue, 10000);
-  }
-
-  if (accessToken) {
+    if(!res.ok) throw new Error('Login failed');
+    const data = await res.json();
+    accessToken = data.accessToken;
+    localStorage.setItem('adminAccessToken', accessToken);
+    if (data.sessionId) localStorage.setItem('adminSessionId', String(data.sessionId));
     document.getElementById("loginOverlay").style.display = 'none';
     document.getElementById("logoutBtn").style.display = 'inline-block';
-    initDashboard();
-  }
+    document.getElementById("userStatus").innerText = data.user.email;
+    await initDashboard();
+  } catch (err) { alert('❌ ' + err.message); }
+}
+
+async function logout(){
+  const sid = localStorage.getItem('adminSessionId');
+  const token = localStorage.getItem('adminAccessToken');
+  try {
+    if (sid && token) {
+      await fetch(`${API}/auth/logout`, {
+        method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+        body: JSON.stringify({ sessionId: Number(sid) }),
+      });
+    }
+  } catch {}
+  localStorage.clear();
+  document.getElementById("logoutBtn").style.display = 'none';
+  document.getElementById("loginOverlay").style.display = 'flex';
+  document.getElementById("userStatus").innerText = 'Not logged in';
+}
+
+async function apiGet(url) {
+  const token = localStorage.getItem('adminAccessToken');
+  if (!token) return null;
+  const res = await fetch(`${API}${url}`, { headers: { Authorization: `Bearer ${token}` }});
+  if (res.status === 401) { alert('Session expired, please log in again.'); logout(); return null; }
+  try { return await res.json(); } catch { return null; }
+}
+
+// ---------- MAP (Leaflet) ----------
+const map = L.map('map', { center: [28.61, 77.20], zoom: 12 });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+const zoneLayer = L.layerGroup().addTo(map);
+
+function colorFor(mult){ if(mult>=2) return '#ff4d4f'; if(mult>=1.5) return '#ffb020'; return '#00eaff'; }
+function radiusFor(mult){ return Math.min(800,150+(mult-1)*500); }
+
+async function loadGeoZones(){
+  const token = localStorage.getItem('adminAccessToken');
+  if(!token) return;
+  try {
+    const res = await fetch(`${API}/admin/geo-surge/status`, { headers: { Authorization: `Bearer ${token}` }});
+    if(res.ok){
+      const data = await res.json();
+      renderZones(data.zones || []);
+      console.log('✅ GeoZones loaded');
+    }
+  } catch(e){ console.warn('Geo REST error',e); }
+}
+
+function connectGeoSocket(){
+  const token = localStorage.getItem('adminAccessToken');
+  if(!token) return;
+  const s = io(`${API}/geo-surge-live`, { auth:{token}, transports:['websocket'] });
+  s.on('connect',()=>console.log('🌐 GeoSurge socket connected'));
+  s.on('geo_update',payload=>renderZones(payload.zones||[]));
+  s.on('connect_error',()=>{ console.warn('Geo socket failed, using REST fallback'); loadGeoZones(); });
+}
+
+function renderZones(zones){
+  zoneLayer.clearLayers();
+  zones.forEach(z=>{
+    const c=L.circle([z.lat,z.lon],{
+      radius:radiusFor(z.multiplier),
+      color:colorFor(z.multiplier),
+      fillColor:colorFor(z.multiplier),
+      fillOpacity:0.25,weight:1
+    }).addTo(zoneLayer);
+    c.bindPopup(`<b>Multiplier: x${z.multiplier}</b><br/>Count: ${z.count}`);
+  });
+  if(zones.length){ map.setView([zones[0].lat,zones[0].lon],13); }
+}
+
+// ---------- METRICS + AUDIT ----------
+const auditCtx=document.getElementById("auditChart").getContext("2d");
+const auditChart=new Chart(auditCtx,{type:"line",data:{labels:[],datasets:[{label:"Audit Events",data:[],borderColor:"#00eaff",fill:true,backgroundColor:"rgba(0,234,255,0.2)"}]}});
+
+function addAuditEvent(e){
+  const div=document.createElement('div'); div.className='event';
+  div.innerHTML=`<b>${e.eventType}</b> — ${e.email||'N/A'} (${e.role||'?'})<br/><small>${new Date(e.timestamp).toLocaleTimeString()}</small>`;
+  document.getElementById("auditFeed").prepend(div);
+}
+
+async function fetchMetrics(){
+  const m=await apiGet('/admin/metrics'); if(!m) return;
+  const sys=m.system;
+  document.getElementById('metricsTable').innerHTML=`<tr><td>Hostname</td><td>${sys.hostname}</td></tr><tr><td>CPU Load</td><td>${sys.cpuLoad1m}</td></tr><tr><td>Memory</td><td>${sys.usedMemMB}/${sys.totalMemMB} MB</td></tr>`;
+}
+
+async function fetchQueue(){
+  const q=await apiGet('/admin/queue/status');
+  const box=document.getElementById('queueStatus');
+  if(!q?.queues){ box.innerText='No data'; return; }
+  box.innerHTML=''; Object.entries(q.queues).forEach(([name,s])=>{
+    box.innerHTML+=`<div><b>${name.toUpperCase()}</b>: Active ${s.active||0}, Waiting ${s.waiting||0}, ✅ ${s.completed||0}, ❌ ${s.failed||0}</div>`;
+  });
+}
+
+async function initDashboard(){
+  connectGeoSocket();
+  await loadGeoZones();
+  await fetchMetrics();
+  await fetchQueue();
+  const logs=await apiGet('/admin/audit/logs?page=1&limit=10');
+  logs?.logs?.forEach(addAuditEvent);
+  setInterval(fetchMetrics,10000);
+  setInterval(fetchQueue,10000);
+}
+
+if(accessToken){
+  document.getElementById("loginOverlay").style.display='none';
+  document.getElementById("logoutBtn").style.display='inline-block';
+  initDashboard();
+}
 </script>
 </body>
 </html>

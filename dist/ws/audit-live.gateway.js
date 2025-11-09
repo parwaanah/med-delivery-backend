@@ -14,21 +14,37 @@ exports.AuditLiveGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
 let AuditLiveGateway = AuditLiveGateway_1 = class AuditLiveGateway {
-    constructor() {
+    constructor(jwt) {
+        this.jwt = jwt;
         this.logger = new common_1.Logger(AuditLiveGateway_1.name);
     }
     handleConnection(client) {
-        this.logger.log(`🟢 Admin connected: ${client.id}`);
+        try {
+            const token = client.handshake.headers['authorization']?.toString().split(' ')[1];
+            if (!token) {
+                this.logger.warn(`❌ Connection rejected: Missing token`);
+                client.disconnect(true);
+                return;
+            }
+            const decoded = this.jwt.verify(token);
+            this.logger.log(`🟢 ${decoded.role} connected: ${client.id}`);
+            client.emit('welcome', { event: 'connected', role: decoded.role, userId: decoded.sub });
+        }
+        catch (err) {
+            this.logger.warn(`❌ Invalid token: ${err.message}`);
+            client.disconnect(true);
+        }
     }
     handleDisconnect(client) {
-        this.logger.log(`🔴 Admin disconnected: ${client.id}`);
+        this.logger.log(`🔴 Disconnected: ${client.id}`);
     }
     emitAuditEvent(event) {
         if (!this.server)
             return;
         this.server.emit('audit_event', event);
-        this.logger.debug(`📡 Emitted audit event: ${JSON.stringify(event)}`);
+        this.logger.debug(`📡 Audit event → ${JSON.stringify(event)}`);
     }
 };
 exports.AuditLiveGateway = AuditLiveGateway;
@@ -40,5 +56,6 @@ exports.AuditLiveGateway = AuditLiveGateway = AuditLiveGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: { origin: '*' },
         namespace: '/audit-live',
-    })
+    }),
+    __metadata("design:paramtypes", [jwt_1.JwtService])
 ], AuditLiveGateway);

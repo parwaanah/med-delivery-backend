@@ -7,9 +7,8 @@ import { GeoSurgeLiveGateway } from '../ws/geo-surge-live.gateway';
 import { GeoSurgeController } from './geo-surge.controller';
 
 @Module({
-  imports: [],
   controllers: [GeoSurgeController],
   providers: [ConfigService, PrismaService, GeoSurgeService, GeoSurgeLiveGateway],
-  exports: [GeoSurgeService],
+  exports: [GeoSurgeService], // ✅ export so other modules (like RidersModule) can inject it
 })
 export class GeoSurgeModule {}

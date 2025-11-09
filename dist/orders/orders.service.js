@@ -21,20 +21,21 @@ const bullmq_1 = require("bullmq");
 const ws_gateway_1 = require("../ws/ws.gateway");
 const config_1 = require("@nestjs/config");
 const surge_service_1 = require("../surge/surge.service");
+const geo_surge_service_1 = require("../geosurge/geo-surge.service");
 let OrdersService = OrdersService_1 = class OrdersService {
-    constructor(prisma, notify, ws, config, surge, orderAssignQueue) {
+    constructor(prisma, notify, ws, config, surge, geoSurge, orderAssignQueue) {
         this.prisma = prisma;
         this.notify = notify;
         this.ws = ws;
         this.config = config;
         this.surge = surge;
+        this.geoSurge = geoSurge;
         this.orderAssignQueue = orderAssignQueue;
         this.logger = new common_1.Logger(OrdersService_1.name);
     }
     async createOrder(customerId, dto) {
-        if (!customerId || isNaN(Number(customerId))) {
+        if (!customerId || isNaN(Number(customerId)))
             throw new common_1.BadRequestException('Invalid or missing customer ID.');
-        }
         if (!dto.items?.length)
             throw new common_1.BadRequestException('No items provided.');
         const total = dto.items.reduce((s, it) => s + it.price * it.quantity, 0);
@@ -43,6 +44,14 @@ let OrdersService = OrdersService_1 = class OrdersService {
         }
         catch (err) {
             this.logger.warn('⚠️ Surge demand update failed:', err);
+        }
+        try {
+            if (dto.pickupLat && dto.pickupLon) {
+                await this.geoSurge.addPoint(`order:${Date.now()}`, dto.pickupLon, dto.pickupLat);
+            }
+        }
+        catch (err) {
+            this.logger.warn('⚠️ GeoSurge update failed:', err);
         }
         if (dto.pharmacyId) {
             const pharmacy = await this.prisma.user.findUnique({
@@ -125,100 +134,26 @@ let OrdersService = OrdersService_1 = class OrdersService {
         });
         return { order, candidates: pharmacyIds };
     }
-    async pharmacyRespond(pharmacyId, orderId, action) {
-        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found.');
-        if (order.status !== 'PENDING')
-            throw new common_1.BadRequestException('Order not pending.');
-        await this.prisma.orderOffer.updateMany({
-            where: { orderId, pharmacyId },
-            data: { status: action },
-        });
-        if (action === 'REJECTED') {
-            await this.notify.create(order.customerId, 'ORDER_REJECTED_BY_PHARMACY', `Order #${orderId} rejected by pharmacy ${pharmacyId}`, { orderId }, pharmacyId);
-            this.notify.sendAdminToast?.({
-                type: 'err',
-                title: 'Pharmacy Rejected',
-                text: `Order #${orderId} rejected by pharmacy ${pharmacyId}.`,
-            });
-            return { ok: true };
-        }
-        await this.prisma.order.update({
-            where: { id: orderId },
-            data: { status: 'ACCEPTED', pharmacyId },
-        });
-        await this.notify.create(order.customerId, 'ORDER_ACCEPTED_BY_PHARMACY', `Order #${orderId} accepted.`, { orderId }, pharmacyId);
-        const riders = await this.prisma.user.findMany({
-            where: { role: 'RIDER', status: 'AVAILABLE' },
-            take: 10,
-        });
-        if (!riders.length) {
-            await this.orderAssignQueue.add('check_assignment', { orderId }, { delay: 1000 * 60 * 3 });
-            await this.notify.create(order.customerId, 'NO_RIDERS_AVAILABLE', `No riders available for order ${orderId}.`, { orderId });
-            this.notify.sendAdminToast?.({
-                type: 'err',
-                title: 'No Riders Available',
-                text: `Order #${orderId} waiting for assignment.`,
-            });
-            return { ok: true, assigned: false };
-        }
-        for (const r of riders) {
-            await this.prisma.orderOffer.create({
-                data: { orderId, riderId: r.id, offeredTo: 'RIDER' },
-            });
-            await this.notify.create(r.id, 'ORDER_ASSIGNMENT_OFFER', `New order #${orderId} available.`, { orderId });
-            this.ws.notifyUser(r.id, 'order_offer', { orderId });
-        }
-        await this.orderAssignQueue.add('check_assignment', { orderId }, { delay: 1000 * 60 * 3 });
-        this.notify.sendAdminToast?.({
-            type: 'info',
-            title: 'Order Accepted',
-            text: `Order #${orderId} accepted and offered to riders.`,
-        });
-        return { ok: true, offeredTo: riders.map((r) => r.id) };
-    }
-    async riderRespond(riderId, orderId, action) {
-        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found.');
-        if (action === 'ACCEPTED') {
-            const updated = await this.prisma.order.update({
-                where: { id: orderId },
-                data: { riderId, status: 'OUT_FOR_DELIVERY' },
-            });
-            await this.prisma.user.update({ where: { id: riderId }, data: { status: 'BUSY' } });
-            await this.prisma.orderOffer.updateMany({ where: { orderId }, data: { status: 'EXPIRED' } });
-            await this.prisma.orderOffer.updateMany({ where: { orderId, riderId }, data: { status: 'ACCEPTED' } });
-            await this.notify.create(order.customerId, 'ORDER_OUT_FOR_DELIVERY', `Rider assigned for order #${orderId}.`, { orderId }, riderId);
-            await this.notify.create(order.pharmacyId, 'ORDER_ASSIGNED_TO_RIDER', `Rider ${riderId} assigned for order #${orderId}.`, { orderId }, riderId);
-            this.ws.notifyUser(order.customerId, 'order_out_for_delivery', { orderId, riderId });
-            this.notify.sendAdminToast?.({
-                type: 'ok',
-                title: 'Rider Accepted',
-                text: `Order #${orderId} → Rider ${riderId}`,
-            });
-            await this.surge.recordRiderAvailability(riderId, false);
-            return updated;
-        }
-        await this.prisma.orderOffer.updateMany({ where: { orderId, riderId }, data: { status: 'REJECTED' } });
-        this.notify.sendAdminToast?.({
-            type: 'err',
-            title: 'Rider Rejected',
-            text: `Order #${orderId} declined by Rider ${riderId}.`,
-        });
-        return { ok: true };
-    }
     async updateStage(riderId, orderId, stage, location) {
         const order = await this.prisma.order.findUnique({ where: { id: orderId } });
         if (!order)
             throw new common_1.NotFoundException('Order not found.');
         if (order.riderId !== riderId)
             throw new common_1.BadRequestException('Not assigned to this rider.');
-        await this.prisma.order.update({ where: { id: orderId }, data: { status: stage } });
+        await this.prisma.order.update({
+            where: { id: orderId },
+            data: { status: stage },
+        });
         if (stage === 'DELIVERED') {
-            await this.prisma.user.update({ where: { id: riderId }, data: { status: 'AVAILABLE' } });
+            await this.prisma.user.update({
+                where: { id: riderId },
+                data: { status: 'AVAILABLE' },
+            });
             await this.surge.recordRiderAvailability(riderId, true);
+            try {
+                await this.geoSurge.removePoint(`order:${orderId}`);
+            }
+            catch { }
             await this.notify.create(order.customerId, 'ORDER_DELIVERED', `Order #${orderId} delivered.`, { orderId }, riderId);
             this.notify.sendAdminToast?.({
                 type: 'ok',
@@ -226,20 +161,16 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 text: `Order #${orderId} completed by Rider ${riderId}.`,
             });
         }
-        else {
-            await this.notify.create(order.customerId, 'ORDER_UPDATE', `Order #${orderId} ${stage}.`, { orderId, stage }, riderId);
-            this.notify.sendAdminToast?.({
-                type: 'info',
-                title: 'Order Update',
-                text: `Order #${orderId} ${stage}.`,
-            });
-        }
         if (location)
             await this.prisma.user.update({
                 where: { id: riderId },
                 data: { latitude: location.lat, longitude: location.lng },
             });
-        this.ws.notifyUser(order.customerId, 'order_status_update', { orderId, stage, location });
+        this.ws.notifyUser(order.customerId, 'order_status_update', {
+            orderId,
+            stage,
+            location,
+        });
         return { ok: true };
     }
     async adminAssign(orderId, adminId, riderId) {
@@ -247,7 +178,10 @@ let OrdersService = OrdersService_1 = class OrdersService {
             where: { id: orderId },
             data: { riderId, status: 'OUT_FOR_DELIVERY' },
         });
-        await this.prisma.user.update({ where: { id: riderId }, data: { status: 'BUSY' } });
+        await this.prisma.user.update({
+            where: { id: riderId },
+            data: { status: 'BUSY' },
+        });
         await this.notify.create(updated.customerId, 'ORDER_ASSIGNED_BY_ADMIN', `Order #${orderId} assigned by admin.`, { orderId }, adminId);
         this.notify.sendAdminToast?.({
             type: 'ok',
@@ -256,24 +190,67 @@ let OrdersService = OrdersService_1 = class OrdersService {
         });
         return updated;
     }
+    async pharmacyRespond(pharmacyId, orderId, action) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found.');
+        if (action === 'REJECTED') {
+            await this.prisma.orderOffer.updateMany({
+                where: { orderId, pharmacyId },
+                data: { status: 'REJECTED' },
+            });
+            return { ok: true };
+        }
+        return this.prisma.order.update({
+            where: { id: orderId },
+            data: { pharmacyId, status: 'ACCEPTED' },
+        });
+    }
+    async riderRespond(riderId, orderId, action) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found.');
+        if (action === 'ACCEPTED') {
+            await this.surge.recordRiderAvailability(riderId, false);
+            return this.prisma.order.update({
+                where: { id: orderId },
+                data: { riderId, status: 'OUT_FOR_DELIVERY' },
+            });
+        }
+        await this.prisma.orderOffer.updateMany({
+            where: { orderId, riderId },
+            data: { status: 'REJECTED' },
+        });
+        return { ok: true };
+    }
     async findByUser(userId, role) {
         if (role === 'ADMIN')
             return this.prisma.order.findMany({ include: { items: true } });
         if (role === 'PHARMACY')
-            return this.prisma.order.findMany({ where: { pharmacyId: userId }, include: { items: true } });
+            return this.prisma.order.findMany({
+                where: { pharmacyId: userId },
+                include: { items: true },
+            });
         if (role === 'RIDER')
-            return this.prisma.order.findMany({ where: { riderId: userId }, include: { items: true } });
-        return this.prisma.order.findMany({ where: { customerId: userId }, include: { items: true } });
+            return this.prisma.order.findMany({
+                where: { riderId: userId },
+                include: { items: true },
+            });
+        return this.prisma.order.findMany({
+            where: { customerId: userId },
+            include: { items: true },
+        });
     }
 };
 exports.OrdersService = OrdersService;
 exports.OrdersService = OrdersService = OrdersService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __param(5, (0, common_1.Inject)('ORDER_ASSIGN_QUEUE')),
+    __param(6, (0, common_1.Inject)('ORDER_ASSIGN_QUEUE')),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         notification_service_1.NotificationService,
         ws_gateway_1.WsGateway,
         config_1.ConfigService,
         surge_service_1.SurgeService,
+        geo_surge_service_1.GeoSurgeService,
         bullmq_1.Queue])
 ], OrdersService);

@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateOrderDto = void 0;
+exports.CreateOrderDto = exports.OrderItemDto = void 0;
 const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
@@ -18,9 +18,10 @@ class OrderItemDto {
         return { medicineId: { required: false, type: () => Number }, name: { required: true, type: () => String }, quantity: { required: true, type: () => Number }, price: { required: true, type: () => Number } };
     }
 }
+exports.OrderItemDto = OrderItemDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], OrderItemDto.prototype, "medicineId", void 0);
 __decorate([
@@ -28,7 +29,7 @@ __decorate([
     __metadata("design:type", String)
 ], OrderItemDto.prototype, "name", void 0);
 __decorate([
-    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], OrderItemDto.prototype, "quantity", void 0);
 __decorate([
@@ -37,15 +38,10 @@ __decorate([
 ], OrderItemDto.prototype, "price", void 0);
 class CreateOrderDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { pharmacyId: { required: false, type: () => Number }, items: { required: true, type: () => [OrderItemDto] }, location: { required: false, type: () => Object } };
+        return { items: { required: true, type: () => [require("./create-order.dto").OrderItemDto] }, pharmacyId: { required: false, type: () => Number }, pickupLat: { required: false, type: () => Number }, pickupLon: { required: false, type: () => Number } };
     }
 }
 exports.CreateOrderDto = CreateOrderDto;
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    __metadata("design:type", Number)
-], CreateOrderDto.prototype, "pharmacyId", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
@@ -54,5 +50,16 @@ __decorate([
 ], CreateOrderDto.prototype, "items", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], CreateOrderDto.prototype, "location", void 0);
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateOrderDto.prototype, "pharmacyId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateOrderDto.prototype, "pickupLat", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateOrderDto.prototype, "pickupLon", void 0);

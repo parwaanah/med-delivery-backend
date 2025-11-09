@@ -14,12 +14,13 @@ const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateRiderDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { name: { required: true, type: () => String }, email: { required: true, type: () => String }, password: { required: true, type: () => String, minLength: 6 } };
+        return { name: { required: true, type: () => String }, email: { required: true, type: () => String }, password: { required: true, type: () => String }, latitude: { required: false, type: () => Number }, longitude: { required: false, type: () => Number } };
     }
 }
 exports.CreateRiderDto = CreateRiderDto;
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateRiderDto.prototype, "name", void 0);
 __decorate([
@@ -27,17 +28,29 @@ __decorate([
     __metadata("design:type", String)
 ], CreateRiderDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateRiderDto.prototype, "password", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateRiderDto.prototype, "latitude", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateRiderDto.prototype, "longitude", void 0);
 class UpdateRiderDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { name: { required: false, type: () => String }, email: { required: false, type: () => String } };
+        return { name: { required: false, type: () => String }, email: { required: false, type: () => String }, latitude: { required: false, type: () => Number }, longitude: { required: false, type: () => Number } };
     }
 }
 exports.UpdateRiderDto = UpdateRiderDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateRiderDto.prototype, "name", void 0);
 __decorate([
@@ -45,13 +58,24 @@ __decorate([
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], UpdateRiderDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateRiderDto.prototype, "latitude", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateRiderDto.prototype, "longitude", void 0);
 class UpdateStatusDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { status: { required: true, type: () => Object, enum: ['AVAILABLE', 'BUSY', 'OFFLINE'] } };
+        return { status: { required: true, type: () => String } };
     }
 }
 exports.UpdateStatusDto = UpdateStatusDto;
 __decorate([
-    (0, class_validator_1.IsIn)(['AVAILABLE', 'BUSY', 'OFFLINE']),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateStatusDto.prototype, "status", void 0);

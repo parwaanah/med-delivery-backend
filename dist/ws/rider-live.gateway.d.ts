@@ -8,6 +8,12 @@ export declare class RiderLiveGateway implements OnGatewayConnection, OnGatewayD
     constructor(prisma: PrismaService);
     handleConnection(client: Socket): void;
     handleDisconnect(client: Socket): void;
-    notifyRiderLocation(riderId: number, payload: any): void;
     notifyAdmins(event: string, payload: any): void;
+    broadcastRiderLocation(payload: {
+        id: number;
+        lat: number;
+        lon: number;
+        status: string;
+        timestamp: number;
+    }): void;
 }

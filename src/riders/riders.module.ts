@@ -3,12 +3,12 @@ import { Module } from '@nestjs/common';
 import { RidersService } from './riders.service';
 import { RidersController } from './riders.controller';
 import { PrismaService } from '../utils/prisma.service';
-import { UtilsModule } from '../utils/utils.module';
-import { SurgeModule } from '../surge/surge.module'; // ✅ add this line
+import { GeoSurgeModule } from '../geosurge/geo-surge.module'; // ✅ import
 
 @Module({
-  imports: [UtilsModule, SurgeModule], // ✅ add SurgeModule here
+  imports: [GeoSurgeModule], // ✅ now Nest can inject GeoSurgeService
   controllers: [RidersController],
   providers: [RidersService, PrismaService],
+  exports: [RidersService],
 })
 export class RidersModule {}

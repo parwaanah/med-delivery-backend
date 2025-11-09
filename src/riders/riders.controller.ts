@@ -3,27 +3,27 @@ import {
   Controller,
   Get,
   Post,
+  Body,
+  Param,
+  Delete,
   Put,
   Patch,
-  Delete,
-  Param,
-  Body,
   UseGuards,
 } from '@nestjs/common';
 import { RidersService } from './riders.service';
-import { CreateRiderDto, UpdateRiderDto, UpdateStatusDto } from './dto/rider.dto';
+import {
+  CreateRiderDto,
+  UpdateRiderDto,
+  UpdateStatusDto,
+} from './dto/rider.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { SurgeService } from '../surge/surge.service';
 
 @Controller('riders')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RidersController {
-  constructor(
-    private readonly ridersService: RidersService,
-    private readonly surge: SurgeService,
-  ) {}
+  constructor(private readonly ridersService: RidersService) {}
 
   @Get()
   @Roles('admin')
@@ -49,24 +49,25 @@ export class RidersController {
     return this.ridersService.update(Number(id), dto);
   }
 
+  @Patch(':id/status')
+  @Roles('admin', 'rider')
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto) {
+    return this.ridersService.updateStatus(Number(id), dto);
+  }
+
+  // ✅ Live GPS endpoint (fully functional)
+  @Patch(':id/location')
+  @Roles('rider', 'admin')
+  async updateLocation(
+    @Param('id') id: string,
+    @Body() body: { lat: number; lon: number },
+  ) {
+    return this.ridersService.updateLocation(Number(id), body.lat, body.lon);
+  }
+
   @Delete(':id')
   @Roles('admin')
   remove(@Param('id') id: string) {
     return this.ridersService.remove(Number(id));
-  }
-
-  @Patch(':id/status')
-  @Roles('admin', 'rider')
-  async updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto) {
-    const result = await this.ridersService.updateStatus(Number(id), dto);
-
-    try {
-      const isAvailable = dto.status?.toUpperCase() === 'AVAILABLE';
-      await this.surge.recordRiderAvailability(Number(id), isAvailable);
-    } catch (err) {
-      console.error('⚠️ Surge supply update failed:', err);
-    }
-
-    return result;
   }
 }

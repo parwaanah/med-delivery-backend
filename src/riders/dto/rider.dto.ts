@@ -1,26 +1,53 @@
-import { IsEmail, IsNotEmpty, IsOptional, MinLength, IsIn } from 'class-validator';
+// src/riders/dto/rider.dto.ts
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+} from 'class-validator';
 
 export class CreateRiderDto {
   @IsNotEmpty()
+  @IsString()
   name!: string;
 
   @IsEmail()
   email!: string;
 
-  @MinLength(6)
+  @IsNotEmpty()
+  @IsString()
   password!: string;
+
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 }
 
 export class UpdateRiderDto {
   @IsOptional()
+  @IsString()
   name?: string;
 
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 }
 
 export class UpdateStatusDto {
-  @IsIn(['AVAILABLE', 'BUSY', 'OFFLINE'])
-  status!: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
+  @IsNotEmpty()
+  @IsString()
+  status!: string;
 }

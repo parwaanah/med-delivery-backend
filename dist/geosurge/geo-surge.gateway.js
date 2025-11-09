@@ -8,45 +8,30 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var RiderLiveGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RiderLiveGateway = void 0;
+exports.GeoSurgeLiveGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../utils/prisma.service");
-let RiderLiveGateway = RiderLiveGateway_1 = class RiderLiveGateway {
-    constructor(prisma) {
-        this.prisma = prisma;
-        this.logger = new common_1.Logger(RiderLiveGateway_1.name);
+let GeoSurgeLiveGateway = class GeoSurgeLiveGateway {
+    constructor() {
+        this.logger = new common_1.Logger('GeoSurgeLiveGateway');
     }
     handleConnection(client) {
-        this.logger.log(`🟢 RiderLive connected: ${client.id}`);
+        this.logger.log(`🌐 GeoSurge client connected: ${client.id}`);
     }
     handleDisconnect(client) {
-        this.logger.log(`🔴 RiderLive disconnected: ${client.id}`);
+        this.logger.log(`❌ GeoSurge client disconnected: ${client.id}`);
     }
-    notifyAdmins(event, payload) {
-        try {
-            this.server.emit(event, payload);
-        }
-        catch (err) {
-            this.logger.warn('notifyAdmins failed', err);
-        }
-    }
-    broadcastRiderLocation(payload) {
-        this.server.emit('rider_location', payload);
+    broadcastGeo(zones) {
+        this.server.emit('geo_update', { zones });
     }
 };
-exports.RiderLiveGateway = RiderLiveGateway;
+exports.GeoSurgeLiveGateway = GeoSurgeLiveGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", socket_io_1.Server)
-], RiderLiveGateway.prototype, "server", void 0);
-exports.RiderLiveGateway = RiderLiveGateway = RiderLiveGateway_1 = __decorate([
-    (0, websockets_1.WebSocketGateway)({
-        namespace: '/rider-live',
-        cors: { origin: '*' },
-    }),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
-], RiderLiveGateway);
+], GeoSurgeLiveGateway.prototype, "server", void 0);
+exports.GeoSurgeLiveGateway = GeoSurgeLiveGateway = __decorate([
+    (0, websockets_1.WebSocketGateway)({ namespace: '/geo-surge-live', cors: true })
+], GeoSurgeLiveGateway);

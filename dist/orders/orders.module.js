@@ -13,18 +13,19 @@ const orders_controller_1 = require("./orders.controller");
 const prisma_service_1 = require("../utils/prisma.service");
 const notification_service_1 = require("../utils/notification.service");
 const ws_gateway_1 = require("../ws/ws.gateway");
-const queue_module_1 = require("../queues/queue.module");
+const config_1 = require("@nestjs/config");
 const surge_module_1 = require("../surge/surge.module");
-const utils_module_1 = require("../utils/utils.module");
+const geo_surge_module_1 = require("../geosurge/geo-surge.module");
+const bullmq_1 = require("@nestjs/bullmq");
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
 exports.OrdersModule = OrdersModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            utils_module_1.UtilsModule,
-            queue_module_1.QueueModule,
+            bullmq_1.BullModule.registerQueue({ name: 'order_assign' }),
             surge_module_1.SurgeModule,
+            geo_surge_module_1.GeoSurgeModule,
         ],
         controllers: [orders_controller_1.OrdersController],
         providers: [
@@ -32,6 +33,7 @@ exports.OrdersModule = OrdersModule = __decorate([
             prisma_service_1.PrismaService,
             notification_service_1.NotificationService,
             ws_gateway_1.WsGateway,
+            config_1.ConfigService,
         ],
         exports: [orders_service_1.OrdersService],
     })
