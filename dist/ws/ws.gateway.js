@@ -10,53 +10,56 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var WsGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WsModule = exports.WsGateway = void 0;
-const common_1 = require("@nestjs/common");
+exports.WsGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
-const prisma_service_1 = require("../utils/prisma.service");
+const common_1 = require("@nestjs/common");
 let WsGateway = WsGateway_1 = class WsGateway {
-    constructor(prisma) {
-        this.prisma = prisma;
+    constructor() {
         this.logger = new common_1.Logger(WsGateway_1.name);
+        this.users = new Map();
+        this.admins = new Set();
     }
     handleConnection(client) {
-        this.logger.log(`Socket connected: ${client.id}`);
-        client.on('join', (payload) => {
-            try {
-                const uid = payload?.userId;
-                if (!uid)
-                    return;
-                client.join(`user-${uid}`);
-                this.logger.log(`Socket ${client.id} joined room user-${uid}`);
-            }
-            catch (err) {
-                this.logger.warn('join handler error', err);
-            }
-        });
+        const userId = Number(client.handshake.query.userId);
+        const role = client.handshake.query.role?.toUpperCase() ?? 'UNKNOWN';
+        if (userId && !isNaN(userId))
+            this.users.set(userId, client.id);
+        if (role === 'ADMIN')
+            this.admins.add(client.id);
+        this.logger.log(`🟢 WS connected: ${client.id} (userId=${userId}, role=${role})`);
     }
     handleDisconnect(client) {
-        this.logger.log(`Socket disconnected: ${client.id}`);
+        this.users.forEach((sid, uid) => {
+            if (sid === client.id)
+                this.users.delete(uid);
+        });
+        this.admins.delete(client.id);
+        this.logger.log(`🔴 WS disconnected: ${client.id}`);
     }
     notifyUser(userId, event, payload) {
-        try {
-            if (!this.server)
-                return;
-            this.server.to(`user-${userId}`).emit(event, payload);
+        const socketId = this.users.get(userId);
+        if (socketId) {
+            this.server.to(socketId).emit(event, payload);
+            this.logger.debug(`📨 Sent ${event} → user ${userId}`);
         }
-        catch (err) {
-            this.logger.warn(`Failed to notify user ${userId}`, err);
+        else {
+            this.logger.debug(`⚠️ No active socket for user ${userId}`);
         }
     }
+    notifyAdmins(event, payload) {
+        if (this.admins.size === 0) {
+            this.logger.debug('⚠️ No admins connected for broadcast');
+            return;
+        }
+        for (const sid of this.admins) {
+            this.server.to(sid).emit(event, payload);
+        }
+        this.logger.debug(`📣 Broadcasted ${event} → ${this.admins.size} admins`);
+    }
     broadcast(event, payload) {
-        try {
-            if (!this.server)
-                return;
-            this.server.emit(event, payload);
-        }
-        catch (err) {
-            this.logger.warn('Broadcast failed', err);
-        }
+        this.server.emit(event, payload);
+        this.logger.debug(`🌐 Broadcasted ${event} to all clients`);
     }
 };
 exports.WsGateway = WsGateway;
@@ -65,16 +68,8 @@ __decorate([
     __metadata("design:type", socket_io_1.Server)
 ], WsGateway.prototype, "server", void 0);
 exports.WsGateway = WsGateway = WsGateway_1 = __decorate([
-    (0, websockets_1.WebSocketGateway)({ cors: { origin: '*' } }),
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
-], WsGateway);
-let WsModule = class WsModule {
-};
-exports.WsModule = WsModule;
-exports.WsModule = WsModule = __decorate([
-    (0, common_1.Module)({
-        providers: [prisma_service_1.PrismaService, WsGateway],
-        exports: [WsGateway],
+    (0, websockets_1.WebSocketGateway)({
+        cors: { origin: '*' },
+        namespace: '/',
     })
-], WsModule);
+], WsGateway);

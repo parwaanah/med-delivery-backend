@@ -1,14 +1,14 @@
 // src/geosurge/geo-surge.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../utils/prisma.service';
+import { ConfigModule } from '@nestjs/config';
 import { GeoSurgeService } from './geo-surge.service';
-import { GeoSurgeLiveGateway } from '../ws/geo-surge-live.gateway';
 import { GeoSurgeController } from './geo-surge.controller';
+import { GeoSurgeLiveGateway } from '../ws/geo-surge-live.gateway';
 
 @Module({
+  imports: [ConfigModule],
+  providers: [GeoSurgeService, GeoSurgeLiveGateway],
   controllers: [GeoSurgeController],
-  providers: [ConfigService, PrismaService, GeoSurgeService, GeoSurgeLiveGateway],
-  exports: [GeoSurgeService], // ✅ export so other modules (like RidersModule) can inject it
+  exports: [GeoSurgeService, GeoSurgeLiveGateway],
 })
 export class GeoSurgeModule {}

@@ -2,24 +2,42 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+
+interface SurgeBroadcast {
+  multiplier: number;
+  demand: number;
+  supply: number;
+  timestamp: number;
+  override?: boolean;
+}
 
 @WebSocketGateway({
   cors: { origin: '*' },
   namespace: '/surge-live',
 })
-export class SurgeLiveGateway implements OnGatewayInit {
-  @WebSocketServer() server!: Server; // ✅ definite assignment
-  private readonly logger = new Logger('SurgeLiveGateway');
+export class SurgeLiveGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer() server!: Server;
+  private readonly logger = new Logger(SurgeLiveGateway.name);
 
-  afterInit() {
-    this.logger.log('⚡ SurgeLiveGateway ready');
+  handleConnection(client: Socket) {
+    this.logger.log(`🟢 Surge client connected: ${client.id}`);
   }
 
-  broadcastSurge(data: any) {
+  handleDisconnect(client: Socket) {
+    this.logger.log(`🔴 Surge client disconnected: ${client.id}`);
+  }
+
+  /** Broadcast surge data with full timestamp + override info */
+  broadcastSurge(data: SurgeBroadcast) {
+    if (!this.server) return;
     this.server.emit('surge_update', data);
+    this.logger.debug(
+      `📡 Surge broadcast → x${data.multiplier} | D=${data.demand} | S=${data.supply} | T=${data.timestamp}`,
+    );
   }
 }

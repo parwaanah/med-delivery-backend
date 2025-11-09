@@ -11,16 +11,17 @@ const common_1 = require("@nestjs/common");
 const surge_service_1 = require("./surge.service");
 const surge_processor_1 = require("./surge.processor");
 const surge_controller_1 = require("./surge.controller");
-const ws_module_1 = require("../ws/ws.module");
+const surge_live_gateway_1 = require("../ws/surge-live.gateway");
 const utils_module_1 = require("../utils/utils.module");
+const config_1 = require("@nestjs/config");
 let SurgeModule = class SurgeModule {
 };
 exports.SurgeModule = SurgeModule;
 exports.SurgeModule = SurgeModule = __decorate([
     (0, common_1.Module)({
-        imports: [ws_module_1.WsModule, utils_module_1.UtilsModule],
-        providers: [surge_service_1.SurgeService, surge_processor_1.SurgeProcessor],
+        imports: [utils_module_1.UtilsModule, config_1.ConfigModule],
+        providers: [surge_service_1.SurgeService, surge_processor_1.SurgeProcessor, surge_live_gateway_1.SurgeLiveGateway],
         controllers: [surge_controller_1.SurgeController],
-        exports: [surge_service_1.SurgeService],
+        exports: [surge_service_1.SurgeService, surge_live_gateway_1.SurgeLiveGateway],
     })
 ], SurgeModule);

@@ -2,13 +2,14 @@
 import { Module } from '@nestjs/common';
 import { RidersService } from './riders.service';
 import { RidersController } from './riders.controller';
-import { PrismaService } from '../utils/prisma.service';
-import { GeoSurgeModule } from '../geosurge/geo-surge.module'; // ✅ import
+import { GeoSurgeModule } from '../geosurge/geo-surge.module';
+import { RiderLiveGateway } from '../ws/rider-live.gateway';
+import { UtilsModule } from '../utils/utils.module';
 
 @Module({
-  imports: [GeoSurgeModule], // ✅ now Nest can inject GeoSurgeService
+  imports: [UtilsModule, GeoSurgeModule],
   controllers: [RidersController],
-  providers: [RidersService, PrismaService],
+  providers: [RidersService, RiderLiveGateway],
   exports: [RidersService],
 })
 export class RidersModule {}

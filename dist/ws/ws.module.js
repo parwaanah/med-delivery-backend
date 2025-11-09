@@ -9,35 +9,46 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WsModule = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
-const prisma_service_1 = require("../utils/prisma.service");
+const config_1 = require("@nestjs/config");
 const ws_gateway_1 = require("./ws.gateway");
 const audit_live_gateway_1 = require("./audit-live.gateway");
-const rider_live_gateway_1 = require("./rider-live.gateway");
 const surge_live_gateway_1 = require("./surge-live.gateway");
+const rider_live_gateway_1 = require("./rider-live.gateway");
+const chat_live_gateway_1 = require("./chat-live.gateway");
+const geo_surge_live_gateway_1 = require("./geo-surge-live.gateway");
+const chat_module_1 = require("../chat/chat.module");
 let WsModule = class WsModule {
 };
 exports.WsModule = WsModule;
 exports.WsModule = WsModule = __decorate([
-    (0, common_1.Global)(),
     (0, common_1.Module)({
         imports: [
-            jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET || 'supersecretkey',
-                signOptions: { expiresIn: '1h' },
+            config_1.ConfigModule,
+            chat_module_1.ChatModule,
+            jwt_1.JwtModule.registerAsync({
+                imports: [config_1.ConfigModule],
+                inject: [config_1.ConfigService],
+                useFactory: (config) => ({
+                    secret: config.get('JWT_SECRET') || 'supersecret',
+                    signOptions: { expiresIn: '1h' },
+                }),
             }),
         ],
         providers: [
-            prisma_service_1.PrismaService,
             ws_gateway_1.WsGateway,
             audit_live_gateway_1.AuditLiveGateway,
-            rider_live_gateway_1.RiderLiveGateway,
             surge_live_gateway_1.SurgeLiveGateway,
+            rider_live_gateway_1.RiderLiveGateway,
+            chat_live_gateway_1.ChatLiveGateway,
+            geo_surge_live_gateway_1.GeoSurgeLiveGateway,
         ],
         exports: [
             ws_gateway_1.WsGateway,
             audit_live_gateway_1.AuditLiveGateway,
-            rider_live_gateway_1.RiderLiveGateway,
             surge_live_gateway_1.SurgeLiveGateway,
+            rider_live_gateway_1.RiderLiveGateway,
+            chat_live_gateway_1.ChatLiveGateway,
+            geo_surge_live_gateway_1.GeoSurgeLiveGateway,
         ],
     })
 ], WsModule);

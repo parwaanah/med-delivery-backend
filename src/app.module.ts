@@ -18,20 +18,29 @@ import { AdminModule } from './admin/admin.module';
 import { HealthModule } from './health/health.module';
 import { SurgeModule } from './surge/surge.module';
 import { GeoSurgeModule } from './geosurge/geo-surge.module';
+import { PaymentModule } from './payment/payment.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+import { ReportsModule } from './reports/reports.module';
+import { ScheduleModule } from '@nestjs/schedule';
+
+import { ChatLiveGateway } from './ws/chat-live.gateway';
+import { ChatModule } from './chat/chat.module';
+import { CacheModule } from './cache/cache.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // ✅ Serve static dashboards from /public
+    // Serve static dashboards from /public
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/', // base URL path
+      serveRoot: '/',
     }),
 
-    // ✅ Core Modules
+    // Core & Enhanced Modules
     UtilsModule,
-    HealthModule, // <-- ✅ added missing comma here
+    HealthModule,
     AuthModule,
     UsersModule,
     PharmaciesModule,
@@ -41,9 +50,18 @@ import { GeoSurgeModule } from './geosurge/geo-surge.module';
     AdminModule,
     WsModule,
     SurgeModule,
-    GeoSurgeModule
+    GeoSurgeModule,
+    PaymentModule,
+    WebhooksModule,
+    ReportsModule,
+    ScheduleModule.forRoot(),
+
+    // Phase 4 add-ons
+    ChatModule,
+    CacheModule,
+    MetricsModule,
   ],
-  providers: [NotificationService, GlobalLogger],
+  providers: [NotificationService, GlobalLogger, ChatLiveGateway],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -1,76 +1,64 @@
-// src/ws/ws.gateway.ts
-import { Module, Injectable, Logger } from '@nestjs/common';
 import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
-  MessageBody,
-  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { PrismaService } from '../utils/prisma.service';
+import { Logger } from '@nestjs/common';
 
-@WebSocketGateway({ cors: { origin: '*' } })
-@Injectable()
+@WebSocketGateway({
+  cors: { origin: '*' },
+  namespace: '/',
+})
 export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server!: Server;
   private readonly logger = new Logger(WsGateway.name);
 
-  constructor(private prisma: PrismaService) {}
+  private users = new Map<number, string>(); // userId → socketId
+  private admins = new Set<string>(); // socketIds for admins
 
   handleConnection(client: Socket) {
-    this.logger.log(`Socket connected: ${client.id}`);
-    // If clients pass token, you may authenticate here (optional)
-    // Listen for join-room message to join a user-specific room
-    client.on('join', (payload: { userId: number }) => {
-      try {
-        const uid = payload?.userId;
-        if (!uid) return;
-        client.join(`user-${uid}`);
-        this.logger.log(`Socket ${client.id} joined room user-${uid}`);
-      } catch (err) {
-        this.logger.warn('join handler error', err as any);
-      }
-    });
+    const userId = Number(client.handshake.query.userId);
+    const role = (client.handshake.query.role as string)?.toUpperCase() ?? 'UNKNOWN';
+
+    if (userId && !isNaN(userId)) this.users.set(userId, client.id);
+    if (role === 'ADMIN') this.admins.add(client.id);
+
+    this.logger.log(`🟢 WS connected: ${client.id} (userId=${userId}, role=${role})`);
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Socket disconnected: ${client.id}`);
-    // socket.io automatically leaves rooms on disconnect, so nothing else needed
+    this.users.forEach((sid, uid) => {
+      if (sid === client.id) this.users.delete(uid);
+    });
+    this.admins.delete(client.id);
+    this.logger.log(`🔴 WS disconnected: ${client.id}`);
   }
 
-  /**
-   * Notify a specific user (all sockets in room user-<id>)
-   */
   notifyUser(userId: number, event: string, payload: any) {
-    try {
-      if (!this.server) return;
-      this.server.to(`user-${userId}`).emit(event, payload);
-    } catch (err) {
-      this.logger.warn(`Failed to notify user ${userId}`, err as any);
+    const socketId = this.users.get(userId);
+    if (socketId) {
+      this.server.to(socketId).emit(event, payload);
+      this.logger.debug(`📨 Sent ${event} → user ${userId}`);
+    } else {
+      this.logger.debug(`⚠️ No active socket for user ${userId}`);
     }
   }
 
-  /**
-   * Broadcast to everyone
-   */
-  broadcast(event: string, payload: any) {
-    try {
-      if (!this.server) return;
-      this.server.emit(event, payload);
-    } catch (err) {
-      this.logger.warn('Broadcast failed', err as any);
+  notifyAdmins(event: string, payload: any) {
+    if (this.admins.size === 0) {
+      this.logger.debug('⚠️ No admins connected for broadcast');
+      return;
     }
+    for (const sid of this.admins) {
+      this.server.to(sid).emit(event, payload);
+    }
+    this.logger.debug(`📣 Broadcasted ${event} → ${this.admins.size} admins`);
+  }
+
+  broadcast(event: string, payload: any) {
+    this.server.emit(event, payload);
+    this.logger.debug(`🌐 Broadcasted ${event} to all clients`);
   }
 }
-
-/**
- * Provide a small module wrapper for easy import
- */
-@Module({
-  providers: [PrismaService, WsGateway],
-  exports: [WsGateway],
-})
-export class WsModule {}

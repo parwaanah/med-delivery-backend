@@ -2,48 +2,36 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
+  SubscribeMessage,
+  MessageBody,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common';
-import { PrismaService } from '../utils/prisma.service';
 
 @WebSocketGateway({
-  namespace: '/rider-live',
   cors: { origin: '*' },
+  namespace: '/rider-live',
 })
-export class RiderLiveGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RiderLiveGateway {
   @WebSocketServer() server!: Server;
   private readonly logger = new Logger(RiderLiveGateway.name);
 
-  constructor(private prisma: PrismaService) {}
-
-  handleConnection(client: Socket) {
-    this.logger.log(`🟢 RiderLive connected: ${client.id}`);
+  // ✅ Generic broadcast to all clients (dashboards, maps, etc.)
+  broadcast(event: string, data: any) {
+    this.server.emit(event, data);
+    this.logger.log(`📡 Broadcast event: ${event}`, JSON.stringify(data));
   }
 
-  handleDisconnect(client: Socket) {
-    this.logger.log(`🔴 RiderLive disconnected: ${client.id}`);
+  // ✅ Specific admin broadcast (matches notifyAdmins pattern used elsewhere)
+  notifyAdmins(event: string, data: any) {
+    this.server.to('admin').emit(event, data);
+    this.logger.log(`🧭 Sent admin notification → ${event}`, JSON.stringify(data));
   }
 
-  // ✅ Notify admins (used by RidersService)
-  notifyAdmins(event: string, payload: any) {
-    try {
-      this.server.emit(event, payload);
-    } catch (err) {
-      this.logger.warn('notifyAdmins failed', err);
-    }
-  }
-
-  // ✅ Optional direct broadcast (if used for clients)
-  broadcastRiderLocation(payload: {
-    id: number;
-    lat: number;
-    lon: number;
-    status: string;
-    timestamp: number;
-  }) {
-    this.server.emit('rider_location', payload);
+  // ✅ Direct rider update listener (optional)
+  @SubscribeMessage('rider_update')
+  handleRiderUpdate(@MessageBody() payload: any) {
+    this.logger.log(`📍 Rider update received`, JSON.stringify(payload));
+    this.broadcast('rider_update', payload);
   }
 }

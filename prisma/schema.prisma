@@ -34,7 +34,7 @@ model User {
   email      String    @unique
   password   String
   role       UserRole  @default(CUSTOMER)
-  status     String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  status     String    @default("PENDING")
   approvedBy Int?
   latitude   Float?
   longitude  Float?
@@ -42,11 +42,9 @@ model User {
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
-  // --- Self-relation for admin approvals ---
   approver      User?  @relation("AdminApprovals", fields: [approvedBy], references: [id])
   approvedUsers User[] @relation("AdminApprovals")
 
-  // --- Relations ---
   customerOrders        Order[]             @relation("CustomerOrders")
   pharmacyOrders        Order[]             @relation("PharmacyOrders")
   riderOrders           Order[]             @relation("RiderOrders")
@@ -57,6 +55,10 @@ model User {
   refreshTokens         RefreshToken[]
   auditLogs             AuditLog[]
   LoginAudit            LoginAudit[]
+
+  // 🗨️ Chat relations
+  sentMessages     ChatMessage[] @relation("UserSentMessages")
+  receivedMessages ChatMessage[] @relation("UserReceivedMessages")
 }
 
 model Medicine {
@@ -191,4 +193,15 @@ model SurgeEvent {
   multiplier Float
   meta       Json?
   createdAt  DateTime @default(now())
+}
+
+model ChatMessage {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  text       String
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("UserSentMessages", fields: [senderId], references: [id])
+  receiver User @relation("UserReceivedMessages", fields: [receiverId], references: [id])
 }

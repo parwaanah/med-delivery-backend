@@ -8,34 +8,30 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var RiderLiveGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RiderLiveGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../utils/prisma.service");
 let RiderLiveGateway = RiderLiveGateway_1 = class RiderLiveGateway {
-    constructor(prisma) {
-        this.prisma = prisma;
+    constructor() {
         this.logger = new common_1.Logger(RiderLiveGateway_1.name);
     }
-    handleConnection(client) {
-        this.logger.log(`🟢 RiderLive connected: ${client.id}`);
+    broadcast(event, data) {
+        this.server.emit(event, data);
+        this.logger.log(`📡 Broadcast event: ${event}`, JSON.stringify(data));
     }
-    handleDisconnect(client) {
-        this.logger.log(`🔴 RiderLive disconnected: ${client.id}`);
+    notifyAdmins(event, data) {
+        this.server.to('admin').emit(event, data);
+        this.logger.log(`🧭 Sent admin notification → ${event}`, JSON.stringify(data));
     }
-    notifyAdmins(event, payload) {
-        try {
-            this.server.emit(event, payload);
-        }
-        catch (err) {
-            this.logger.warn('notifyAdmins failed', err);
-        }
-    }
-    broadcastRiderLocation(payload) {
-        this.server.emit('rider_location', payload);
+    handleRiderUpdate(payload) {
+        this.logger.log(`📍 Rider update received`, JSON.stringify(payload));
+        this.broadcast('rider_update', payload);
     }
 };
 exports.RiderLiveGateway = RiderLiveGateway;
@@ -43,10 +39,16 @@ __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", socket_io_1.Server)
 ], RiderLiveGateway.prototype, "server", void 0);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('rider_update'),
+    __param(0, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], RiderLiveGateway.prototype, "handleRiderUpdate", null);
 exports.RiderLiveGateway = RiderLiveGateway = RiderLiveGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
-        namespace: '/rider-live',
         cors: { origin: '*' },
-    }),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+        namespace: '/rider-live',
+    })
 ], RiderLiveGateway);

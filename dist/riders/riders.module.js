@@ -10,16 +10,17 @@ exports.RidersModule = void 0;
 const common_1 = require("@nestjs/common");
 const riders_service_1 = require("./riders.service");
 const riders_controller_1 = require("./riders.controller");
-const prisma_service_1 = require("../utils/prisma.service");
 const geo_surge_module_1 = require("../geosurge/geo-surge.module");
+const rider_live_gateway_1 = require("../ws/rider-live.gateway");
+const utils_module_1 = require("../utils/utils.module");
 let RidersModule = class RidersModule {
 };
 exports.RidersModule = RidersModule;
 exports.RidersModule = RidersModule = __decorate([
     (0, common_1.Module)({
-        imports: [geo_surge_module_1.GeoSurgeModule],
+        imports: [utils_module_1.UtilsModule, geo_surge_module_1.GeoSurgeModule],
         controllers: [riders_controller_1.RidersController],
-        providers: [riders_service_1.RidersService, prisma_service_1.PrismaService],
+        providers: [riders_service_1.RidersService, rider_live_gateway_1.RiderLiveGateway],
         exports: [riders_service_1.RidersService],
     })
 ], RidersModule);

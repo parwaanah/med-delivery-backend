@@ -9,17 +9,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GeoSurgeModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const prisma_service_1 = require("../utils/prisma.service");
 const geo_surge_service_1 = require("./geo-surge.service");
-const geo_surge_live_gateway_1 = require("../ws/geo-surge-live.gateway");
 const geo_surge_controller_1 = require("./geo-surge.controller");
+const geo_surge_live_gateway_1 = require("../ws/geo-surge-live.gateway");
 let GeoSurgeModule = class GeoSurgeModule {
 };
 exports.GeoSurgeModule = GeoSurgeModule;
 exports.GeoSurgeModule = GeoSurgeModule = __decorate([
     (0, common_1.Module)({
+        imports: [config_1.ConfigModule],
+        providers: [geo_surge_service_1.GeoSurgeService, geo_surge_live_gateway_1.GeoSurgeLiveGateway],
         controllers: [geo_surge_controller_1.GeoSurgeController],
-        providers: [config_1.ConfigService, prisma_service_1.PrismaService, geo_surge_service_1.GeoSurgeService, geo_surge_live_gateway_1.GeoSurgeLiveGateway],
-        exports: [geo_surge_service_1.GeoSurgeService],
+        exports: [geo_surge_service_1.GeoSurgeService, geo_surge_live_gateway_1.GeoSurgeLiveGateway],
     })
 ], GeoSurgeModule);

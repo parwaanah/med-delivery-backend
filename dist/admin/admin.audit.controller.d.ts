@@ -9,8 +9,8 @@ export declare class AdminAuditController {
         logs: {
             email: string | null;
             role: string | null;
-            id: number;
             userId: number | null;
+            id: number;
             ip: string | null;
             userAgent: string | null;
             eventType: string;
