@@ -26883,3 +26883,92 @@
 [2025-11-10T11:02:15.044Z] [INFO] [Request] GET /admin/metrics 200 (18ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
 [2025-11-10T11:02:29.506Z] [INFO] [GeoSurgeService] 🔺 GeoSurge broadcast 2 zones
 [2025-11-10T11:02:29.507Z] [INFO] [SurgeService] ⚡ Surge update → x4 (demand 11, supply 1)
+[2025-11-10T11:13:55.506Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-10T11:13:55.509Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-10T11:13:55.510Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-10T11:13:55.512Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-10T11:13:55.517Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-10T11:13:55.519Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-10T11:13:55.520Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-10T11:13:55.521Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-10T11:13:55.521Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-10T11:13:55.522Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-10T11:13:55.522Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-10T11:13:55.523Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-10T11:13:55.524Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-10T11:13:55.524Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-10T11:13:55.525Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-10T11:13:55.526Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-10T11:13:55.526Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-10T11:13:55.527Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-10T11:13:55.528Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-10T11:13:55.528Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-10T11:13:55.529Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-10T11:13:55.530Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-10T11:13:55.530Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-10T11:13:55.531Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-10T11:13:55.532Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-10T11:13:55.532Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-10T11:13:55.533Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-10T11:13:55.533Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-10T11:13:55.534Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-10T11:13:55.534Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-10T11:13:55.535Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-10T11:13:55.535Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-10T11:13:55.536Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-10T11:13:55.537Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-10T11:13:55.537Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-10T11:13:55.538Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-10T11:13:55.538Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-10T11:13:55.539Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-10T11:13:55.540Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-10T11:13:55.540Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-10T11:13:55.541Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-10T11:13:55.541Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-10T11:13:55.541Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-10T11:13:55.542Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-10T11:13:55.542Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-10T11:13:55.543Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-10T11:13:55.544Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-10T11:13:55.544Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-10T11:13:55.545Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-10T11:13:55.545Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-10T11:13:55.546Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-10T11:13:55.547Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-10T11:13:55.547Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-10T11:13:55.548Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-10T11:13:55.548Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-10T11:13:55.548Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-10T11:13:55.549Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-10T11:13:55.550Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-10T11:13:55.550Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-10T11:13:55.551Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-10T11:13:55.551Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-10T11:13:55.552Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-10T11:13:55.552Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-10T11:13:55.553Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-10T11:13:55.690Z] [INFO] [SurgeProcessor] 🚀 SurgeProcessor running every 15s
+[2025-11-10T11:13:55.691Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected to Redis → redis://127.0.0.1:6379
+[2025-11-10T11:13:55.783Z] [INFO] [OrdersProcessor] ✅ OrdersProcessor worker started (order_assign)
+[2025-11-10T11:13:55.981Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-10T11:13:56.207Z] [INFO] [GeoSurgeService] 🔺 GeoSurge broadcast 2 zones
+[2025-11-10T11:13:56.211Z] [INFO] [Request] GET /admin/geo-surge/status 200 (21ms) user=superadmin_live@example.com ip=::1
+[2025-11-10T11:14:10.710Z] [INFO] [GeoSurgeService] 🔺 GeoSurge broadcast 2 zones
+[2025-11-10T11:14:10.711Z] [INFO] [SurgeService] ⚡ Surge update → x4 (demand 11, supply 1)
+[2025-11-10T11:14:12.315Z] [INFO] [Request] GET /admin/queue/status 200 (4ms) user=anonymous ip=::1
+[2025-11-10T11:14:12.330Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-10T11:14:12.335Z] [INFO] [Request] GET /admin/queue/status 200 (3ms) user=anonymous ip=::1
+[2025-11-10T11:14:12.340Z] [INFO] [Request] GET /admin/queue/status 200 (2ms) user=anonymous ip=::1
+[2025-11-10T11:14:12.347Z] [INFO] [Request] GET /admin/metrics 200 (35ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-10T11:14:12.362Z] [INFO] [Request] GET /admin/metrics 200 (14ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-10T11:14:12.379Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-10T11:14:12.395Z] [INFO] [Request] GET /admin/metrics 200 (15ms) user=superadmin_live@example.com ip=::ffff:127.0.0.1
+[2025-11-10T11:14:25.719Z] [INFO] [GeoSurgeService] 🔺 GeoSurge broadcast 2 zones
+[2025-11-10T11:14:25.719Z] [INFO] [SurgeService] ⚡ Surge update → x5.8 (demand 11, supply 1)
+[2025-11-10T11:14:36.589Z] [INFO] [Request] POST /auth/register 201 (108ms) user=anonymous ip=::1
+[2025-11-10T11:14:36.713Z] [INFO] [Request] POST /auth/login 201 (80ms) user=anonymous ip=::1
+[2025-11-10T11:14:36.799Z] [INFO] [Request] POST /auth/login 201 (82ms) user=anonymous ip=::1
+[2025-11-10T11:14:36.811Z] [INFO] [Request] GET /admin/users/pending 200 (7ms) user=superadmin_live@example.com ip=::1
+[2025-11-10T11:14:36.835Z] [INFO] [Request] GET /admin/audit/logs?page=1%26limit=5 200 (15ms) user=superadmin_live@example.com ip=::1
+[2025-11-10T11:14:40.727Z] [INFO] [GeoSurgeService] 🔺 GeoSurge broadcast 2 zones
+[2025-11-10T11:14:40.729Z] [INFO] [SurgeService] ⚡ Surge update → x6.88 (demand 11, supply 1)
