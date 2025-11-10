@@ -1,36 +1,32 @@
-<!-- public/admin-dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>💊 Medicine Delivery — Admin Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <style>
     body { font-family:'Segoe UI',sans-serif;background:#0b0e12;color:#f5f5f5;margin:0;min-height:100vh; }
     header { background:#1e1f24;color:#00eaff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center; }
     #logoutBtn{ background:#ff005c;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;font-weight:600;margin-left:12px; }
-    .tabs{ background:#14171c;display:flex;justify-content:center;gap:10px;padding:10px;border-bottom:1px solid #222; }
+    .tabs{ background:#14171c;display:flex;justify-content:center;gap:10px;padding:10px;border-bottom:1px solid #222;flex-wrap:wrap; }
     .tabs button{ background:#1c1f26;border:none;color:#ccc;padding:8px 14px;border-radius:5px;cursor:pointer;transition:.2s; }
     .tabs button.active{ background:#00eaff;color:#000;font-weight:bold; }
     section{ display:none;padding:16px; } section.active{ display:block; }
-    h3{ color:#00eaff;margin-top:0; } canvas{ width:100%;height:240px;background:#16181d;border-radius:6px; }
+    h3{ color:#00eaff;margin-top:0; }
     table{ color:#ccc;width:100%;border-collapse:collapse; }
+    td,th{ padding:8px;border-bottom:1px solid #222; }
     .event{ background:#16181d;border-left:4px solid #00ff99;padding:8px;margin-bottom:8px;border-radius:6px; }
     #loginOverlay{ position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.9);display:flex;align-items:center;justify-content:center;z-index:9999; }
     #loginBox{ background:#111827;padding:30px;border-radius:10px;width:360px; }
     #loginBox input{ width:100%;margin:6px 0;padding:10px;background:#0b1220;color:#fff;border:1px solid #1f2937;border-radius:6px; }
     #loginBox button{ margin-top:10px;width:100%;padding:10px;border:none;background:#00eaff;color:#00111a;border-radius:6px;cursor:pointer;font-weight:600; }
-    .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
-    #map { width:100%; height:480px; border-radius:8px; margin-top:12px; box-shadow:0 6px 18px rgba(0,0,0,0.5); }
-    .legend { background:#111827;padding:8px;border-radius:6px;color:#fff; position: absolute; right:10px; top:10px; z-index:1000; }
+    #map { width:100%; height:420px; border-radius:8px; margin-top:12px; box-shadow:0 6px 18px rgba(0,0,0,0.5); }
+    .legend { background:#111827;padding:8px;border-radius:6px;color:#fff; position:absolute; right:10px; top:10px; z-index:1000; }
+    .small-btn{ padding:6px 10px;border-radius:6px;border:none;cursor:pointer;margin-right:6px; }
+    #loginError{ color:#ff8b8b;margin-top:8px;display:none;text-align:center; }
   </style>
 </head>
 <body>
@@ -40,6 +36,7 @@
       <input id="email" type="email" value="superadmin_live@example.com" />
       <input id="password" type="password" value="superadmin123" />
       <button id="loginBtn">Login</button>
+      <div id="loginError"></div>
     </div>
   </div>
 
@@ -52,198 +49,218 @@
   </header>
 
   <div class="tabs">
-    <button data-tab="audit" class="active">Audit Logs</button>
-    <button data-tab="metrics">System Metrics</button>
-    <button data-tab="surge">Surge Engine</button>
-    <button data-tab="heatmap">Surge Heatmap</button>
-    <button data-tab="queue">Redis Queue Monitor</button>
-    <button data-tab="health">System Health</button>
+    <button data-tab="audit" class="active">Audit</button>
+    <button data-tab="metrics">Metrics</button>
+    <button data-tab="surge">Surge</button>
+    <button data-tab="heatmap">Heatmap</button>
+    <button data-tab="queue">Queue</button>
+    <button data-tab="health">Health</button>
+    <button data-tab="users">Users</button>
   </div>
 
+  <!-- AUDIT -->
   <section id="audit" class="active">
     <h3>🔍 Live Audit Feed</h3>
-    <canvas id="auditChart"></canvas>
+    <div style="margin-bottom:8px;">
+      <button id="downloadAudit" class="small-btn" style="background:#00eaff;color:#00111a">Download JSON</button>
+      <button id="clearCache" class="small-btn" style="background:#ffb020;color:#000">Clear Cache</button>
+      <button id="refreshAudit" class="small-btn" style="background:#00ff99;color:#000">Refresh</button>
+    </div>
     <div id="auditFeed"></div>
   </section>
 
+  <!-- METRICS -->
   <section id="metrics">
     <h3>📊 System Metrics</h3>
     <table id="metricsTable"></table>
-    <canvas id="metricsChart"></canvas>
   </section>
 
+  <!-- SURGE -->
   <section id="surge">
-    <h3>⚡ Surge Engine</h3>
-    <canvas id="surgeChart"></canvas>
-    <div id="surgeHistory" style="margin-top:12px;"></div>
+    <h3>⚡ Surge Info</h3>
+    <div id="surgeInfo"></div>
   </section>
 
+  <!-- HEATMAP -->
   <section id="heatmap">
     <h3>🗺️ Surge Heatmap</h3>
     <div style="position:relative;">
       <div id="map"></div>
-      <div class="legend" id="mapLegend">
-        <div><b>Legend</b></div>
-        <div style="margin-top:6px;">● x1.0 — Low</div>
-        <div>● x1.5 — Medium</div>
-        <div>● x2.0 — High</div>
-      </div>
+      <div class="legend"><b>Legend</b><br/>● Low (x1.0)<br/>● Medium (x1.5)<br/>● High (x2.0)</div>
     </div>
   </section>
 
+  <!-- QUEUE -->
   <section id="queue">
-    <h3>⚙️ Redis Queue Monitor</h3>
+    <h3>⚙️ Redis Queue</h3>
     <div id="queueStatus"></div>
   </section>
 
+  <!-- HEALTH -->
   <section id="health">
-    <h3>💡 System Health (Live)</h3>
+    <h3>💡 System Health</h3>
     <div id="healthStatus"></div>
-    <canvas id="memChart"></canvas>
-    <canvas id="uptimeChart"></canvas>
+  </section>
+
+  <!-- USERS -->
+  <section id="users">
+    <h3>👥 User Management</h3>
+    <div style="margin-bottom:10px;">
+      <input id="userSearch" placeholder="Search name or email"
+        style="width:50%;padding:8px;border-radius:6px;border:none;background:#0b1220;color:#fff;" />
+      <button id="reloadUsers" class="small-btn" style="background:#00eaff;color:#00111a;">Reload</button>
+      <button id="pendingOnly" class="small-btn" style="background:#555;color:#fff;">Pending Only</button>
+      <button id="resetAllPending" class="small-btn" style="background:#ffb020;color:#000;">Reset All Pending</button>
+      <button id="downloadReport" class="small-btn" style="background:#00eaff;color:#00111a;">Download Daily Report</button>
+    </div>
+    <table id="usersTable" border="1" cellspacing="0" cellpadding="6" style="width:100%;color:#ccc;background:#111827;border-radius:8px;"></table>
   </section>
 
 <script>
 const API = "http://localhost:3001";
-let accessToken = localStorage.getItem("adminAccessToken");
+let accessToken = localStorage.getItem("adminAccessToken") || null;
+let pendingFilter = false;
 
-document.getElementById("loginBtn").addEventListener("click", login);
-document.getElementById("logoutBtn").addEventListener("click", logout);
-document.querySelectorAll(".tabs button").forEach(btn => btn.addEventListener("click", () => {
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById(btn.dataset.tab).classList.add("active");
-}));
+/* ---------------- TAB UI ---------------- */
+document.querySelectorAll(".tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
 
-async function login(){
+/* ---------------- LOGIN ---------------- */
+document.getElementById("loginBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
+  const err = document.getElementById("loginError");
+  err.style.display = "none";
   try {
     const res = await fetch(`${API}/auth/login`, {
-      method: 'POST', headers: {'Content-Type':'application/json'},
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
     });
-    if(!res.ok) throw new Error('Login failed');
     const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Login failed");
     accessToken = data.accessToken;
-    localStorage.setItem('adminAccessToken', accessToken);
-    if (data.sessionId) localStorage.setItem('adminSessionId', String(data.sessionId));
-    document.getElementById("loginOverlay").style.display = 'none';
-    document.getElementById("logoutBtn").style.display = 'inline-block';
+    localStorage.setItem("adminAccessToken", accessToken);
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "inline-block";
     document.getElementById("userStatus").innerText = data.user.email;
-    await initDashboard();
-  } catch (err) { alert('❌ ' + err.message); }
+    initDashboard();
+  } catch (e) {
+    err.innerText = e.message;
+    err.style.display = "block";
+  }
+});
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  accessToken = null; localStorage.clear();
+  document.getElementById("loginOverlay").style.display = "flex";
+  document.getElementById("logoutBtn").style.display = "none";
+  document.getElementById("userStatus").innerText = "Not logged in";
+});
+
+/* ---------------- API WRAPPER ---------------- */
+async function api(path, method="GET", body=null) {
+  const headers = { "Content-Type": "application/json" };
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  const res = await fetch(`${API}${path}`, { method, headers, body: body?JSON.stringify(body):undefined });
+  const data = await res.json().catch(()=>({}));
+  return { ok: res.ok, data };
 }
 
-async function logout(){
-  const sid = localStorage.getItem('adminSessionId');
-  const token = localStorage.getItem('adminAccessToken');
-  try {
-    if (sid && token) {
-      await fetch(`${API}/auth/logout`, {
-        method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
-        body: JSON.stringify({ sessionId: Number(sid) }),
-      });
-    }
-  } catch {}
-  localStorage.clear();
-  document.getElementById("logoutBtn").style.display = 'none';
-  document.getElementById("loginOverlay").style.display = 'flex';
-  document.getElementById("userStatus").innerText = 'Not logged in';
+/* ---------------- USERS ---------------- */
+function bindUserTabButtons() {
+  document.getElementById("reloadUsers").onclick = fetchUsers;
+  document.getElementById("pendingOnly").onclick = () => { pendingFilter = !pendingFilter; fetchUsers(); };
+  document.getElementById("resetAllPending").onclick = async () => {
+    const { ok, data } = await api("/admin/users/reset-all-pending", "POST");
+    alert(ok ? (data.message || "Queued resets") : "Failed");
+  };
+  document.getElementById("downloadReport").onclick = async () => {
+    const { ok } = await api("/admin/reports/daily", "POST");
+    alert(ok ? "Report generated" : "Failed to generate");
+  };
+  document.getElementById("userSearch").oninput = e => fetchUsers(e.target.value);
 }
 
-async function apiGet(url) {
-  const token = localStorage.getItem('adminAccessToken');
-  if (!token) return null;
-  const res = await fetch(`${API}${url}`, { headers: { Authorization: `Bearer ${token}` }});
-  if (res.status === 401) { alert('Session expired, please log in again.'); logout(); return null; }
-  try { return await res.json(); } catch { return null; }
-}
-
-// ---------- MAP (Leaflet) ----------
-const map = L.map('map', { center: [28.61, 77.20], zoom: 12 });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-const zoneLayer = L.layerGroup().addTo(map);
-
-function colorFor(mult){ if(mult>=2) return '#ff4d4f'; if(mult>=1.5) return '#ffb020'; return '#00eaff'; }
-function radiusFor(mult){ return Math.min(800,150+(mult-1)*500); }
-
-async function loadGeoZones(){
-  const token = localStorage.getItem('adminAccessToken');
-  if(!token) return;
-  try {
-    const res = await fetch(`${API}/admin/geo-surge/status`, { headers: { Authorization: `Bearer ${token}` }});
-    if(res.ok){
-      const data = await res.json();
-      renderZones(data.zones || []);
-      console.log('✅ GeoZones loaded');
-    }
-  } catch(e){ console.warn('Geo REST error',e); }
-}
-
-function connectGeoSocket(){
-  const token = localStorage.getItem('adminAccessToken');
-  if(!token) return;
-  const s = io(`${API}/geo-surge-live`, { auth:{token}, transports:['websocket'] });
-  s.on('connect',()=>console.log('🌐 GeoSurge socket connected'));
-  s.on('geo_update',payload=>renderZones(payload.zones||[]));
-  s.on('connect_error',()=>{ console.warn('Geo socket failed, using REST fallback'); loadGeoZones(); });
-}
-
-function renderZones(zones){
-  zoneLayer.clearLayers();
-  zones.forEach(z=>{
-    const c=L.circle([z.lat,z.lon],{
-      radius:radiusFor(z.multiplier),
-      color:colorFor(z.multiplier),
-      fillColor:colorFor(z.multiplier),
-      fillOpacity:0.25,weight:1
-    }).addTo(zoneLayer);
-    c.bindPopup(`<b>Multiplier: x${z.multiplier}</b><br/>Count: ${z.count}`);
-  });
-  if(zones.length){ map.setView([zones[0].lat,zones[0].lon],13); }
-}
-
-// ---------- METRICS + AUDIT ----------
-const auditCtx=document.getElementById("auditChart").getContext("2d");
-const auditChart=new Chart(auditCtx,{type:"line",data:{labels:[],datasets:[{label:"Audit Events",data:[],borderColor:"#00eaff",fill:true,backgroundColor:"rgba(0,234,255,0.2)"}]}});
-
-function addAuditEvent(e){
-  const div=document.createElement('div'); div.className='event';
-  div.innerHTML=`<b>${e.eventType}</b> — ${e.email||'N/A'} (${e.role||'?'})<br/><small>${new Date(e.timestamp).toLocaleTimeString()}</small>`;
-  document.getElementById("auditFeed").prepend(div);
-}
-
-async function fetchMetrics(){
-  const m=await apiGet('/admin/metrics'); if(!m) return;
-  const sys=m.system;
-  document.getElementById('metricsTable').innerHTML=`<tr><td>Hostname</td><td>${sys.hostname}</td></tr><tr><td>CPU Load</td><td>${sys.cpuLoad1m}</td></tr><tr><td>Memory</td><td>${sys.usedMemMB}/${sys.totalMemMB} MB</td></tr>`;
-}
-
-async function fetchQueue(){
-  const q=await apiGet('/admin/queue/status');
-  const box=document.getElementById('queueStatus');
-  if(!q?.queues){ box.innerText='No data'; return; }
-  box.innerHTML=''; Object.entries(q.queues).forEach(([name,s])=>{
-    box.innerHTML+=`<div><b>${name.toUpperCase()}</b>: Active ${s.active||0}, Waiting ${s.waiting||0}, ✅ ${s.completed||0}, ❌ ${s.failed||0}</div>`;
+async function fetchUsers(query="") {
+  const { ok, data } = await api("/users");
+  if (!ok) return alert("Failed to load users");
+  let users = data;
+  if (pendingFilter) users = users.filter(u => u.status === "PENDING");
+  if (query) users = users.filter(u =>
+    (u.email||"").toLowerCase().includes(query.toLowerCase()) ||
+    (u.name||"").toLowerCase().includes(query.toLowerCase())
+  );
+  const table = document.getElementById("usersTable");
+  table.innerHTML = `<tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>`;
+  users.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.id}</td><td>${u.name||""}</td><td>${u.email||""}</td><td>${u.role||""}</td><td>${u.status||""}</td>
+      <td>
+        <button class="small-btn" style="background:#28a745;color:#fff" onclick="approveUser(${u.id})">Approve</button>
+        <button class="small-btn" style="background:#d33;color:#fff" onclick="rejectUser(${u.id})">Reject</button>
+        <button class="small-btn" style="background:#00eaff;color:#00111a" onclick="sendReset(${u.id},'${u.email}')">Reset</button>
+      </td>`;
+    table.appendChild(tr);
   });
 }
 
-async function initDashboard(){
-  connectGeoSocket();
-  await loadGeoZones();
-  await fetchMetrics();
-  await fetchQueue();
-  const logs=await apiGet('/admin/audit/logs?page=1&limit=10');
-  logs?.logs?.forEach(addAuditEvent);
-  setInterval(fetchMetrics,10000);
-  setInterval(fetchQueue,10000);
-}
+window.approveUser = async id => {
+  const { ok, data } = await api(`/admin/users/${id}/approve`, "PATCH");
+  alert(ok ? (data.message || "Approved") : "Failed");
+  if (ok) fetchUsers();
+};
+window.rejectUser = async id => {
+  const { ok, data } = await api(`/admin/users/${id}/reject`, "PATCH");
+  alert(ok ? (data.message || "Rejected") : "Failed");
+  if (ok) fetchUsers();
+};
+window.sendReset = async (id, email) => {
+  const { ok } = await api(`/admin/users/${id}/reset-password`, "POST");
+  alert(ok ? `Reset queued for ${email}` : "Failed");
+};
 
-if(accessToken){
-  document.getElementById("loginOverlay").style.display='none';
-  document.getElementById("logoutBtn").style.display='inline-block';
+/* ---------------- AUDIT ---------------- */
+async function fetchAudit() {
+  const { ok, data } = await api("/admin/audit/logs?page=1&limit=20");
+  if (!ok) return;
+  const feed = document.getElementById("auditFeed");
+  feed.innerHTML = "";
+  (data.logs || []).forEach(e => {
+    const div = document.createElement("div");
+    div.className = "event";
+    div.innerHTML = `<b>${e.eventType}</b> — ${e.email||"N/A"}<br/><small>${new Date(e.timestamp).toLocaleString()}</small>`;
+    feed.prepend(div);
+  });
+}
+document.getElementById("refreshAudit").addEventListener("click", fetchAudit);
+document.getElementById("downloadAudit").addEventListener("click", async () => {
+  const { ok, data } = await api("/admin/audit/logs?page=1&limit=1000");
+  if (!ok) return alert("Failed to download audit");
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "audit.json"; a.click();
+});
+document.getElementById("clearCache").addEventListener("click", async () => {
+  const { ok } = await api("/admin/cache/clear", "POST");
+  alert(ok ? "Cache cleared" : "Failed");
+});
+
+/* ---------------- DASHBOARD INIT ---------------- */
+async function initDashboard() {
+  await Promise.all([fetchAudit(), fetchUsers()]);
+  bindUserTabButtons();
+}
+if (accessToken) {
+  document.getElementById("loginOverlay").style.display = "none";
+  document.getElementById("logoutBtn").style.display = "inline-block";
+  document.getElementById("userStatus").innerText = "admin";
   initDashboard();
 }
 </script>
