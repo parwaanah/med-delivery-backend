@@ -9,14 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CacheModule = void 0;
 const common_1 = require("@nestjs/common");
 const cache_service_1 = require("./cache.service");
-const config_1 = require("@nestjs/config");
 let CacheModule = class CacheModule {
 };
 exports.CacheModule = CacheModule;
 exports.CacheModule = CacheModule = __decorate([
     (0, common_1.Global)(),
     (0, common_1.Module)({
-        providers: [cache_service_1.CacheService, config_1.ConfigService],
+        providers: [cache_service_1.CacheService],
         exports: [cache_service_1.CacheService],
     })
 ], CacheModule);

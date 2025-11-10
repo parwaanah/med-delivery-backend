@@ -17,14 +17,22 @@ let PermissionsGuard = class PermissionsGuard {
         this.reflector = reflector;
     }
     canActivate(context) {
-        const required = this.reflector.get('permissions', context.getHandler()) || [];
-        if (!required.length)
+        const requiredRoles = this.reflector.get('roles', context.getHandler())
+            ?? this.reflector.get('roles', context.getClass());
+        if (!requiredRoles || requiredRoles.length === 0) {
             return true;
-        const req = context.switchToHttp().getRequest();
+        }
+        const ctx = context.switchToHttp();
+        const req = ctx.getRequest();
         const user = req.user;
-        if (!user)
-            return false;
-        return required.includes((user.role || '').toUpperCase());
+        if (!user || !user.role) {
+            throw new common_1.ForbiddenException('User role missing');
+        }
+        const userRole = String(user.role).toUpperCase();
+        const allowed = requiredRoles.map((r) => String(r).toUpperCase());
+        if (allowed.includes(userRole))
+            return true;
+        throw new common_1.ForbiddenException('Insufficient permissions');
     }
 };
 exports.PermissionsGuard = PermissionsGuard;
