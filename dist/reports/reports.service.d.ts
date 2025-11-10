@@ -6,5 +6,8 @@ export declare class ReportsService {
     generateDailyReport(): Promise<{
         json: string;
         pdf: string;
+        csv: string;
     }>;
+    private createPdfReport;
+    private createCsvReport;
 }

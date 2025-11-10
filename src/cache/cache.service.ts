@@ -1,31 +1,68 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import Redis from 'ioredis';
-import { ConfigService } from '@nestjs/config';
+// src/cache/cache.service.ts
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { LRUCache } from 'lru-cache'; // ✅ FIXED import (v10+ exports class LRUCache)
+
+export interface CacheGetOptions {
+  refreshTTL?: number; // optional: refresh TTL on get
+}
 
 @Injectable()
-export class CacheService implements OnModuleInit {
-  private client!: Redis;
+export class CacheService implements OnModuleDestroy {
   private readonly logger = new Logger(CacheService.name);
+  private cache: InstanceType<typeof LRUCache<string, any>>; // ✅ fixed typing
 
-  constructor(private config: ConfigService) {}
+  constructor() {
+    // ✅ Updated for lru-cache v10+
+    this.cache = new LRUCache<string, any>({
+      max: 10_000,
+      ttl: 1000 * 60 * 30, // 30 min
+      allowStale: false,
+    });
 
-  onModuleInit() {
-    const url = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
-    this.client = new Redis(url);
-    this.client.on('connect', () => this.logger.log(`✅ Redis cache connected ${url}`));
-    this.client.on('error', (e) => this.logger.warn('Redis cache error', e));
+    this.logger.log('✅ LRU Cache initialized (v10+ compatible)');
   }
 
-  async get<T = any>(key: string): Promise<T | null> {
-    const v = await this.client.get(key);
-    return v ? JSON.parse(v) as T : null;
+  set<T = any>(key: string, value: T, ttlMs?: number) {
+    if (ttlMs && ttlMs > 0) {
+      this.cache.set(key, value, { ttl: ttlMs });
+    } else {
+      this.cache.set(key, value);
+    }
   }
 
-  async set(key: string, value: any, ttlSec = 60) {
-    await this.client.set(key, JSON.stringify(value), 'EX', ttlSec);
+  get<T = any>(key: string, opts?: CacheGetOptions): T | undefined {
+    const v = this.cache.get(key) as T | undefined;
+    if (v && opts?.refreshTTL) {
+      this.cache.set(key, v, { ttl: opts.refreshTTL });
+    }
+    return v;
   }
 
-  async del(key: string) {
-    await this.client.del(key);
+  del(key: string) {
+    this.cache.delete(key);
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+
+  has(key: string) {
+    return this.cache.has(key);
+  }
+
+  size() {
+    return this.cache.size;
+  }
+
+  dumpStats() {
+    return {
+      size: this.cache.size,
+      max: (this.cache as any).max ?? null,
+    };
+  }
+
+  onModuleDestroy() {
+    this.logger.log('🧹 Clearing cache on shutdown');
+    this.clear();
   }
 }
