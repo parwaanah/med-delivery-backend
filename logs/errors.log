@@ -322,3 +322,615 @@ ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
 ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
 [2025-11-08T18:02:59.021Z] [ERROR] [SurgeProcessor] Surge recalc error
 ReplyError: WRONGTYPE Operation against a key holding the wrong kind of value
+[2025-11-11T15:06:08.330Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async PharmaciesService.findOne (C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:26)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:06:08.335Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async RidersService.findOne (C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:07:08.293Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async PharmaciesService.findOne (C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:26)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:07:08.297Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async RidersService.findOne (C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:08:08.284Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async PharmaciesService.findOne (C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:26)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:08:08.287Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async RidersService.findOne (C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:09:08.281Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async PharmaciesService.findOne (C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:26)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:09:08.284Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async RidersService.findOne (C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:10:08.296Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async PharmaciesService.findOne (C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:26)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:10:08.299Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async RidersService.findOne (C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:11:08.297Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:49
+
+  23     });
+  24 }
+  25 async findOne(id) {
+→ 26     const pharmacy = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async PharmaciesService.findOne (C:\Users\OMEN\med-delivery\backend\dist\pharmacies\pharmacies.service.js:26:26)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-11T15:11:08.302Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:46
+
+  37     });
+  38 }
+  39 async findOne(id) {
+→ 40     const rider = await this.prisma.user.findUnique({
+           where: {
+         +   id: Int
+           },
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             status: true,
+             latitude: true,
+             longitude: true,
+             createdAt: true
+           }
+         })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async RidersService.findOne (C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
