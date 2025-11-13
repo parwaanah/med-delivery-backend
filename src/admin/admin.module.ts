@@ -4,6 +4,7 @@ import { AdminController } from './admin.controller';
 import { AdminUsersController } from './admin.users.controller';
 import { AdminAuditController } from './admin.audit.controller';
 import { AdminMetricsController } from './admin.metrics.controller';
+import { AdminOrdersController } from './admin.orders.controller';
 import { AdminQueueController } from './admin.queue.controller';
 
 @Module({
@@ -12,6 +13,7 @@ import { AdminQueueController } from './admin.queue.controller';
     AdminUsersController,
     AdminAuditController,
     AdminMetricsController,
+    AdminOrdersController, // ✅ Added
     AdminQueueController,
   ],
   providers: [PrismaService],

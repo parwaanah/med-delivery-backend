@@ -42,7 +42,7 @@ model User {
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
-  approver      User?  @relation("AdminApprovals", fields: [approvedBy], references: [id])
+  approver      User?  @relation("AdminApprovals", fields: [approvedBy], references: [id], onDelete: SetNull)
   approvedUsers User[] @relation("AdminApprovals")
 
   customerOrders        Order[]             @relation("CustomerOrders")
@@ -78,8 +78,8 @@ model PharmacyInventory {
   stock      Int      @default(0)
   createdAt  DateTime @default(now())
 
-  pharmacy User     @relation("PharmacyInventoryRelation", fields: [pharmacyId], references: [id])
-  medicine Medicine @relation(fields: [medicineId], references: [id])
+  pharmacy User     @relation("PharmacyInventoryRelation", fields: [pharmacyId], references: [id], onDelete: Cascade)
+  medicine Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
 
   @@unique([pharmacyId, medicineId])
 }
@@ -95,9 +95,9 @@ model Order {
   updatedAt  DateTime    @updatedAt
   deletedAt  DateTime?
 
-  customer User         @relation("CustomerOrders", fields: [customerId], references: [id])
-  pharmacy User         @relation("PharmacyOrders", fields: [pharmacyId], references: [id])
-  rider    User?        @relation("RiderOrders", fields: [riderId], references: [id])
+  customer User  @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Cascade)
+  pharmacy User  @relation("PharmacyOrders", fields: [pharmacyId], references: [id], onDelete: Cascade)
+  rider    User? @relation("RiderOrders", fields: [riderId], references: [id], onDelete: SetNull)
   items    OrderItem[]
   offers   OrderOffer[]
 }
@@ -110,8 +110,8 @@ model OrderItem {
   quantity   Int
   price      Float
 
-  order    Order     @relation(fields: [orderId], references: [id])
-  medicine Medicine? @relation(fields: [medicineId], references: [id])
+  order    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  medicine Medicine? @relation(fields: [medicineId], references: [id], onDelete: SetNull)
 }
 
 model OrderOffer {
@@ -122,7 +122,7 @@ model OrderOffer {
   offeredTo  String
   status     String   @default("PENDING")
   createdAt  DateTime @default(now())
-  order      Order    @relation(fields: [orderId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -135,8 +135,8 @@ model Notification {
   status     String   @default("UNREAD")
   createdAt  DateTime @default(now())
 
-  sender   User? @relation("SentNotifications", fields: [senderId], references: [id])
-  receiver User  @relation("ReceivedNotifications", fields: [receiverId], references: [id])
+  sender   User? @relation("SentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+  receiver User  @relation("ReceivedNotifications", fields: [receiverId], references: [id], onDelete: Cascade)
 }
 
 model Session {
@@ -148,7 +148,8 @@ model Session {
   expiresAt DateTime
   revoked   Boolean  @default(false)
 
-  user          User           @relation(fields: [userId], references: [id])
+  // ✅ Automatically delete sessions when user is deleted
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[] @relation("SessionToRefreshTokens")
 }
 
@@ -161,8 +162,9 @@ model RefreshToken {
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  user    User     @relation(fields: [userId], references: [id])
-  session Session? @relation("SessionToRefreshTokens", fields: [sessionId], references: [id])
+  // ✅ Cascade delete when related entities are deleted
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session Session? @relation("SessionToRefreshTokens", fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
@@ -172,7 +174,8 @@ model AuditLog {
   resource  String?
   meta      Json?
   createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model LoginAudit {
@@ -185,7 +188,8 @@ model LoginAudit {
   role      String?
   success   Boolean  @default(true)
   timestamp DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model SurgeEvent {
@@ -202,6 +206,6 @@ model ChatMessage {
   text       String
   createdAt  DateTime @default(now())
 
-  sender   User @relation("UserSentMessages", fields: [senderId], references: [id])
-  receiver User @relation("UserReceivedMessages", fields: [receiverId], references: [id])
+  sender   User @relation("UserSentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("UserReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 }

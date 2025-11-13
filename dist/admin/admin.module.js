@@ -13,6 +13,7 @@ const admin_controller_1 = require("./admin.controller");
 const admin_users_controller_1 = require("./admin.users.controller");
 const admin_audit_controller_1 = require("./admin.audit.controller");
 const admin_metrics_controller_1 = require("./admin.metrics.controller");
+const admin_orders_controller_1 = require("./admin.orders.controller");
 const admin_queue_controller_1 = require("./admin.queue.controller");
 let AdminModule = class AdminModule {
 };
@@ -24,6 +25,7 @@ exports.AdminModule = AdminModule = __decorate([
             admin_users_controller_1.AdminUsersController,
             admin_audit_controller_1.AdminAuditController,
             admin_metrics_controller_1.AdminMetricsController,
+            admin_orders_controller_1.AdminOrdersController,
             admin_queue_controller_1.AdminQueueController,
         ],
         providers: [prisma_service_1.PrismaService],

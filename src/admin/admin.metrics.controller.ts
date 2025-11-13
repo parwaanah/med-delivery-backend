@@ -14,9 +14,9 @@ interface DbCountRow {
   count: string;
 }
 
-@Controller('admin/metrics')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, 'ADMIN', 'admin') // ✅ case-insensitive protection
+@Roles(UserRole.ADMIN, 'ADMIN', 'admin')
+@Controller('admin/metrics')
 export class AdminMetricsController {
   constructor(private prisma: PrismaService) {}
 
@@ -28,7 +28,7 @@ export class AdminMetricsController {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
 
-    // ✅ Redis Ping (resilient)
+    // ✅ Redis Ping
     let redisPing: string;
     try {
       const { stdout } = await execAsync('redis-cli ping');
@@ -48,7 +48,20 @@ export class AdminMetricsController {
       activeConnections = 0;
     }
 
+    // ✅ Entity counts (Overview tab)
+    const [ordersCount, usersCount, pharmaciesCount, ridersCount] =
+      await Promise.all([
+        this.prisma.order.count(),
+        this.prisma.user.count(),
+        this.prisma.user.count({ where: { role: 'PHARMACY' } }),
+        this.prisma.user.count({ where: { role: 'RIDER' } }),
+      ]);
+
     return {
+      orders: { total: ordersCount },
+      users: { count: usersCount },
+      pharmacies: { count: pharmaciesCount },
+      riders: { count: ridersCount },
       system: {
         hostname: os.hostname(),
         platform: os.platform(),
@@ -58,9 +71,7 @@ export class AdminMetricsController {
         uptimeMinutes: Math.round(uptime / 60),
       },
       redis: redisPing,
-      database: {
-        activeConnections,
-      },
+      database: { activeConnections },
       node: {
         rssMB: Math.round(mem.rss / 1024 / 1024),
         heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),

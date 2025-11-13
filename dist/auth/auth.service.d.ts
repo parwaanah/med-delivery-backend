@@ -6,6 +6,7 @@ export declare class AuthService {
     private prisma;
     private jwtService;
     private audit;
+    private readonly logger;
     constructor(prisma: PrismaService, jwtService: JwtService, audit: AuditService);
     register(data: RegisterDto): Promise<{
         accessToken: string;
@@ -34,6 +35,12 @@ export declare class AuthService {
     }>;
     logout(sessionId: number): Promise<{
         message: string;
+    }>;
+    requestPasswordReset(email: string): Promise<{
+        message: string;
+        email: string;
+        resetLink: string;
+        timestamp: string;
     }>;
     private generateToken;
 }

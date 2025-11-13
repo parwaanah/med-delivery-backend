@@ -41,6 +41,7 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -51,11 +52,12 @@ const date_fns_1 = require("date-fns");
 const prisma_service_1 = require("../utils/prisma.service");
 const audit_service_1 = require("../utils/audit.service");
 const client_1 = require("@prisma/client");
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     constructor(prisma, jwtService, audit) {
         this.prisma = prisma;
         this.jwtService = jwtService;
         this.audit = audit;
+        this.logger = new common_1.Logger(AuthService_1.name);
     }
     async register(data) {
         if (!data.email || !data.password || !data.name)
@@ -183,6 +185,24 @@ let AuthService = class AuthService {
         });
         return { message: 'Logout successful' };
     }
+    async requestPasswordReset(email) {
+        if (!email)
+            throw new common_1.BadRequestException('Email is required');
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            throw new common_1.BadRequestException(`No user found with email: ${email}`);
+        }
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        const resetLink = `https://your-frontend-url/reset-password?token=${resetToken}`;
+        this.logger.log(`📩 Password reset requested for ${email}`);
+        this.logger.log(`🔗 Mock reset link: ${resetLink}`);
+        return {
+            message: `Password reset email sent to ${email}`,
+            email,
+            resetLink,
+            timestamp: new Date().toISOString(),
+        };
+    }
     generateToken(user) {
         const payload = { sub: user.id, role: user.role, email: user.email };
         const accessToken = this.jwtService.sign(payload);
@@ -193,7 +213,7 @@ let AuthService = class AuthService {
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         jwt_1.JwtService,

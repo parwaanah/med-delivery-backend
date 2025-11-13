@@ -934,3 +934,355 @@ Argument `id` is missing.
     at async RidersService.findOne (C:\Users\OMEN\med-delivery\backend\dist\riders\riders.service.js:40:23)
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:04:13.997Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:54:38
+
+  51     });
+  52 }
+  53 async deleteUser(id) {
+→ 54     await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:54:38
+
+  51     });
+  52 }
+  53 async deleteUser(id) {
+→ 54     await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:54:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:23:58.379Z] [ERROR] [NestApplication] Error: listen EADDRINUSE: address already in use :::3001
+[2025-11-12T16:50:41.339Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:50:59.233Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:51:34.627Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:51:40.334Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:52:04.014Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:52:16.737Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:52:30.261Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(63) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(63) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:53:43.036Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(50) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(50) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:54:06.897Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(56) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(56) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:54:06.905Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(55) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(55) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:57:22.888Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-12T16:57:29.459Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.user.delete()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:38
+
+  61 });
+  62 if (!existing)
+  63     throw new common_1.NotFoundException(`User #${userId} not found`);
+→ 64 await this.prisma.user.delete(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23001", message: "update or delete on table \"User\" violates RESTRICT setting of foreign key constraint \"Session_userId_fkey\" on table \"Session\"", severity: "ERROR", detail: Some("Key (id)=(73) is referenced from table \"Session\"."), column: None, hint: None }), transient: false })
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async AdminUsersController.deleteUser (C:\Users\OMEN\med-delivery\backend\dist\admin\admin.users.controller.js:64:9)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17

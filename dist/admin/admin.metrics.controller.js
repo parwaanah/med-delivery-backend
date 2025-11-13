@@ -80,7 +80,17 @@ let AdminMetricsController = class AdminMetricsController {
         catch {
             activeConnections = 0;
         }
+        const [ordersCount, usersCount, pharmaciesCount, ridersCount] = await Promise.all([
+            this.prisma.order.count(),
+            this.prisma.user.count(),
+            this.prisma.user.count({ where: { role: 'PHARMACY' } }),
+            this.prisma.user.count({ where: { role: 'RIDER' } }),
+        ]);
         return {
+            orders: { total: ordersCount },
+            users: { count: usersCount },
+            pharmacies: { count: pharmaciesCount },
+            riders: { count: ridersCount },
             system: {
                 hostname: os.hostname(),
                 platform: os.platform(),
@@ -90,9 +100,7 @@ let AdminMetricsController = class AdminMetricsController {
                 uptimeMinutes: Math.round(uptime / 60),
             },
             redis: redisPing,
-            database: {
-                activeConnections,
-            },
+            database: { activeConnections },
             node: {
                 rssMB: Math.round(mem.rss / 1024 / 1024),
                 heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
@@ -111,8 +119,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AdminMetricsController.prototype, "getMetrics", null);
 exports.AdminMetricsController = AdminMetricsController = __decorate([
-    (0, common_1.Controller)('admin/metrics'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, 'ADMIN', 'admin'),
+    (0, common_1.Controller)('admin/metrics'),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], AdminMetricsController);

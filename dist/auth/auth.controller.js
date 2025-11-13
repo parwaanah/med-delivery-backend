@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var AuthController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const openapi = require("@nestjs/swagger");
@@ -18,9 +19,10 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const auth_dto_1 = require("./dto/auth.dto");
 const swagger_1 = require("@nestjs/swagger");
-let AuthController = class AuthController {
+let AuthController = AuthController_1 = class AuthController {
     constructor(authService) {
         this.authService = authService;
+        this.logger = new common_1.Logger(AuthController_1.name);
     }
     async register(dto) {
         return this.authService.register(dto);
@@ -36,15 +38,16 @@ let AuthController = class AuthController {
     async logout(sessionId) {
         return this.authService.logout(sessionId);
     }
+    async requestPasswordReset(body) {
+        const email = body.email?.trim();
+        if (!email)
+            throw new common_1.BadRequestException('Email is required');
+        return this.authService.requestPasswordReset(email);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiBody)({
-        type: auth_dto_1.RegisterDto,
-        description: 'Register a new user',
-    }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'User registered successfully' }),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -53,11 +56,6 @@ __decorate([
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
-    (0, swagger_1.ApiBody)({
-        type: auth_dto_1.LoginDto,
-        description: 'Authenticate user and get access + refresh tokens',
-    }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Login successful' }),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
@@ -67,11 +65,6 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('refresh'),
-    (0, swagger_1.ApiBody)({
-        type: auth_dto_1.RefreshTokenDto,
-        description: 'Use refresh token to obtain new access token',
-    }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Access token refreshed successfully' }),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -80,23 +73,21 @@ __decorate([
 ], AuthController.prototype, "refresh", null);
 __decorate([
     (0, common_1.Post)('logout'),
-    (0, swagger_1.ApiBody)({
-        schema: {
-            type: 'object',
-            properties: {
-                sessionId: { type: 'number', example: 1 },
-            },
-        },
-        description: 'Logout and revoke current session',
-    }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Logout successful' }),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)('sessionId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "logout", null);
-exports.AuthController = AuthController = __decorate([
+__decorate([
+    (0, common_1.Post)('request-password-reset'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "requestPasswordReset", null);
+exports.AuthController = AuthController = AuthController_1 = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

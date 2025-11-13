@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
 export declare class AuthController {
     private authService;
+    private readonly logger;
     constructor(authService: AuthService);
     register(dto: RegisterDto): Promise<{
         accessToken: string;
@@ -31,5 +32,13 @@ export declare class AuthController {
     }>;
     logout(sessionId: number): Promise<{
         message: string;
+    }>;
+    requestPasswordReset(body: {
+        email?: string;
+    }): Promise<{
+        message: string;
+        email: string;
+        resetLink: string;
+        timestamp: string;
     }>;
 }

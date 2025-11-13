@@ -3,6 +3,18 @@ export declare class AdminMetricsController {
     private prisma;
     constructor(prisma: PrismaService);
     getMetrics(): Promise<{
+        orders: {
+            total: number;
+        };
+        users: {
+            count: number;
+        };
+        pharmacies: {
+            count: number;
+        };
+        riders: {
+            count: number;
+        };
         system: {
             hostname: string;
             platform: NodeJS.Platform;
