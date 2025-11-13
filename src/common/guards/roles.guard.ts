@@ -17,23 +17,23 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // Allow access if no roles are required
+    // Allow access if no roles required
     if (!requiredRoles || requiredRoles.length === 0) return true;
 
     const { user } = context.switchToHttp().getRequest();
-    if (!user || !user.role) {
-      throw new ForbiddenException('User role not found in token');
-    }
 
-    // ✅ Normalize both sides to lowercase for case-insensitive matching
+    if (!user || !user.role)
+      throw new ForbiddenException('User role missing in token');
+
     const userRole = String(user.role).toLowerCase();
+
     const allowed = requiredRoles.some(
       (role) => role.toLowerCase() === userRole,
     );
 
     if (!allowed) {
       throw new ForbiddenException(
-        `Access denied: requires one of [${requiredRoles.join(', ')}], but user has role "${user.role}"`,
+        `Access denied → requires [${requiredRoles}], got "${user.role}"`
       );
     }
 

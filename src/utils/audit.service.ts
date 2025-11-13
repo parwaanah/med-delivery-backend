@@ -10,8 +10,8 @@ export class AuditService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly liveGateway: AuditLiveGateway,
-    private readonly notification: NotificationService,
+    private readonly live: AuditLiveGateway,
+    private readonly notify: NotificationService,
   ) {}
 
   async log({
@@ -36,8 +36,7 @@ export class AuditService {
         data: { userId, email, ip, userAgent, eventType, role, success },
       });
 
-      // Broadcast audit feed live
-      this.liveGateway.emitAuditEvent({
+      this.live.emitAuditEvent({
         eventType,
         userId,
         email,
@@ -46,19 +45,16 @@ export class AuditService {
         timestamp: record.timestamp,
       });
 
-      // Admin toast for key audit events
-      const toastType = success ? 'ok' : 'err';
-      this.notification.sendAdminToast({
-        type: toastType,
+      this.notify.sendAdminToast({
+        type: success ? 'ok' : 'err',
         title: `Audit • ${eventType}`,
-        text: `${email ?? 'unknown'} (${role ?? 'N/A'})`,
+        text: email ?? 'unknown',
       });
 
       return record;
     } catch (err) {
       this.logger.error('Audit log failed', err);
-      // Prevent crash if audit DB fails — optional: silent continue
-      return { error: true, message: 'Audit log failed' };
+      return { error: true };
     }
   }
 }

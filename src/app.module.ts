@@ -32,13 +32,16 @@ import { MetricsModule } from './metrics/metrics.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // Serve static dashboards from /public
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/',
-    }),
+  rootPath: join(process.cwd(), 'public'),  // <— Load from real folder
+  serveRoot: '/public',
+  serveStaticOptions: {
+    index: false,
+    fallthrough: false,
+  },
+}),
 
-    // Core & Enhanced Modules
+    // Core modules
     UtilsModule,
     HealthModule,
     AuthModule,
@@ -55,8 +58,6 @@ import { MetricsModule } from './metrics/metrics.module';
     WebhooksModule,
     ReportsModule,
     ScheduleModule.forRoot(),
-
-    // Phase 4 add-ons
     ChatModule,
     CacheModule,
     MetricsModule,

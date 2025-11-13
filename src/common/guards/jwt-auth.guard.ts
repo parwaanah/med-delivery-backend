@@ -1,4 +1,5 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+// src/common/guards/jwt-auth.guard.ts
+import { Injectable, ExecutionContext } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 
@@ -13,7 +14,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true; // ✅ Skip guard if route marked @Public()
+
+    if (isPublic) return true; // Allow public routes
     return super.canActivate(context);
   }
 }

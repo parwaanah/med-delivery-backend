@@ -32,7 +32,7 @@ export class HealthController {
 
     // ✅ 2. Redis check — lightweight ping
     try {
-      await redisPing(redisUrl);
+      await redisPing();
       results.redis = { status: 'up' };
     } catch (err: unknown) {
       const msg =

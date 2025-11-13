@@ -1,0 +1,221 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var AuthService_1;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuthService = void 0;
+const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
+const bcrypt = __importStar(require("bcryptjs"));
+const crypto = __importStar(require("crypto"));
+const date_fns_1 = require("date-fns");
+const prisma_service_1 = require("../utils/prisma.service");
+const audit_service_1 = require("../utils/audit.service");
+const client_1 = require("@prisma/client");
+let AuthService = AuthService_1 = class AuthService {
+    constructor(prisma, jwtService, audit) {
+        this.prisma = prisma;
+        this.jwtService = jwtService;
+        this.audit = audit;
+        this.logger = new common_1.Logger(AuthService_1.name);
+    }
+    async register(data) {
+        if (!data.email || !data.password || !data.name)
+            throw new common_1.BadRequestException('Name, email, and password required');
+        const existing = await this.prisma.user.findUnique({
+            where: { email: data.email },
+        });
+        if (existing)
+            throw new common_1.BadRequestException('Email already in use');
+        const hashed = await bcrypt.hash(data.password, 10);
+        const normalizedRole = data.role || client_1.UserRole.CUSTOMER;
+        const isCustomer = normalizedRole === client_1.UserRole.CUSTOMER;
+        const autoStatus = isCustomer ? 'APPROVED' : 'PENDING';
+        const user = await this.prisma.user.create({
+            data: {
+                name: data.name,
+                email: data.email,
+                password: hashed,
+                role: normalizedRole,
+                status: autoStatus,
+            },
+        });
+        await this.audit.log({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            eventType: 'REGISTER_SUCCESS',
+            success: true,
+        });
+        return this.generateToken(user);
+    }
+    async login(data, ip, userAgent) {
+        const user = await this.prisma.user.findUnique({ where: { email: data.email } });
+        if (!user)
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        if (user.status !== 'APPROVED')
+            throw new common_1.UnauthorizedException('Account pending admin approval');
+        const match = await bcrypt.compare(data.password, user.password);
+        if (!match)
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        const session = await this.prisma.session.create({
+            data: {
+                userId: user.id,
+                ip: ip || null,
+                userAgent: userAgent ? String(userAgent) : null,
+                expiresAt: (0, date_fns_1.addHours)(new Date(), 12),
+            },
+        });
+        const refreshTokenRaw = crypto.randomBytes(32).toString('hex');
+        const refreshTokenHash = crypto.createHash('sha256').update(refreshTokenRaw).digest('hex');
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: user.id,
+                sessionId: session.id,
+                tokenHash: refreshTokenHash,
+                expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
+            },
+        });
+        await this.audit.log({
+            userId: user.id,
+            email: user.email,
+            eventType: 'LOGIN_SUCCESS',
+            success: true,
+        });
+        const accessToken = this.jwtService.sign({ sub: user.id, role: user.role }, { expiresIn: '1h' });
+        return {
+            accessToken,
+            refreshToken: refreshTokenRaw,
+            sessionId: session.id,
+            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        };
+    }
+    async refreshToken(oldToken) {
+        if (!oldToken)
+            throw new common_1.UnauthorizedException('Missing token');
+        const oldHash = crypto.createHash('sha256').update(oldToken).digest('hex');
+        const existing = await this.prisma.refreshToken.findFirst({
+            where: { tokenHash: oldHash, revoked: false },
+            include: { session: true },
+        });
+        if (!existing || !existing.session)
+            throw new common_1.UnauthorizedException('Invalid refresh token');
+        if (existing.expiresAt && (0, date_fns_1.isBefore)(existing.expiresAt, new Date())) {
+            await this.prisma.refreshToken.update({
+                where: { id: existing.id },
+                data: { revoked: true },
+            });
+            throw new common_1.UnauthorizedException('Refresh token expired');
+        }
+        if (existing.session.revoked) {
+            throw new common_1.UnauthorizedException('Session revoked');
+        }
+        await this.prisma.refreshToken.update({
+            where: { id: existing.id },
+            data: { revoked: true },
+        });
+        const newTokenRaw = crypto.randomBytes(32).toString('hex');
+        const newTokenHash = crypto.createHash('sha256').update(newTokenRaw).digest('hex');
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: existing.session.userId,
+                sessionId: existing.session.id,
+                tokenHash: newTokenHash,
+                expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
+            },
+        });
+        const user = await this.prisma.user.findUnique({
+            where: { id: existing.session.userId },
+        });
+        if (!user)
+            throw new common_1.UnauthorizedException('User not found');
+        const accessToken = this.jwtService.sign({ sub: user.id, role: user.role }, { expiresIn: '1h' });
+        return { accessToken, refreshToken: newTokenRaw, sessionId: existing.session.id };
+    }
+    async logout(sessionId) {
+        if (!sessionId)
+            throw new common_1.BadRequestException('sessionId required');
+        await this.prisma.session.update({
+            where: { id: sessionId },
+            data: { revoked: true },
+        });
+        await this.prisma.refreshToken.updateMany({
+            where: { sessionId },
+            data: { revoked: true },
+        });
+        return { message: 'Logout successful' };
+    }
+    async requestPasswordReset(email) {
+        if (!email)
+            throw new common_1.BadRequestException('Email is required');
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            throw new common_1.BadRequestException(`No user found with email: ${email}`);
+        }
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        const resetLink = `https://your-frontend-url/reset-password?token=${resetToken}`;
+        this.logger.log(`Password reset requested for ${email}`);
+        this.logger.log(`Mock reset link: ${resetLink}`);
+        return {
+            message: `Password reset email sent to ${email}`,
+            email,
+            resetLink,
+            timestamp: new Date().toISOString(),
+        };
+    }
+    generateToken(user) {
+        const payload = { sub: user.id, role: user.role, email: user.email };
+        const accessToken = this.jwtService.sign(payload);
+        return {
+            accessToken,
+            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        };
+    }
+};
+exports.AuthService = AuthService;
+exports.AuthService = AuthService = AuthService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        jwt_1.JwtService,
+        audit_service_1.AuditService])
+], AuthService);

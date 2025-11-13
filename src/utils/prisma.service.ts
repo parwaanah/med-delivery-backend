@@ -15,12 +15,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const shutdown = async () => {
       try {
         await this.$disconnect();
-      } catch {
-        // ignore
-      } finally {
-        try { await app.close(); } catch {}
-        process.exit(0);
-      }
+      } catch {}
+      try { await app.close(); } catch {}
+      process.exit(0);
     };
 
     process.on('SIGINT', shutdown);

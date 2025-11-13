@@ -56,7 +56,7 @@ model User {
   auditLogs             AuditLog[]
   LoginAudit            LoginAudit[]
 
-  // 🗨️ Chat relations
+  // Chat relations
   sentMessages     ChatMessage[] @relation("UserSentMessages")
   receivedMessages ChatMessage[] @relation("UserReceivedMessages")
 }
@@ -148,7 +148,6 @@ model Session {
   expiresAt DateTime
   revoked   Boolean  @default(false)
 
-  // ✅ Automatically delete sessions when user is deleted
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[] @relation("SessionToRefreshTokens")
 }
@@ -162,7 +161,6 @@ model RefreshToken {
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  // ✅ Cascade delete when related entities are deleted
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   session Session? @relation("SessionToRefreshTokens", fields: [sessionId], references: [id], onDelete: Cascade)
 }

@@ -1,4 +1,3 @@
-// src/auth/auth.service.ts
 import {
   Injectable,
   UnauthorizedException,
@@ -24,7 +23,6 @@ export class AuthService {
     private audit: AuditService,
   ) {}
 
-  // ------------------ REGISTER ------------------
   async register(data: RegisterDto) {
     if (!data.email || !data.password || !data.name)
       throw new BadRequestException('Name, email, and password required');
@@ -61,7 +59,6 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  // ------------------ LOGIN ------------------
   async login(data: LoginDto, ip?: string, userAgent?: string) {
     const user = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (!user) throw new UnauthorizedException('Invalid credentials');
@@ -110,7 +107,6 @@ export class AuthService {
     };
   }
 
-  // ------------------ REFRESH TOKEN ------------------
   async refreshToken(oldToken: string) {
     if (!oldToken) throw new UnauthorizedException('Missing token');
 
@@ -160,7 +156,6 @@ export class AuthService {
     return { accessToken, refreshToken: newTokenRaw, sessionId: existing.session.id };
   }
 
-  // ------------------ LOGOUT ------------------
   async logout(sessionId: number) {
     if (!sessionId) throw new BadRequestException('sessionId required');
     await this.prisma.session.update({
@@ -174,36 +169,28 @@ export class AuthService {
     return { message: 'Logout successful' };
   }
 
-  // ------------------ PASSWORD RESET ------------------
-async requestPasswordReset(email: string) {
-  if (!email) throw new BadRequestException('Email is required');
+  async requestPasswordReset(email: string) {
+    if (!email) throw new BadRequestException('Email is required');
 
-  const user = await this.prisma.user.findUnique({ where: { email } });
-  if (!user) {
-    // ❌ Explicitly reject for admin visibility
-    throw new BadRequestException(`No user found with email: ${email}`);
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new BadRequestException(`No user found with email: ${email}`);
+    }
+
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    const resetLink = `https://your-frontend-url/reset-password?token=${resetToken}`;
+
+    this.logger.log(`Password reset requested for ${email}`);
+    this.logger.log(`Mock reset link: ${resetLink}`);
+
+    return {
+      message: `Password reset email sent to ${email}`,
+      email,
+      resetLink,
+      timestamp: new Date().toISOString(),
+    };
   }
 
-  // Generate mock reset token (future-ready)
-  const resetToken = crypto.randomBytes(20).toString('hex');
-  const resetLink = `https://your-frontend-url/reset-password?token=${resetToken}`;
-
-  // Optional: Store token for verification (future implementation)
-  // await this.prisma.passwordResetToken.create({
-  //   data: { userId: user.id, token: resetToken },
-  // });
-
-  this.logger.log(`📩 Password reset requested for ${email}`);
-  this.logger.log(`🔗 Mock reset link: ${resetLink}`);
-
-  return {
-    message: `Password reset email sent to ${email}`,
-    email,
-    resetLink,
-    timestamp: new Date().toISOString(),
-  };
-}
-  // ------------------ TOKEN GENERATION ------------------
   private generateToken(user: any) {
     const payload = { sub: user.id, role: user.role, email: user.email };
     const accessToken = this.jwtService.sign(payload);

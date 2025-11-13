@@ -23,7 +23,6 @@ export class AdminUsersController {
 
   constructor(private prisma: PrismaService) {}
 
-  // 🔹 Get all users (Users tab)
   @Get()
   async getAllUsers() {
     const users = await this.prisma.user.findMany({
@@ -33,7 +32,6 @@ export class AdminUsersController {
     return { total: users.length, users };
   }
 
-  // 🔹 Pending users (Approvals tab)
   @Get('pending')
   async getPendingUsers() {
     const pending = await this.prisma.user.findMany({
@@ -43,7 +41,6 @@ export class AdminUsersController {
     return { total: pending.length, users: pending };
   }
 
-  // 🔹 Approve user
   @Patch(':id/approve')
   async approveUser(@Param('id') id: number) {
     return this.prisma.user.update({
@@ -52,7 +49,6 @@ export class AdminUsersController {
     });
   }
 
-  // 🔹 Reject user
   @Patch(':id/reject')
   async rejectUser(@Param('id') id: number) {
     return this.prisma.user.update({
@@ -61,7 +57,6 @@ export class AdminUsersController {
     });
   }
 
-  // ✅ Robust delete user (deletes refreshTokens -> sessions -> user) inside a transaction
   @Delete(':id')
   async deleteUser(@Param('id') id: number) {
     const userId = Number(id);
@@ -74,22 +69,16 @@ export class AdminUsersController {
     if (!existing) throw new NotFoundException(`User #${userId} not found`);
 
     try {
-      // Transactional cleanup:
-      // 1) delete refresh tokens for this user (covers tokens tied to sessions)
-      // 2) delete sessions for this user
-      // 3) delete user
       await this.prisma.$transaction([
         this.prisma.refreshToken.deleteMany({ where: { userId } }),
         this.prisma.session.deleteMany({ where: { userId } }),
         this.prisma.user.delete({ where: { id: userId } }),
       ]);
 
-      this.logger.log(`🗑️ Deleted user #${userId} (${existing.email})`);
+      this.logger.log(`Deleted user #${userId} (${existing.email})`);
       return { message: `User #${userId} deleted successfully` };
     } catch (err) {
-      // Log original error for debugging
       this.logger.error(`Failed to delete user #${userId}`, err as any);
-      // Re-throw as a consistent HTTP error
       throw new InternalServerErrorException('Failed to delete user — see server logs');
     }
   }

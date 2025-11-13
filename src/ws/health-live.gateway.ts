@@ -49,7 +49,7 @@ export class HealthLiveGateway implements OnGatewayInit {
     }
 
     try {
-      await redisPing(this.redisUrl);
+      await redisPing();
       results.redis = { status: 'up' };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err) || 'Unknown error';

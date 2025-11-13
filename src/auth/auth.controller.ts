@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, Logger, BadRequestException } from '@nestj
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
-import { ApiTags, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -32,7 +32,6 @@ export class AuthController {
     return this.authService.logout(sessionId);
   }
 
-  // ✅ Added route for Recovery tab
   @Post('request-password-reset')
   async requestPasswordReset(@Body() body: { email?: string }) {
     const email = body.email?.trim();

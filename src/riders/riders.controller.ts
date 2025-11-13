@@ -1,4 +1,3 @@
-// src/riders/riders.controller.ts
 import {
   Controller,
   Get,
@@ -55,7 +54,6 @@ export class RidersController {
     return this.ridersService.updateStatus(Number(id), dto);
   }
 
-  // ✅ Live GPS endpoint (fully functional)
   @Patch(':id/location')
   @Roles('rider', 'admin')
   async updateLocation(
