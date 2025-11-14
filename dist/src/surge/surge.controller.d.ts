@@ -8,10 +8,15 @@ export declare class SurgeController {
         supply: number;
         override: number | null;
     }>;
-    override(body: any): Promise<{
+    override(body: {
+        multiplier: number;
+        setBy?: string;
+    }): Promise<{
         multiplier: number;
         demand: number;
         supply: number;
+    } | {
+        error: string;
     }>;
     reset(): Promise<{
         multiplier: number;

@@ -20,9 +20,9 @@ export declare class OrdersController {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     }) | {
         order: {
             items: {
@@ -40,11 +40,15 @@ export declare class OrdersController {
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
+            riderId: number | null;
             totalPrice: number;
             customerId: number;
-            riderId: number | null;
         };
         candidates: number[];
+        scores: {
+            pharmacyId: number;
+            score: number;
+        }[];
     }>;
     findAll(req: any): Promise<({
         items: {
@@ -62,9 +66,9 @@ export declare class OrdersController {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     })[]>;
     pharmacyRespond(req: any, orderId: string, dto: RespondOfferDto): Promise<{
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -73,9 +77,9 @@ export declare class OrdersController {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     } | {
         ok: boolean;
     }>;
@@ -86,9 +90,9 @@ export declare class OrdersController {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     } | {
         ok: boolean;
     }>;
@@ -105,8 +109,8 @@ export declare class OrdersController {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     }>;
 }

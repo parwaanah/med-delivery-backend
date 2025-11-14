@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   IsNumber,
+  MinLength,
 } from 'class-validator';
 
 export class CreateRiderDto {
@@ -16,7 +17,7 @@ export class CreateRiderDto {
   email!: string;
 
   @IsNotEmpty()
-  @IsString()
+  @MinLength(6)
   password!: string;
 
   @IsOptional()

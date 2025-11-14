@@ -11,7 +11,8 @@ let client = null;
 async function checkRedisConnection(redisUrl) {
     if (client)
         return client;
-    client = new ioredis_1.default(redisUrl, {
+    const url = redisUrl || process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+    client = new ioredis_1.default(url, {
         maxRetriesPerRequest: null,
         enableReadyCheck: true,
     });
@@ -20,14 +21,16 @@ async function checkRedisConnection(redisUrl) {
     });
     return client;
 }
-async function redisPing() {
+async function redisPing(redisUrl) {
     try {
-        if (!client)
+        const c = client || (await checkRedisConnection(redisUrl));
+        if (!c)
             return false;
-        const pong = await client.ping();
-        return pong === 'PONG';
+        const pong = await c.ping();
+        return String(pong).toUpperCase() === 'PONG';
     }
-    catch {
+    catch (err) {
+        console.warn('redisPing failed', err);
         return false;
     }
 }

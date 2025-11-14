@@ -15,7 +15,7 @@ const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 class OrderItemDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { medicineId: { required: false, type: () => Number }, name: { required: true, type: () => String }, quantity: { required: true, type: () => Number }, price: { required: true, type: () => Number } };
+        return { medicineId: { required: false, type: () => Number }, name: { required: true, type: () => String }, quantity: { required: true, type: () => Number, minimum: 1 }, price: { required: true, type: () => Number } };
     }
 }
 exports.OrderItemDto = OrderItemDto;
@@ -30,6 +30,7 @@ __decorate([
 ], OrderItemDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], OrderItemDto.prototype, "quantity", void 0);
 __decorate([
@@ -63,3 +64,4 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateOrderDto.prototype, "pickupLon", void 0);
+exports.default = CreateOrderDto;

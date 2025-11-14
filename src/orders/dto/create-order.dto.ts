@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   ValidateNested,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -17,6 +18,7 @@ export class OrderItemDto {
   name!: string;
 
   @IsNumber()
+  @Min(1)
   quantity!: number;
 
   @IsNumber()
@@ -33,7 +35,7 @@ export class CreateOrderDto {
   @IsNumber()
   pharmacyId?: number;
 
-  // ✅ GeoSurge pickup coordinates (optional)
+  // Geo pickup coordinates (optional)
   @IsOptional()
   @IsNumber()
   pickupLat?: number;
@@ -42,3 +44,4 @@ export class CreateOrderDto {
   @IsNumber()
   pickupLon?: number;
 }
+export default CreateOrderDto;

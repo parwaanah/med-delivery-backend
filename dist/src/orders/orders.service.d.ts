@@ -15,7 +15,13 @@ export declare class OrdersService {
     private geoSurge;
     private orderAssignQueue;
     private readonly logger;
+    private readonly defaultRiderSearchKm;
+    private readonly riderSpeedKmPerHr;
     constructor(prisma: PrismaService, notify: NotificationService, ws: WsGateway, config: ConfigService, surge: SurgeService, geoSurge: GeoSurgeService, orderAssignQueue: Queue);
+    private haversineKm;
+    private estimateEtaMinutes;
+    private computePharmacyScore;
+    private computeRiderScore;
     createOrder(customerId: number, dto: CreateOrderDto): Promise<({
         items: {
             name: string;
@@ -32,9 +38,9 @@ export declare class OrdersService {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     }) | {
         order: {
             items: {
@@ -52,11 +58,15 @@ export declare class OrdersService {
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
+            riderId: number | null;
             totalPrice: number;
             customerId: number;
-            riderId: number | null;
         };
         candidates: number[];
+        scores: {
+            pharmacyId: number;
+            score: number;
+        }[];
     }>;
     updateStage(riderId: number, orderId: number, stage: 'REACHED_PHARMACY' | 'PICKED_UP' | 'DELIVERED', location?: {
         lat: number;
@@ -71,9 +81,9 @@ export declare class OrdersService {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     }>;
     pharmacyRespond(pharmacyId: number, orderId: number, action: 'ACCEPTED' | 'REJECTED'): Promise<{
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -82,9 +92,9 @@ export declare class OrdersService {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     } | {
         ok: boolean;
     }>;
@@ -95,9 +105,9 @@ export declare class OrdersService {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     } | {
         ok: boolean;
     }>;
@@ -117,8 +127,8 @@ export declare class OrdersService {
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
+        riderId: number | null;
         totalPrice: number;
         customerId: number;
-        riderId: number | null;
     })[]>;
 }

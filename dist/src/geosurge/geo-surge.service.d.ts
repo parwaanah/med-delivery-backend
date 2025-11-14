@@ -9,6 +9,15 @@ export interface GeoZone {
     multiplier: number;
     lastUpdated: number;
 }
+export interface GeoPoint {
+    memberId: string;
+    lon: number;
+    lat: number;
+    distKm?: number;
+    meta?: {
+        [k: string]: string;
+    };
+}
 export declare class GeoSurgeService implements OnModuleInit, OnModuleDestroy {
     private readonly config;
     private readonly gateway;
@@ -22,5 +31,6 @@ export declare class GeoSurgeService implements OnModuleInit, OnModuleDestroy {
     onModuleDestroy(): void;
     addPoint(memberId: string, lon: number, lat: number): Promise<void>;
     removePoint(memberId: string): Promise<void>;
+    findNearbyPoints(lon: number, lat: number, radiusKm?: number, withMeta?: boolean, limit?: number): Promise<GeoPoint[]>;
     recalcAndBroadcast(): Promise<GeoZone[]>;
 }

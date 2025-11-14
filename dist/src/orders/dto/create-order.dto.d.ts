@@ -10,3 +10,4 @@ export declare class CreateOrderDto {
     pickupLat?: number;
     pickupLon?: number;
 }
+export default CreateOrderDto;

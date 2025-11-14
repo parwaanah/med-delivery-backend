@@ -9,18 +9,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SurgeModule = void 0;
 const common_1 = require("@nestjs/common");
 const surge_service_1 = require("./surge.service");
-const surge_processor_1 = require("./surge.processor");
-const surge_controller_1 = require("./surge.controller");
 const surge_live_gateway_1 = require("../ws/surge-live.gateway");
-const utils_module_1 = require("../utils/utils.module");
+const prisma_service_1 = require("../utils/prisma.service");
 const config_1 = require("@nestjs/config");
+const surge_controller_1 = require("./surge.controller");
 let SurgeModule = class SurgeModule {
 };
 exports.SurgeModule = SurgeModule;
 exports.SurgeModule = SurgeModule = __decorate([
     (0, common_1.Module)({
-        imports: [utils_module_1.UtilsModule, config_1.ConfigModule],
-        providers: [surge_service_1.SurgeService, surge_processor_1.SurgeProcessor, surge_live_gateway_1.SurgeLiveGateway],
+        imports: [config_1.ConfigModule],
+        providers: [surge_service_1.SurgeService, surge_live_gateway_1.SurgeLiveGateway, prisma_service_1.PrismaService],
         controllers: [surge_controller_1.SurgeController],
         exports: [surge_service_1.SurgeService, surge_live_gateway_1.SurgeLiveGateway],
     })

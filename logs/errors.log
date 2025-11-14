@@ -1316,3 +1316,183 @@ Error: ENOENT: no such file or directory, stat 'C:\Users\OMEN\med-delivery\backe
 Error: ENOENT: no such file or directory, stat 'C:\Users\OMEN\med-delivery\backend\dist\public\admin-dashboard.html'
 [2025-11-13T15:12:10.200Z] [ERROR] [ExceptionsHandler] ENOENT: no such file or directory, stat 'C:\Users\OMEN\med-delivery\backend\dist\public\admin-dashboard.html'
 Error: ENOENT: no such file or directory, stat 'C:\Users\OMEN\med-delivery\backend\dist\public\admin-dashboard.html'
+[2025-11-13T17:58:50.855Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:194:47
+
+  191     return updated;
+  192 }
+  193 async pharmacyRespond(pharmacyId, orderId, action) {
+→ 194     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:194:47
+
+  191     return updated;
+  192 }
+  193 async pharmacyRespond(pharmacyId, orderId, action) {
+→ 194     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async OrdersService.pharmacyRespond (C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:194:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-13T17:58:50.862Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:210:47
+
+  207     });
+  208 }
+  209 async riderRespond(riderId, orderId, action) {
+→ 210     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:210:47
+
+  207     });
+  208 }
+  209 async riderRespond(riderId, orderId, action) {
+→ 210     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async OrdersService.riderRespond (C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:210:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-13T17:58:50.868Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:47
+
+  135     return { order, candidates: pharmacyIds };
+  136 }
+  137 async updateStage(riderId, orderId, stage, location) {
+→ 138     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:47
+
+  135     return { order, candidates: pharmacyIds };
+  136 }
+  137 async updateStage(riderId, orderId, stage, location) {
+→ 138     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async OrdersService.updateStage (C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-13T17:58:50.874Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:47
+
+  135     return { order, candidates: pharmacyIds };
+  136 }
+  137 async updateStage(riderId, orderId, stage, location) {
+→ 138     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:47
+
+  135     return { order, candidates: pharmacyIds };
+  136 }
+  137 async updateStage(riderId, orderId, stage, location) {
+→ 138     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async OrdersService.updateStage (C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-13T17:58:50.880Z] [ERROR] [ExceptionsHandler] 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:47
+
+  135     return { order, candidates: pharmacyIds };
+  136 }
+  137 async updateStage(riderId, orderId, stage, location) {
+→ 138     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+PrismaClientValidationError: 
+Invalid `this.prisma.order.findUnique()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:47
+
+  135     return { order, candidates: pharmacyIds };
+  136 }
+  137 async updateStage(riderId, orderId, stage, location) {
+→ 138     const order = await this.prisma.order.findUnique({
+            where: {
+          +   id: Int
+            }
+          })
+
+Argument `id` is missing.
+    at wn (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\OMEN\med-delivery\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async OrdersService.updateStage (C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:23)
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17

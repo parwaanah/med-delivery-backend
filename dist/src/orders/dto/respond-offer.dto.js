@@ -22,3 +22,4 @@ __decorate([
     (0, class_validator_1.IsIn)(['ACCEPTED', 'REJECTED']),
     __metadata("design:type", String)
 ], RespondOfferDto.prototype, "action", void 0);
+exports.default = RespondOfferDto;

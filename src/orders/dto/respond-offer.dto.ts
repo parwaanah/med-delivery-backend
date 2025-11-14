@@ -2,6 +2,7 @@
 import { IsIn } from 'class-validator';
 
 export class RespondOfferDto {
-  @IsIn(['ACCEPTED','REJECTED'])
+  @IsIn(['ACCEPTED', 'REJECTED'])
   action!: 'ACCEPTED' | 'REJECTED';
 }
+export default RespondOfferDto;

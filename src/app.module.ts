@@ -1,3 +1,4 @@
+// src/app.module.ts
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -33,13 +34,13 @@ import { MetricsModule } from './metrics/metrics.module';
     ConfigModule.forRoot({ isGlobal: true }),
 
     ServeStaticModule.forRoot({
-  rootPath: join(process.cwd(), 'public'),  // <— Load from real folder
-  serveRoot: '/public',
-  serveStaticOptions: {
-    index: false,
-    fallthrough: false,
-  },
-}),
+      rootPath: join(process.cwd(), 'public'),  // <— Load from real folder
+      serveRoot: '/public',
+      serveStaticOptions: {
+        index: false,
+        fallthrough: false,
+      },
+    }),
 
     // Core modules
     UtilsModule,

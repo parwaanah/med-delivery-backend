@@ -32,7 +32,7 @@ let SurgeService = class SurgeService {
         this.demandKey = 'surge:demand';
         this.supplyKey = 'surge:supply';
         const url = this.config.get('REDIS_URL') ?? 'redis://127.0.0.1:6379';
-        this.redis = new ioredis_1.default(url);
+        this.redis = new ioredis_1.default(url, { maxRetriesPerRequest: null, enableReadyCheck: true });
         this.logger.log(`✅ Predictive Surge Engine connected → ${url}`);
         (async () => {
             const keys = [this.historyKey, this.demandKey, this.supplyKey];

@@ -47,6 +47,38 @@ let GeoSurgeService = class GeoSurgeService {
         await this.redis.zrem(this.key, memberId);
         await this.redis.del(`geo:meta:${memberId}`);
     }
+    async findNearbyPoints(lon, lat, radiusKm = 2, withMeta = true, limit = 200) {
+        try {
+            const raw = await this.redis.georadius(this.key, lon, lat, radiusKm, 'km', 'WITHDIST', 'COUNT', limit, 'ASC');
+            if (!raw || !raw.length)
+                return [];
+            const points = [];
+            for (const entry of raw) {
+                const memberId = entry[0];
+                const distKm = Number(entry[1]);
+                const p = { memberId, lon: 0, lat: 0, distKm };
+                if (withMeta) {
+                    try {
+                        const meta = await this.redis.hgetall(`geo:meta:${memberId}`);
+                        if (meta && Object.keys(meta).length)
+                            p.meta = meta;
+                        if (meta?.lon && meta?.lat) {
+                            p.lon = parseFloat(meta.lon);
+                            p.lat = parseFloat(meta.lat);
+                        }
+                    }
+                    catch (err) {
+                    }
+                }
+                points.push(p);
+            }
+            return points;
+        }
+        catch (err) {
+            this.logger.warn('findNearbyPoints failed', err?.message ?? err);
+            return [];
+        }
+    }
     async recalcAndBroadcast() {
         try {
             const raw = await this.redis.zrange(this.key, 0, -1);

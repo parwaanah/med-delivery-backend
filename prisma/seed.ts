@@ -1,38 +1,74 @@
-import { PrismaClient, UserRole } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
-
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-async function seed() {
-  const users = [
-    { name: 'Test Pharmacy Auto2', email: 'pharmacy_auto2@example.com', password: 'pharma123', role: UserRole.PHARMACY },
-    { name: 'Test Rider Auto2', email: 'rider_auto2@example.com', password: 'rider123', role: UserRole.RIDER },
-    { name: 'Test Customer Auto2', email: 'customer_auto2@example.com', password: 'customer123', role: UserRole.CUSTOMER },
-  ];
+async function main() {
+  console.log("Seeding medicines + inventory...");
 
-  for (const u of users) {
-    const existing = await prisma.user.findUnique({ where: { email: u.email } });
-    if (!existing) {
-      const hash = await bcrypt.hash(u.password, 10);
-      await prisma.user.create({
-        data: {
-          name: u.name,
-          email: u.email,
-          password: hash,
-          role: u.role,
-          status: 'APPROVED',
-        },
-      });
-      console.log(`Created user: ${u.email}`);
-    } else {
-      console.log(`User already exists: ${u.email}`);
-    }
+  // Ensure pharmacy exists
+  const pharmacyId = 17;
+  const pharmacy = await prisma.user.findUnique({ where: { id: pharmacyId } });
+
+  if (!pharmacy) {
+    console.log(`❌ Pharmacy ID ${pharmacyId} not found. Creating default pharmacy...`);
+    await prisma.user.create({
+      data: {
+        id: pharmacyId,
+        name: "Seed Pharmacy",
+        email: "seed_pharmacy@example.com",
+        password: "123456",
+        role: "PHARMACY",
+        status: "APPROVED",
+      },
+    });
   }
 
-  await prisma.$disconnect();
+  const meds = [
+    { name: "Paracetamol", sku: "MED-001" },
+    { name: "Amoxicillin", sku: "MED-002" },
+    { name: "Ibuprofen", sku: "MED-003" },
+    { name: "Cetirizine", sku: "MED-004" },
+    { name: "Azithromycin", sku: "MED-005" },
+  ];
+
+  for (const m of meds) {
+    await prisma.medicine.upsert({
+      where: { sku: m.sku },
+      update: {},
+      create: m,
+    });
+  }
+
+  // fetch medicine IDs
+  const allMeds = await prisma.medicine.findMany();
+
+  // create inventory for ALL medicines
+  for (const m of allMeds) {
+    await prisma.pharmacyInventory.upsert({
+      where: {
+        pharmacyId_medicineId: {
+          pharmacyId,
+          medicineId: m.id,
+        },
+      },
+      update: {
+        price: 25 + m.id,
+        stock: 50,
+      },
+      create: {
+        pharmacyId,
+        medicineId: m.id,
+        price: 25 + m.id,
+        stock: 50,
+      },
+    });
+  }
+
+  console.log("✅ Seed Completed");
 }
 
-seed().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());

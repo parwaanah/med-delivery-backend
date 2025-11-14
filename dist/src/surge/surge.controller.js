@@ -19,17 +19,22 @@ const surge_service_1 = require("./surge.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let SurgeController = class SurgeController {
     constructor(surge) {
         this.surge = surge;
     }
-    status() {
+    async status() {
         return this.surge.getStatus();
     }
-    override(body) {
-        return this.surge.overrideMultiplier(body.multiplier, body);
+    async override(body) {
+        const m = Number(body.multiplier);
+        if (!Number.isFinite(m) || m <= 0) {
+            return { error: 'invalid multiplier' };
+        }
+        return this.surge.overrideMultiplier(m, { setBy: body.setBy });
     }
-    reset() {
+    async reset() {
         return this.surge.clearOverride();
     }
 };
@@ -39,26 +44,26 @@ __decorate([
     openapi.ApiResponse({ status: 200 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SurgeController.prototype, "status", null);
 __decorate([
     (0, common_1.Post)('override'),
-    openapi.ApiResponse({ status: 201 }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SurgeController.prototype, "override", null);
 __decorate([
     (0, common_1.Post)('reset'),
     openapi.ApiResponse({ status: 201, type: Object }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SurgeController.prototype, "reset", null);
 exports.SurgeController = SurgeController = __decorate([
     (0, common_1.Controller)('admin/surge'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, 'ADMIN', 'admin'),
     __metadata("design:paramtypes", [surge_service_1.SurgeService])
 ], SurgeController);

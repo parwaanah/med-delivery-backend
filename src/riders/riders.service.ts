@@ -82,7 +82,7 @@ export class RidersService {
       },
     });
 
-    // ✅ Add to GeoSurge map
+    // add to GeoSurge map
     try {
       await this.geoSurge.addPoint(
         `rider:${rider.id}`,
@@ -118,14 +118,9 @@ export class RidersService {
       },
     });
 
-    // ✅ Update GeoSurge position
     try {
       if (updated.latitude && updated.longitude) {
-        await this.geoSurge.addPoint(
-          `rider:${id}`,
-          updated.longitude,
-          updated.latitude,
-        );
+        await this.geoSurge.addPoint(`rider:${id}`, updated.longitude, updated.latitude);
       }
     } catch (err) {
       this.logger.warn(`GeoSurge updatePoint failed for rider:${id}`);
@@ -171,7 +166,7 @@ export class RidersService {
     return { message: 'Rider deleted successfully' };
   }
 
-  // ✅ NEW — Live GPS endpoint for dashboard + GeoSurge
+  // Live GPS endpoint for dashboard + GeoSurge
   async updateLocation(id: number, lat: number, lon: number) {
     const rider = await this.prisma.user.findUnique({ where: { id } });
     if (!rider) throw new NotFoundException('Rider not found');
@@ -187,7 +182,7 @@ export class RidersService {
       this.logger.warn(`GeoSurge addPoint failed for rider:${id}`, err);
     }
 
-    // 🔥 Broadcast to admin map via WebSocket
+    // Broadcast to admin map via WebSocket
     this.riderGateway.notifyAdmins('rider_location', {
       id,
       lat,

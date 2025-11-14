@@ -3,10 +3,11 @@ import IORedis from 'ioredis';
 
 let client: IORedis | null = null;
 
-export async function checkRedisConnection(redisUrl: string) {
+export async function checkRedisConnection(redisUrl?: string) {
   if (client) return client;
 
-  client = new IORedis(redisUrl, {
+  const url = redisUrl || process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+  client = new IORedis(url, {
     maxRetriesPerRequest: null,
     enableReadyCheck: true,
   });
@@ -15,15 +16,22 @@ export async function checkRedisConnection(redisUrl: string) {
     console.error('Redis error:', err?.message || err);
   });
 
+  // wait until ready (non-blocking): resolve immediately (caller can ping)
   return client;
 }
 
-export async function redisPing() {
+/**
+ * ping the redis instance. Accepts optional redisUrl if you want a fresh client.
+ * Returns true if PONG, false otherwise.
+ */
+export async function redisPing(redisUrl?: string) {
   try {
-    if (!client) return false;
-    const pong = await client.ping();
-    return pong === 'PONG';
-  } catch {
+    const c = client || (await checkRedisConnection(redisUrl));
+    if (!c) return false;
+    const pong = await c.ping();
+    return String(pong).toUpperCase() === 'PONG';
+  } catch (err) {
+    console.warn('redisPing failed', err);
     return false;
   }
 }

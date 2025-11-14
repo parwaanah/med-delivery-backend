@@ -18,17 +18,14 @@ let SurgeLiveGateway = SurgeLiveGateway_1 = class SurgeLiveGateway {
     constructor() {
         this.logger = new common_1.Logger(SurgeLiveGateway_1.name);
     }
-    handleConnection(client) {
-        this.logger.log(`🟢 Surge client connected: ${client.id}`);
-    }
-    handleDisconnect(client) {
-        this.logger.log(`🔴 Surge client disconnected: ${client.id}`);
-    }
-    broadcastSurge(data) {
-        if (!this.server)
-            return;
-        this.server.emit('surge_update', data);
-        this.logger.debug(`📡 Surge broadcast → x${data.multiplier} | D=${data.demand} | S=${data.supply} | T=${data.timestamp}`);
+    broadcastSurge(payload) {
+        try {
+            this.server.emit('surge_update', payload);
+            this.logger.debug('surge_update emitted', JSON.stringify(payload));
+        }
+        catch (err) {
+            this.logger.warn('surge broadcast failed', err);
+        }
     }
 };
 exports.SurgeLiveGateway = SurgeLiveGateway;
@@ -37,8 +34,5 @@ __decorate([
     __metadata("design:type", socket_io_1.Server)
 ], SurgeLiveGateway.prototype, "server", void 0);
 exports.SurgeLiveGateway = SurgeLiveGateway = SurgeLiveGateway_1 = __decorate([
-    (0, websockets_1.WebSocketGateway)({
-        cors: { origin: '*' },
-        namespace: '/surge-live',
-    })
+    (0, websockets_1.WebSocketGateway)({ namespace: '/surge-live', cors: true })
 ], SurgeLiveGateway);

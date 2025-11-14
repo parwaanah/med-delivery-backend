@@ -1,3 +1,4 @@
+// src/surge/surge.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -29,10 +30,10 @@ export class SurgeService {
     private readonly surgeGateway: SurgeLiveGateway,
   ) {
     const url = this.config.get<string>('REDIS_URL') ?? 'redis://127.0.0.1:6379';
-    this.redis = new Redis(url);
+    this.redis = new Redis(url, { maxRetriesPerRequest: null, enableReadyCheck: true });
     this.logger.log(`✅ Predictive Surge Engine connected → ${url}`);
 
-    // 🧹 Auto-clean invalid Redis keys from previous versions
+    // auto-clean keys from previous versions if types mismatch
     (async () => {
       const keys = [this.historyKey, this.demandKey, this.supplyKey];
       for (const key of keys) {
@@ -53,19 +54,16 @@ export class SurgeService {
     })();
   }
 
-  /** called when an order is created */
   async incrementDemand(by = 1) {
     await this.redis.incrby(this.demandKey, by);
     return this.recalculate();
   }
 
-  /** called when a rider toggles availability */
   async recordRiderAvailability(riderId: number, available: boolean) {
     await this.redis.incrby(this.supplyKey, available ? 1 : -1);
     return this.recalculate();
   }
 
-  /** compute rolling surge multiplier */
   private async recalculate() {
     try {
       if (this.overrideValue) return this.broadcast(this.overrideValue);
@@ -73,7 +71,6 @@ export class SurgeService {
       const demand = parseInt((await this.redis.get(this.demandKey)) || '0', 10);
       const supply = Math.max(1, parseInt((await this.redis.get(this.supplyKey)) || '1', 10));
 
-      // store sample safely
       const snap: SurgeSnapshot = {
         timestamp: Date.now(),
         demand,
@@ -81,7 +78,6 @@ export class SurgeService {
         multiplier: this.currentMultiplier,
       };
 
-      // ✅ write safely, handling WRONGTYPE recovery
       try {
         await this.redis.zadd(this.historyKey, Date.now(), JSON.stringify(snap));
       } catch (err: any) {
@@ -96,21 +92,17 @@ export class SurgeService {
 
       await this.trimHistory();
 
-      // fetch last 15 min samples
       const minScore = Date.now() - this.windowMs;
       const samples = await this.redis.zrangebyscore(this.historyKey, minScore, '+inf');
       const parsed = samples.map((s) => JSON.parse(s) as SurgeSnapshot);
 
-      const avgDemand =
-        parsed.length > 0 ? parsed.reduce((a, b) => a + b.demand, 0) / parsed.length : demand;
-      const avgSupply =
-        parsed.length > 0 ? parsed.reduce((a, b) => a + b.supply, 0) / parsed.length : supply;
+      const avgDemand = parsed.length > 0 ? parsed.reduce((a, b) => a + b.demand, 0) / parsed.length : demand;
+      const avgSupply = parsed.length > 0 ? parsed.reduce((a, b) => a + b.supply, 0) / parsed.length : supply;
 
       const ratio = avgDemand / avgSupply;
       const smoothFactor = 0.6;
       const targetMult = this.baseMultiplier + Math.max(0, ratio - 1) * 0.75;
 
-      // smooth out spikes
       this.currentMultiplier =
         this.currentMultiplier * smoothFactor + targetMult * (1 - smoothFactor);
       this.currentMultiplier = Number(this.currentMultiplier.toFixed(2));
@@ -128,7 +120,6 @@ export class SurgeService {
     await this.redis.zremrangebyscore(this.historyKey, '-inf', cutoff);
   }
 
-  /** send live surge update */
   private broadcast(multiplier: number, demand = 0, supply = 0) {
     this.surgeGateway.broadcastSurge({
       multiplier,
@@ -140,7 +131,6 @@ export class SurgeService {
     return { multiplier, demand, supply };
   }
 
-  /** manual override */
   async overrideMultiplier(multiplier: number, meta?: any) {
     this.overrideValue = multiplier;
     this.logger.warn(`🛠 Surge override → x${multiplier} by ${meta?.setBy ?? 'manual'}`);

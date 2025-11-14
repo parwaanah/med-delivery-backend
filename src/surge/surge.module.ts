@@ -1,15 +1,15 @@
 // src/surge/surge.module.ts
 import { Module } from '@nestjs/common';
 import { SurgeService } from './surge.service';
-import { SurgeProcessor } from './surge.processor';
-import { SurgeController } from './surge.controller';
 import { SurgeLiveGateway } from '../ws/surge-live.gateway';
-import { UtilsModule } from '../utils/utils.module';
+import { PrismaService } from '../utils/prisma.service';
 import { ConfigModule } from '@nestjs/config';
+import { SurgeController } from './surge.controller';
+
 
 @Module({
-  imports: [UtilsModule, ConfigModule],
-  providers: [SurgeService, SurgeProcessor, SurgeLiveGateway],
+  imports: [ConfigModule],
+  providers: [SurgeService, SurgeLiveGateway, PrismaService],
   controllers: [SurgeController],
   exports: [SurgeService, SurgeLiveGateway],
 })

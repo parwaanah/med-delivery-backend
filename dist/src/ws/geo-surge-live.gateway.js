@@ -17,14 +17,14 @@ let GeoSurgeLiveGateway = class GeoSurgeLiveGateway {
     constructor() {
         this.logger = new common_1.Logger('GeoSurgeLiveGateway');
     }
+    handleConnection(client) {
+        this.logger.log(`🌐 GeoSurge client connected: ${client.id}`);
+    }
+    handleDisconnect(client) {
+        this.logger.log(`❌ GeoSurge client disconnected: ${client.id}`);
+    }
     broadcastGeo(zones) {
-        try {
-            this.server.emit('geo_update', { zones, ts: Date.now() });
-            this.logger.debug(`🌍 broadcast geo_update -> ${zones.length} zones`);
-        }
-        catch (err) {
-            this.logger.error('broadcastGeo failed', err.message || err);
-        }
+        this.server.emit('geo_update', { zones });
     }
 };
 exports.GeoSurgeLiveGateway = GeoSurgeLiveGateway;
@@ -33,6 +33,5 @@ __decorate([
     __metadata("design:type", socket_io_1.Server)
 ], GeoSurgeLiveGateway.prototype, "server", void 0);
 exports.GeoSurgeLiveGateway = GeoSurgeLiveGateway = __decorate([
-    (0, websockets_1.WebSocketGateway)({ namespace: '/geo-surge-live', cors: { origin: '*' } }),
-    (0, common_1.Injectable)()
+    (0, websockets_1.WebSocketGateway)({ namespace: '/geo-surge-live', cors: true })
 ], GeoSurgeLiveGateway);

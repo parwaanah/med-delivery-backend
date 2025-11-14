@@ -21,9 +21,9 @@ export declare class AdminOrdersController {
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
+            riderId: number | null;
             totalPrice: number;
             customerId: number;
-            riderId: number | null;
         })[];
     }>;
 }
