@@ -10,9 +10,9 @@ export declare class AdminEscalationController {
         total: number;
         items: {
             notification: {
+                id: number;
                 status: string;
                 createdAt: Date;
-                id: number;
                 senderId: number | null;
                 receiverId: number;
                 type: string;
@@ -33,22 +33,22 @@ export declare class AdminEscalationController {
                 } | null;
                 items: {
                     id: number;
+                    orderId: number;
                     name: string;
                     quantity: number;
                     price: number;
                     medicineId: number | null;
-                    orderId: number;
                 }[];
             } & {
-                status: import(".prisma/client").$Enums.OrderStatus;
-                totalPrice: number;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
                 id: number;
+                status: import(".prisma/client").$Enums.OrderStatus;
+                createdAt: Date;
                 customerId: number;
                 pharmacyId: number;
                 riderId: number | null;
+                totalPrice: number;
+                updatedAt: Date;
+                deletedAt: Date | null;
             }) | null;
         }[];
     }>;
@@ -56,8 +56,8 @@ export declare class AdminEscalationController {
         total: number;
         candidates: {
             user: {
-                status: string;
                 id: number;
+                status: string;
                 name: string;
                 email: string;
                 latitude: number | null;
@@ -69,5 +69,15 @@ export declare class AdminEscalationController {
             distKm: number | null;
         }[];
     }>;
-    assign(id: string, riderId: string): Promise<any>;
+    assign(id: string, riderId: string): Promise<{
+        id: number;
+        status: import(".prisma/client").$Enums.OrderStatus;
+        createdAt: Date;
+        customerId: number;
+        pharmacyId: number;
+        riderId: number | null;
+        totalPrice: number;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
 }

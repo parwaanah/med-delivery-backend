@@ -6,21 +6,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaymentsModule = void 0;
+exports.CartModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const payments_service_1 = require("./payments.service");
-const payments_controller_1 = require("./payments.controller");
-const razorpay_service_1 = require("./razorpay.service");
+const cart_service_1 = require("./cart.service");
+const cart_controller_1 = require("./cart.controller");
 const utils_module_1 = require("../utils/utils.module");
-let PaymentsModule = class PaymentsModule {
+const surge_module_1 = require("../surge/surge.module");
+const orders_module_1 = require("../orders/orders.module");
+const payments_module_1 = require("../payments/payments.module");
+let CartModule = class CartModule {
 };
-exports.PaymentsModule = PaymentsModule;
-exports.PaymentsModule = PaymentsModule = __decorate([
+exports.CartModule = CartModule;
+exports.CartModule = CartModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule, utils_module_1.UtilsModule],
-        controllers: [payments_controller_1.PaymentsController],
-        providers: [payments_service_1.PaymentsService, razorpay_service_1.RazorpayService],
-        exports: [payments_service_1.PaymentsService],
+        imports: [utils_module_1.UtilsModule, surge_module_1.SurgeModule, orders_module_1.OrdersModule, payments_module_1.PaymentsModule],
+        controllers: [cart_controller_1.CartController],
+        providers: [cart_service_1.CartService],
+        exports: [cart_service_1.CartService],
     })
-], PaymentsModule);
+], CartModule);

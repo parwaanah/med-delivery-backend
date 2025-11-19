@@ -32,7 +32,7 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
             payment_capture: 1,
         };
         const order = await this.client.orders.create(opts);
-        this.logger.log(`Razorpay order created ${order.id}`);
+        this.logger.log(`Razorpay order created ${order?.id ?? '<no-id>'}`);
         return order;
     }
     verifyWebhookSignature(rawBody, signature, secret) {

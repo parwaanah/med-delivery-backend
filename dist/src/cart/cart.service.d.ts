@@ -24,17 +24,17 @@ export declare class CartService {
         paymentIntent: {
             rzpOrder: any;
             transaction: {
-                status: string;
-                createdAt: Date;
-                id: string;
-                orderId: number | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
                 method: string | null;
+                id: string;
+                orderId: number | null;
                 provider: string;
                 providerOrder: string | null;
                 providerPayment: string | null;
+                status: string;
                 rawData: import("@prisma/client/runtime/library").JsonValue | null;
+                createdAt: Date;
             };
         };
         message: string;

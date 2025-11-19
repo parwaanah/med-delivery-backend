@@ -1,4 +1,3 @@
-// src/payments/razorpay.service.ts
 import Razorpay from 'razorpay';
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -8,6 +7,7 @@ export class RazorpayService {
   public readonly client: Razorpay;
 
   constructor() {
+    // lazy-create client with env variables (empty strings allowed in dev)
     this.client = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID || '',
       key_secret: process.env.RAZORPAY_KEY_SECRET || '',
@@ -19,10 +19,10 @@ export class RazorpayService {
       amount: amountInPaise,
       currency,
       receipt: receipt ?? `receipt_${Date.now()}`,
-      payment_capture: 1, // auto-capture
+      payment_capture: 1, // auto-capture (you said refunds manual for now)
     };
     const order = await this.client.orders.create(opts as any);
-    this.logger.log(`Razorpay order created ${order.id}`);
+    this.logger.log(`Razorpay order created ${order?.id ?? '<no-id>'}`);
     return order as any;
   }
 
@@ -33,6 +33,8 @@ export class RazorpayService {
       return false;
     }
     // Razorpay signature uses HMAC SHA256 of raw body
+    // Keep this deterministic and synchronous
+    // Note: expects hex digest
     const crypto = require('crypto');
     const expected = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
     return expected === signature;

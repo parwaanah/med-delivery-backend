@@ -1,4 +1,3 @@
-// src/payments/payments.controller.ts
 import {
   Controller,
   Post,
@@ -10,6 +9,7 @@ import {
   HttpStatus,
   Get,
   Param,
+  BadRequestException,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { RazorpayService } from './razorpay.service';
@@ -26,18 +26,22 @@ export class PaymentsController {
     private prisma: PrismaService,
   ) {}
 
-  // Create a razorpay order for an existing order: returns razorpayOrderId & transaction id
+  // Create a razorpay order for an existing order: returns razorpayOrder & transaction
   @Post('create-intent')
   async createIntent(@Body() body: CreateIntentDto) {
     const orderId = Number(body.orderId);
-    if (isNaN(orderId)) throw new Error('Invalid orderId');
+    if (isNaN(orderId)) throw new BadRequestException('Invalid orderId');
     return this.paymentsService.createPaymentForOrder(orderId);
   }
 
-  // Webhook: raw body verified in main.ts middleware (req.rawBody required)
+  // Webhook: raw body validated by main.ts middleware. Controller verifies signature again.
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  async webhook(@Req() req: Request, @Res() res: Response, @Headers('x-razorpay-signature') signature: string) {
+  async webhook(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Headers('x-razorpay-signature') signature: string,
+  ) {
     try {
       const raw = (req as any).rawBody as Buffer;
       if (!raw) {
@@ -68,11 +72,14 @@ export class PaymentsController {
     return this.paymentsService.listTransactions();
   }
 
-  // Optional: fetch transaction by order id
+  // Optional: fetch transactions by order id
   @Get('by-order/:orderId')
   async byOrder(@Param('orderId') orderId: string) {
     const idNum = Number(orderId);
     if (isNaN(idNum)) return [];
-    return this.prisma.transaction.findMany({ where: { orderId: idNum }, orderBy: { createdAt: 'desc' }});
+    return this.prisma.transaction.findMany({
+      where: { orderId: idNum },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

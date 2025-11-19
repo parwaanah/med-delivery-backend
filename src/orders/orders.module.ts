@@ -1,30 +1,26 @@
-// src/orders/orders.module.ts
 import { Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { PrismaService } from '../utils/prisma.service';
-import { NotificationService } from '../utils/notification.service';
-import { WsGateway } from '../ws/ws.gateway';
-import { ConfigService } from '@nestjs/config';
+import { UtilsModule } from '../utils/utils.module';
+import { WsModule } from '../ws/ws.module';
 import { SurgeModule } from '../surge/surge.module';
 import { GeoSurgeModule } from '../geosurge/geo-surge.module';
-import { BullModule } from '@nestjs/bullmq';
+import { QueueModule } from '../queues/queue.module';
 import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
   imports: [
-    BullModule.registerQueue({ name: 'order_assign' }),
+    UtilsModule,     // provides PrismaService, NotificationService, etc.
+    WsModule,        // WebSocket gateway
     SurgeModule,
     GeoSurgeModule,
-    PaymentsModule,          // <-- REQUIRED
+    QueueModule,     // provides ORDER_ASSIGN_QUEUE token
+    PaymentsModule,  // provides PaymentsService
   ],
   controllers: [OrdersController],
   providers: [
     OrdersService,
-    PrismaService,
-    NotificationService,
-    WsGateway,
-    ConfigService,
+    // don't re-provide PrismaService or WsGateway here — provided through UtilsModule / WsModule
   ],
   exports: [OrdersService],
 })

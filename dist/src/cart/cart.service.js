@@ -45,7 +45,8 @@ let CartService = class CartService {
             pickupLon: opts?.pickupLon,
         };
         const result = await this.orders.createOrder(userId, createDto);
-        const order = result.order ?? result;
+        const resultAny = result;
+        const order = resultAny.order ?? resultAny;
         const paymentIntent = await this.payments.createPaymentForOrder(order.id);
         return {
             orderId: order.id,

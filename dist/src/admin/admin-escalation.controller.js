@@ -112,7 +112,7 @@ __decorate([
 ], AdminEscalationController.prototype, "getCandidates", null);
 __decorate([
     (0, common_1.Post)(':id/assign/:riderId'),
-    openapi.ApiResponse({ status: 201, type: Object }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Param)('riderId')),
     __metadata("design:type", Function),

@@ -1,4 +1,3 @@
-// src/payments/dto/refund.dto.ts
 import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class RefundDto {

@@ -29,7 +29,7 @@ let PaymentsController = class PaymentsController {
     async createIntent(body) {
         const orderId = Number(body.orderId);
         if (isNaN(orderId))
-            throw new Error('Invalid orderId');
+            throw new common_1.BadRequestException('Invalid orderId');
         return this.paymentsService.createPaymentForOrder(orderId);
     }
     async webhook(req, res, signature) {
@@ -61,7 +61,10 @@ let PaymentsController = class PaymentsController {
         const idNum = Number(orderId);
         if (isNaN(idNum))
             return [];
-        return this.prisma.transaction.findMany({ where: { orderId: idNum }, orderBy: { createdAt: 'desc' } });
+        return this.prisma.transaction.findMany({
+            where: { orderId: idNum },
+            orderBy: { createdAt: 'desc' },
+        });
     }
 };
 exports.PaymentsController = PaymentsController;
