@@ -64,7 +64,7 @@ __decorate([
 ], OrdersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    openapi.ApiResponse({ status: 200, type: [Object] }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -95,7 +95,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('rider/:orderId/stage'),
     (0, roles_decorator_1.Roles)('rider'),
-    openapi.ApiResponse({ status: 200 }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('orderId')),
     __param(2, (0, common_1.Body)()),
@@ -106,7 +106,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('admin/:orderId/assign/:riderId'),
     (0, roles_decorator_1.Roles)('admin'),
-    openapi.ApiResponse({ status: 201 }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('orderId')),
     __param(2, (0, common_1.Param)('riderId')),

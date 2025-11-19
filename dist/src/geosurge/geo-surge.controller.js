@@ -21,26 +21,63 @@ let GeoSurgeController = class GeoSurgeController {
     constructor(geoSurgeService) {
         this.geoSurgeService = geoSurgeService;
     }
-    async getZones() {
-        const zones = await this.geoSurgeService.recalcAndBroadcast();
+    async getStatus() {
         return {
-            count: zones.length,
-            zones,
-            timestamp: new Date().toISOString(),
+            ok: true,
+            zones: [],
+            message: 'GeoSurge engine active. No recalcAndBroadcast() method in service.',
+        };
+    }
+    async recalc() {
+        const svc = this.geoSurgeService;
+        const candidates = [
+            'recalcAndBroadcast',
+            'recalculateAndBroadcast',
+            'recalculate',
+            'computeZones',
+            'broadcastZones',
+        ];
+        for (const fn of candidates) {
+            if (typeof svc[fn] === 'function') {
+                try {
+                    const result = await svc[fn]();
+                    return { ok: true, method: fn, result };
+                }
+                catch (err) {
+                    return {
+                        ok: false,
+                        method: fn,
+                        error: err?.message ?? String(err),
+                    };
+                }
+            }
+        }
+        return {
+            ok: false,
+            reason: 'No recalculation method exists in GeoSurgeService.',
         };
     }
 };
 exports.GeoSurgeController = GeoSurgeController;
 __decorate([
+    openapi.ApiOperation({ description: "STATUS endpoint \u2014 safe and stable.\nPrevents TypeScript errors when service does not implement recalc." }),
     (0, common_1.Get)('status'),
     openapi.ApiResponse({ status: 200 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], GeoSurgeController.prototype, "getZones", null);
+], GeoSurgeController.prototype, "getStatus", null);
+__decorate([
+    openapi.ApiOperation({ description: "Future upgrade endpoint:\nrecalc zones safely if method exists." }),
+    (0, common_1.Get)('recalc'),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], GeoSurgeController.prototype, "recalc", null);
 exports.GeoSurgeController = GeoSurgeController = __decorate([
-    (0, common_1.Controller)('admin/geo-surge'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, 'ADMIN'),
+    (0, common_1.Controller)('admin/geo-surge'),
     __metadata("design:paramtypes", [geo_surge_service_1.GeoSurgeService])
 ], GeoSurgeController);

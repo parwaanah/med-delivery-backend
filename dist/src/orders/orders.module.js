@@ -17,6 +17,7 @@ const config_1 = require("@nestjs/config");
 const surge_module_1 = require("../surge/surge.module");
 const geo_surge_module_1 = require("../geosurge/geo-surge.module");
 const bullmq_1 = require("@nestjs/bullmq");
+const payments_module_1 = require("../payments/payments.module");
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
@@ -26,6 +27,7 @@ exports.OrdersModule = OrdersModule = __decorate([
             bullmq_1.BullModule.registerQueue({ name: 'order_assign' }),
             surge_module_1.SurgeModule,
             geo_surge_module_1.GeoSurgeModule,
+            payments_module_1.PaymentsModule,
         ],
         controllers: [orders_controller_1.OrdersController],
         providers: [

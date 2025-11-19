@@ -10,14 +10,24 @@ export declare class CartController {
         message: string;
     }>;
     checkout(req: Request, body: any): Promise<{
+        orderId: any;
+        order: any;
         paymentIntent: {
-            clientSecret: string | null;
-            id: string;
-            amount: number;
+            rzpOrder: any;
+            transaction: {
+                status: string;
+                createdAt: Date;
+                id: string;
+                orderId: number | null;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                currency: string;
+                method: string | null;
+                provider: string;
+                providerOrder: string | null;
+                providerPayment: string | null;
+                rawData: import("@prisma/client/runtime/library").JsonValue | null;
+            };
         };
-        baseTotal: any;
-        surgeMultiplier: number;
-        total: number;
         message: string;
     }>;
 }

@@ -8,37 +8,31 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var NotificationsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NotificationService = void 0;
+exports.NotificationsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../utils/prisma.service");
-const ws_gateway_1 = require("../ws/ws.gateway");
-let NotificationService = class NotificationService {
-    constructor(prisma, wsGateway) {
+let NotificationsService = NotificationsService_1 = class NotificationsService {
+    constructor(prisma) {
         this.prisma = prisma;
-        this.wsGateway = wsGateway;
+        this.logger = new common_1.Logger(NotificationsService_1.name);
     }
-    async create(receiverId, type, message, meta, senderId) {
-        const n = await this.prisma.notification.create({
-            data: {
-                receiverId,
-                senderId: senderId ?? null,
-                type,
-                message,
-                meta: meta ?? null,
-            },
-        });
+    async findAll() {
         try {
-            this.wsGateway.notifyUser(receiverId, 'notification', n);
+            return await this.prisma.notification.findMany({
+                orderBy: { createdAt: 'desc' },
+                take: 200,
+            });
         }
         catch (err) {
+            this.logger.error('Failed to fetch notifications', err);
+            return [];
         }
-        return n;
     }
 };
-exports.NotificationService = NotificationService;
-exports.NotificationService = NotificationService = __decorate([
+exports.NotificationsService = NotificationsService;
+exports.NotificationsService = NotificationsService = NotificationsService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        ws_gateway_1.WsGateway])
-], NotificationService);
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+], NotificationsService);

@@ -6,20 +6,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaymentModule = void 0;
+exports.PaymentsModule = void 0;
 const common_1 = require("@nestjs/common");
-const payments_controller_1 = require("./payments.controller");
 const payments_service_1 = require("./payments.service");
-const utils_module_1 = require("../utils/utils.module");
-const config_1 = require("@nestjs/config");
-let PaymentModule = class PaymentModule {
+const payments_controller_1 = require("./payments.controller");
+const razorpay_service_1 = require("./razorpay.service");
+const prisma_service_1 = require("../utils/prisma.service");
+let PaymentsModule = class PaymentsModule {
 };
-exports.PaymentModule = PaymentModule;
-exports.PaymentModule = PaymentModule = __decorate([
+exports.PaymentsModule = PaymentsModule;
+exports.PaymentsModule = PaymentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [utils_module_1.UtilsModule, config_1.ConfigModule],
+        imports: [],
         controllers: [payments_controller_1.PaymentsController],
-        providers: [payments_service_1.PaymentsService],
+        providers: [payments_service_1.PaymentsService, razorpay_service_1.RazorpayService, prisma_service_1.PrismaService],
         exports: [payments_service_1.PaymentsService],
     })
-], PaymentModule);
+], PaymentsModule);

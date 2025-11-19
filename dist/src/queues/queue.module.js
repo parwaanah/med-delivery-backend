@@ -28,17 +28,15 @@ exports.QueueModule = QueueModule = __decorate([
             {
                 provide: 'REDIS',
                 useFactory: (config) => {
-                    const redisUrl = config.get('REDIS_URL') ?? 'redis://127.0.0.1:6379';
-                    return new ioredis_1.default(redisUrl, {
-                        enableReadyCheck: true,
-                    });
+                    const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+                    return new ioredis_1.default(redisUrl, { enableReadyCheck: true });
                 },
                 inject: [config_1.ConfigService],
             },
             {
                 provide: 'ORDER_ASSIGN_QUEUE',
                 useFactory: (config) => {
-                    const redisUrl = config.get('REDIS_URL') ?? 'redis://127.0.0.1:6379';
+                    const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
                     const bullConn = new ioredis_1.default(redisUrl, {
                         enableReadyCheck: true,
                         maxRetriesPerRequest: null,

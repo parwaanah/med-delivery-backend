@@ -7,14 +7,16 @@ import { NotificationService } from '../utils/notification.service';
 import { WsGateway } from '../ws/ws.gateway';
 import { ConfigService } from '@nestjs/config';
 import { SurgeModule } from '../surge/surge.module';
-import { GeoSurgeModule } from '../geosurge/geo-surge.module'; // ✅ import GeoSurgeModule
+import { GeoSurgeModule } from '../geosurge/geo-surge.module';
 import { BullModule } from '@nestjs/bullmq';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: 'order_assign' }),
     SurgeModule,
-    GeoSurgeModule, // ✅ make GeoSurgeService available here
+    GeoSurgeModule,
+    PaymentsModule,          // <-- REQUIRED
   ],
   controllers: [OrdersController],
   providers: [

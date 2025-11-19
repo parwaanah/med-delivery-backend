@@ -1,5 +1,5 @@
 import { RidersService } from './riders.service';
-import { CreateRiderDto, UpdateRiderDto, UpdateStatusDto } from './dto/rider.dto';
+import { CreateRiderDto, UpdateRiderDto, UpdateStatusDto, UpdateLocationDto } from './dto/rider.dto';
 export declare class RidersController {
     private readonly ridersService;
     constructor(ridersService: RidersService);
@@ -43,10 +43,7 @@ export declare class RidersController {
         status: string;
         id: number;
     }>;
-    updateLocation(id: string, body: {
-        lat: number;
-        lon: number;
-    }): Promise<{
+    updateLocation(id: string, body: UpdateLocationDto): Promise<{
         ok: boolean;
         id: number;
         lat: number;

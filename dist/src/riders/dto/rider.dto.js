@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateStatusDto = exports.UpdateRiderDto = exports.CreateRiderDto = void 0;
+exports.UpdateLocationDto = exports.UpdateStatusDto = exports.UpdateRiderDto = exports.CreateRiderDto = void 0;
 const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateRiderDto {
@@ -79,3 +79,29 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateStatusDto.prototype, "status", void 0);
+class UpdateLocationDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { latitude: { required: false, type: () => Number }, longitude: { required: false, type: () => Number }, lat: { required: false, type: () => Number }, lon: { required: false, type: () => Number } };
+    }
+}
+exports.UpdateLocationDto = UpdateLocationDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateLocationDto.prototype, "latitude", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateLocationDto.prototype, "longitude", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateLocationDto.prototype, "lat", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateLocationDto.prototype, "lon", void 0);

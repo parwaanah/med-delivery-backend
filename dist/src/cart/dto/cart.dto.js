@@ -9,36 +9,37 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CartDto = void 0;
+exports.CartDto = exports.CartItemDto = void 0;
 const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-class CartItem {
+class CartItemDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { pharmacyId: { required: true, type: () => Number }, medicineId: { required: true, type: () => Number }, quantity: { required: true, type: () => Number } };
+        return { price: { required: true, type: () => Number }, quantity: { required: true, type: () => Number }, medicineId: { required: true, type: () => Number }, name: { required: true, type: () => String } };
     }
 }
+exports.CartItemDto = CartItemDto;
 __decorate([
-    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], CartItem.prototype, "pharmacyId", void 0);
+], CartItemDto.prototype, "price", void 0);
 __decorate([
-    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], CartItem.prototype, "medicineId", void 0);
+], CartItemDto.prototype, "quantity", void 0);
 __decorate([
-    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], CartItem.prototype, "quantity", void 0);
+], CartItemDto.prototype, "medicineId", void 0);
 class CartDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { items: { required: true, type: () => [CartItem] } };
+        return { items: { required: true, type: () => [require("./cart.dto").CartItemDto] } };
     }
 }
 exports.CartDto = CartDto;
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
-    (0, class_transformer_1.Type)(() => CartItem),
+    (0, class_transformer_1.Type)(() => CartItemDto),
     __metadata("design:type", Array)
 ], CartDto.prototype, "items", void 0);

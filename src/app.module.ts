@@ -19,11 +19,11 @@ import { AdminModule } from './admin/admin.module';
 import { HealthModule } from './health/health.module';
 import { SurgeModule } from './surge/surge.module';
 import { GeoSurgeModule } from './geosurge/geo-surge.module';
-import { PaymentModule } from './payment/payment.module';
+import { PaymentsModule } from './payments/payments.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { ReportsModule } from './reports/reports.module';
 import { ScheduleModule } from '@nestjs/schedule';
-
+import { NotificationsModule } from './notifications/notifications.module';
 import { ChatLiveGateway } from './ws/chat-live.gateway';
 import { ChatModule } from './chat/chat.module';
 import { CacheModule } from './cache/cache.module';
@@ -55,13 +55,14 @@ import { MetricsModule } from './metrics/metrics.module';
     WsModule,
     SurgeModule,
     GeoSurgeModule,
-    PaymentModule,
+    PaymentsModule,
     WebhooksModule,
     ReportsModule,
     ScheduleModule.forRoot(),
     ChatModule,
     CacheModule,
     MetricsModule,
+    NotificationsModule,
   ],
   providers: [NotificationService, GlobalLogger, ChatLiveGateway],
 })

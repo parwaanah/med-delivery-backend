@@ -26,10 +26,11 @@ const admin_module_1 = require("./admin/admin.module");
 const health_module_1 = require("./health/health.module");
 const surge_module_1 = require("./surge/surge.module");
 const geo_surge_module_1 = require("./geosurge/geo-surge.module");
-const payment_module_1 = require("./payment/payment.module");
+const payments_module_1 = require("./payments/payments.module");
 const webhooks_module_1 = require("./webhooks/webhooks.module");
 const reports_module_1 = require("./reports/reports.module");
 const schedule_1 = require("@nestjs/schedule");
+const notifications_module_1 = require("./notifications/notifications.module");
 const chat_live_gateway_1 = require("./ws/chat-live.gateway");
 const chat_module_1 = require("./chat/chat.module");
 const cache_module_1 = require("./cache/cache.module");
@@ -64,13 +65,14 @@ exports.AppModule = AppModule = __decorate([
             ws_module_1.WsModule,
             surge_module_1.SurgeModule,
             geo_surge_module_1.GeoSurgeModule,
-            payment_module_1.PaymentModule,
+            payments_module_1.PaymentsModule,
             webhooks_module_1.WebhooksModule,
             reports_module_1.ReportsModule,
             schedule_1.ScheduleModule.forRoot(),
             chat_module_1.ChatModule,
             cache_module_1.CacheModule,
             metrics_module_1.MetricsModule,
+            notifications_module_1.NotificationsModule,
         ],
         providers: [notification_service_1.NotificationService, global_logger_service_1.GlobalLogger, chat_live_gateway_1.ChatLiveGateway],
     })

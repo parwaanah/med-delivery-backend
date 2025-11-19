@@ -1,4 +1,3 @@
-// src/queues/orders.processor.ts
 import { Injectable, OnModuleInit, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
@@ -23,7 +22,6 @@ export class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     const redisUrl = this.config.get<string>('REDIS_URL') || 'redis://127.0.0.1:6379';
 
-    // Worker connection MUST use maxRetriesPerRequest: null
     this.redisClient = new IORedis(redisUrl, {
       enableReadyCheck: true,
       maxRetriesPerRequest: null,
@@ -33,26 +31,40 @@ export class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
       'order_assign',
       async (job: Job) => {
         try {
-          const { orderId } = job.data as { orderId: number };
+          const { orderId } = job.data;
           if (!orderId) return;
 
-          const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+          const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+            select: { id: true, riderId: true, status: true, pharmacyId: true, customerId: true }
+          });
+
           if (!order) return;
 
-          if (!order.riderId && (order.status === 'ACCEPTED' || order.status === 'ASSIGNED')) {
-            const admin = await this.prisma.user.findFirst({ where: { role: 'ADMIN' } });
+          // If still no rider after delay → escalate
+          if (!order.riderId && order.status === 'PENDING') {
+            const admin = await this.prisma.user.findFirst({
+              where: { role: 'ADMIN' },
+              select: { id: true }
+            });
+
             if (admin) {
               await this.notify.create(
                 admin.id,
                 'ORDER_ESCALATION',
-                `No rider accepted order ${orderId} within timeframe`,
-                { orderId },
+                `⚠ No rider accepted order #${orderId} within the expected time.`,
+                { orderId }
               );
+
               this.ws.notifyUser(admin.id, 'order_escalation', { orderId });
             }
+
+            this.logger.warn(
+              `⏰ Escalation triggered for order ${orderId} — no rider accepted.`
+            );
           }
         } catch (err) {
-          this.logger.error('Worker job failed', err as any);
+          this.logger.error('Worker job failed', err);
         }
       },
       {
@@ -60,22 +72,22 @@ export class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
       },
     );
 
-    this.worker.on('completed', (job) => this.logger.log(`Worker completed job ${job.id}`));
-    this.worker.on('failed', (job, err) => this.logger.warn(`Worker failed job ${job?.id}: ${err?.message}`));
+    this.worker.on('completed', (job) =>
+      this.logger.log(`Order escalation check completed for job ${job.id}`)
+    );
+    this.worker.on('failed', (job, err) =>
+      this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`)
+    );
+
     this.logger.log('✅ OrdersProcessor worker started (order_assign)');
   }
 
   async onModuleDestroy() {
     try {
-      await this.worker?.close();
-    } catch {
-      // ignore
-    }
+      await this.worker.close();
+    } catch {}
     try {
-      await this.redisClient?.quit();
-    } catch {
-      // ignore
-    }
-    this.logger.log('🧹 OrdersProcessor shut down');
+      await this.redisClient.quit();
+    } catch {}
   }
 }

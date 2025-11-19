@@ -14,6 +14,8 @@ import { WsGateway } from '../ws/ws.gateway';
 import { ConfigService } from '@nestjs/config';
 import { SurgeService } from '../surge/surge.service';
 import { GeoSurgeService, GeoPoint } from '../geosurge/geo-surge.service';
+import { PaymentsService } from '../payments/payments.service';
+import { OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -28,6 +30,7 @@ export class OrdersService {
     private config: ConfigService,
     private surge: SurgeService,
     private geoSurge: GeoSurgeService,
+    private payments: PaymentsService, // ensure PaymentsService is provided in module
     @Inject('ORDER_ASSIGN_QUEUE') private orderAssignQueue: Queue,
   ) {}
 
@@ -72,7 +75,7 @@ export class OrdersService {
     try {
       const since = new Date(Date.now() - 30 * 60 * 1000);
       const accepted = await this.prisma.order.count({
-        where: { pharmacyId, status: 'ACCEPTED', updatedAt: { gte: since } },
+        where: { pharmacyId, status: OrderStatus.ACCEPTED, updatedAt: { gte: since } },
       });
       scoreParts.push(Math.min(15, accepted * 3));
     } catch {
@@ -160,6 +163,12 @@ export class OrdersService {
     return Math.round(Math.min(100, score));
   }
 
+  /**
+   * createOrder:
+   * - supports direct pharmacyId (customer chose a pharmacy)
+   * - supports catalog mode (no pharmacy selected) -> smart routing creates offers
+   * - does NOT charge payment here — payment created only after pharmacy ACCEPTS (Swiggy-style)
+   */
   async createOrder(customerId: number, dto: CreateOrderDto) {
     if (!customerId || isNaN(+customerId))
       throw new BadRequestException('Invalid or missing customer ID.');
@@ -183,7 +192,7 @@ export class OrdersService {
       this.logger.warn('GeoSurge addPoint failed for order geo', (err as any)?.message ?? err);
     }
 
-    /** 1) DIRECT PHARMACY ORDER — unchanged */
+    // 1) DIRECT PHARMACY ORDER (customer selected pharmacy)
     if (dto.pharmacyId) {
       const pharmacy = await this.prisma.user.findUnique({
         where: { id: dto.pharmacyId },
@@ -196,7 +205,7 @@ export class OrdersService {
           customer: { connect: { id: +customerId } },
           pharmacy: { connect: { id: dto.pharmacyId } },
           totalPrice: total,
-          status: 'PENDING',
+          status: OrderStatus.PENDING,
           items: {
             create: dto.items.map((it) => ({
               medicineId: it.medicineId ?? undefined,
@@ -209,6 +218,7 @@ export class OrdersService {
         include: { items: true },
       });
 
+      // notify pharmacy to accept/reject
       await this.notify.create(
         dto.pharmacyId,
         'ORDER_PLACED',
@@ -216,17 +226,18 @@ export class OrdersService {
         { orderId: order.id },
         customerId,
       );
-
       this.ws.notifyUser(dto.pharmacyId, 'order_placed', order);
 
-      try {
-        await this.geoSurge.removePoint(orderGeoId);
-      } catch {}
+      // remove geo point and schedule escalation (rider assignment) later
+      try { await this.geoSurge.removePoint(orderGeoId); } catch {}
 
-      return order;
+      const delayMs = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
+      await this.orderAssignQueue.add('rider_escalation', { orderId: order.id }, { delay: delayMs });
+
+      return { order };
     }
 
-    /** 2) SMART AUTO-ROUTING (A2) */
+    // 2) SMART AUTO-ROUTING (customer didn't pick pharmacy)
     const medicineIds = dto.items
       .map((i) => i.medicineId)
       .filter((id) => typeof id === 'number');
@@ -257,12 +268,13 @@ export class OrdersService {
 
     const bestPharmacyId = scores[0].pharmacyId;
 
+    // create order assigned to bestPharmacy for data integrity but still PENDING (pharmacy must ACCEPT)
     const order = await this.prisma.order.create({
       data: {
         customer: { connect: { id: +customerId } },
         pharmacy: { connect: { id: bestPharmacyId } },
         totalPrice: total,
-        status: 'PENDING',
+        status: OrderStatus.PENDING,
         items: {
           create: dto.items.map((it) => ({
             medicineId: it.medicineId ?? undefined,
@@ -275,7 +287,7 @@ export class OrdersService {
       include: { items: true },
     });
 
-    /** Send offers to all matching pharmacies */
+    // create offers and notify all candidate pharmacies
     for (const pid of pharmacyIds) {
       await this.prisma.orderOffer.create({
         data: { orderId: order.id, pharmacyId: pid, offeredTo: 'PHARMACY' },
@@ -291,7 +303,7 @@ export class OrdersService {
       this.ws.notifyUser(pid, 'order_available', { orderId: order.id });
     }
 
-    /** 3) AUTO-ASSIGN RIDER (A2) */
+    // try pre-finding riders (best-effort) but do NOT assign unless workflow requires it later
     try {
       let searchLat = dto.pickupLat;
       let searchLon = dto.pickupLon;
@@ -326,67 +338,31 @@ export class OrdersService {
         }
 
         riderScores.sort((a, b) => b.score - a.score);
-
-        for (const cand of riderScores.slice(0, 5)) {
-          const match = cand.point.memberId.match(/^rider:(\d+)$/);
-          if (!match) continue;
-          const riderId = Number(match[1]);
-
-          const r = await this.prisma.user.findUnique({
-            where: { id: riderId },
-            select: { status: true },
-          });
-
-          if (!r || r.status !== 'AVAILABLE') continue;
-
-          await this.prisma.order.update({
-            where: { id: order.id },
-            data: {
-              riderId,
-              status: 'OUT_FOR_DELIVERY',
-            },
-          });
-
-          await this.prisma.user.update({
-            where: { id: riderId },
-            data: { status: 'BUSY' },
-          });
-
-          await this.notify.create(
-            riderId,
-            'ORDER_ASSIGNED',
-            `You were assigned to order #${order.id}`,
-            { orderId: order.id },
-            undefined, // <-- fixed: pass undefined rather than null for optional actor param
-          );
-
-          this.ws.notifyUser(riderId, 'order_assigned', {
-            orderId: order.id,
-          });
-
-          break;
-        }
+        // We intentionally do not auto-assign — just keep candidates info in DB if needed
       }
     } catch (err) {
-      this.logger.warn('Auto-assign rider failed:', (err as any)?.message ?? err);
+      this.logger.warn('Auto-assign rider discovery failed:', (err as any)?.message ?? err);
     }
 
-    try {
-      await this.geoSurge.removePoint(orderGeoId);
-    } catch {}
+    try { await this.geoSurge.removePoint(orderGeoId); } catch {}
+
+    // schedule escalation (admins notified if no rider assignment within delay)
+    const delayMs = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
+    await this.orderAssignQueue.add('rider_escalation', { orderId: order.id }, { delay: delayMs });
 
     return { order, candidates: pharmacyIds, scores };
   }
 
+  /**
+   * updateStage: used by rider to push status updates (REACHED_PHARMACY / PICKED_UP / DELIVERED)
+   */
   async updateStage(
     riderId: number,
     orderId: number,
     stage: 'REACHED_PHARMACY' | 'PICKED_UP' | 'DELIVERED',
     location?: { lat: number; lng: number },
   ) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-    });
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found.');
 
     if (order.riderId !== riderId)
@@ -394,20 +370,13 @@ export class OrdersService {
 
     await this.prisma.order.update({
       where: { id: orderId },
-      data: { status: stage },
+      data: { status: stage as any },
     });
 
     if (stage === 'DELIVERED') {
-      await this.prisma.user.update({
-        where: { id: riderId },
-        data: { status: 'AVAILABLE' },
-      });
-
+      await this.prisma.user.update({ where: { id: riderId }, data: { status: 'AVAILABLE' } });
       await this.surge.recordRiderAvailability(riderId, true);
-
-      try {
-        await this.geoSurge.removePoint(`order:${orderId}`);
-      } catch {}
+      try { await this.geoSurge.removePoint(`order:${orderId}`); } catch {}
 
       await this.notify.create(
         order.customerId,
@@ -418,30 +387,27 @@ export class OrdersService {
       );
     }
 
-    if (location)
+    if (location) {
       await this.prisma.user.update({
         where: { id: riderId },
         data: { latitude: location.lat, longitude: location.lng },
       });
+    }
 
-    this.ws.notifyUser(order.customerId, 'order_status_update', {
-      orderId,
-      stage,
-      location,
-    });
+    this.ws.notifyUser(order.customerId, 'order_status_update', { orderId, stage, location });
     return { ok: true };
   }
 
+  /**
+   * Admin manual assign (used by admin UI / escalation)
+   */
   async adminAssign(orderId: number, adminId: number, riderId: number) {
     const updated = await this.prisma.order.update({
       where: { id: orderId },
-      data: { riderId, status: 'OUT_FOR_DELIVERY' },
+      data: { riderId, status: OrderStatus.OUT_FOR_DELIVERY },
     });
 
-    await this.prisma.user.update({
-      where: { id: riderId },
-      data: { status: 'BUSY' },
-    });
+    await this.prisma.user.update({ where: { id: riderId }, data: { status: 'BUSY' } });
 
     await this.notify.create(
       updated.customerId,
@@ -454,14 +420,19 @@ export class OrdersService {
     return updated;
   }
 
+  /**
+   * pharmacyRespond:
+   * - if REJECTED: mark that pharmacy's offers rejected
+   * - if ACCEPTED:
+   *    - mark order ACCEPTED, reject other offers
+   *    - create a Razorpay order & local transaction and return it (frontend shows payment modal)
+   */
   async pharmacyRespond(
     pharmacyId: number,
     orderId: number,
     action: 'ACCEPTED' | 'REJECTED',
   ) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-    });
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found.');
 
     if (action === 'REJECTED') {
@@ -472,9 +443,10 @@ export class OrdersService {
       return { ok: true };
     }
 
+    // ACCEPTED
     const updated = await this.prisma.order.update({
       where: { id: orderId },
-      data: { pharmacyId, status: 'ACCEPTED' },
+      data: { pharmacyId, status: OrderStatus.ACCEPTED },
     });
 
     await this.prisma.orderOffer.updateMany({
@@ -482,24 +454,42 @@ export class OrdersService {
       data: { status: 'REJECTED' },
     });
 
-    return updated;
+    // Notify customer to pay
+    await this.notify.create(
+      updated.customerId,
+      'ORDER_ACCEPTED',
+      `Your order #${orderId} was accepted by the pharmacy. Please complete payment.`,
+      { orderId },
+      pharmacyId,
+    );
+
+    // Create Razorpay order + local transaction and return payment info to caller
+    try {
+      const payment = await this.payments.createPaymentForOrder(orderId);
+      this.ws.notifyUser(updated.customerId, 'payment_required', { orderId, payment });
+      return { order: updated, payment };
+    } catch (err) {
+      this.logger.warn('Failed to create payment order after pharmacy accept', (err as any)?.message ?? err);
+      return { order: updated, paymentError: (err as any)?.message ?? String(err) };
+    }
   }
 
+  /**
+   * riderRespond: riders accept/reject (manual)
+   */
   async riderRespond(
     riderId: number,
     orderId: number,
     action: 'ACCEPTED' | 'REJECTED',
   ) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-    });
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found.');
 
     if (action === 'ACCEPTED') {
       await this.surge.recordRiderAvailability(riderId, false);
       return this.prisma.order.update({
         where: { id: orderId },
-        data: { riderId, status: 'OUT_FOR_DELIVERY' },
+        data: { riderId, status: OrderStatus.OUT_FOR_DELIVERY },
       });
     }
 
@@ -510,6 +500,9 @@ export class OrdersService {
     return { ok: true };
   }
 
+  /**
+   * findByUser: returns user-specific orders
+   */
   async findByUser(userId: number, role: string) {
     if (role === 'ADMIN')
       return this.prisma.order.findMany({ include: { items: true } });

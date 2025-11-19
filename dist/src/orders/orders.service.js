@@ -179,8 +179,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 throw new common_1.NotFoundException('Pharmacy not found.');
             const order = await this.prisma.order.create({
                 data: {
-                    customer: { connect: { id: +customerId } },
-                    pharmacy: { connect: { id: dto.pharmacyId } },
+                    customerId,
+                    pharmacyId: dto.pharmacyId,
                     totalPrice: total,
                     status: 'PENDING',
                     items: {
@@ -200,6 +200,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 await this.geoSurge.removePoint(orderGeoId);
             }
             catch { }
+            const delayMs = (Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000);
+            await this.orderAssignQueue.add('rider_escalation', { orderId: order.id }, { delay: delayMs });
             return order;
         }
         const medicineIds = dto.items
@@ -225,8 +227,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
         const bestPharmacyId = scores[0].pharmacyId;
         const order = await this.prisma.order.create({
             data: {
-                customer: { connect: { id: +customerId } },
-                pharmacy: { connect: { id: bestPharmacyId } },
+                customerId,
+                pharmacyId: bestPharmacyId,
                 totalPrice: total,
                 status: 'PENDING',
                 items: {
@@ -274,28 +276,19 @@ let OrdersService = OrdersService_1 = class OrdersService {
                     if (!match)
                         continue;
                     const riderId = Number(match[1]);
+                    if (!riderId || isNaN(riderId))
+                        continue;
                     const r = await this.prisma.user.findUnique({
                         where: { id: riderId },
                         select: { status: true },
                     });
                     if (!r || r.status !== 'AVAILABLE')
                         continue;
-                    await this.prisma.order.update({
-                        where: { id: order.id },
-                        data: {
-                            riderId,
-                            status: 'OUT_FOR_DELIVERY',
-                        },
+                    await this.prisma.orderOffer.create({
+                        data: { orderId: order.id, riderId, offeredTo: 'RIDER' },
                     });
-                    await this.prisma.user.update({
-                        where: { id: riderId },
-                        data: { status: 'BUSY' },
-                    });
-                    await this.notify.create(riderId, 'ORDER_ASSIGNED', `You were assigned to order #${order.id}`, { orderId: order.id }, undefined);
-                    this.ws.notifyUser(riderId, 'order_assigned', {
-                        orderId: order.id,
-                    });
-                    break;
+                    await this.notify.create(riderId, 'ORDER_OFFERED', `New rider offer for order #${order.id}`, { orderId: order.id }, undefined);
+                    this.ws.notifyUser(riderId, 'order_offered', { orderId: order.id });
                 }
             }
         }
@@ -306,115 +299,9 @@ let OrdersService = OrdersService_1 = class OrdersService {
             await this.geoSurge.removePoint(orderGeoId);
         }
         catch { }
+        const delayMs = (Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000);
+        await this.orderAssignQueue.add('rider_escalation', { orderId: order.id }, { delay: delayMs });
         return { order, candidates: pharmacyIds, scores };
-    }
-    async updateStage(riderId, orderId, stage, location) {
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-        });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found.');
-        if (order.riderId !== riderId)
-            throw new common_1.BadRequestException('Not assigned to this rider.');
-        await this.prisma.order.update({
-            where: { id: orderId },
-            data: { status: stage },
-        });
-        if (stage === 'DELIVERED') {
-            await this.prisma.user.update({
-                where: { id: riderId },
-                data: { status: 'AVAILABLE' },
-            });
-            await this.surge.recordRiderAvailability(riderId, true);
-            try {
-                await this.geoSurge.removePoint(`order:${orderId}`);
-            }
-            catch { }
-            await this.notify.create(order.customerId, 'ORDER_DELIVERED', `Order #${orderId} delivered.`, { orderId }, riderId);
-        }
-        if (location)
-            await this.prisma.user.update({
-                where: { id: riderId },
-                data: { latitude: location.lat, longitude: location.lng },
-            });
-        this.ws.notifyUser(order.customerId, 'order_status_update', {
-            orderId,
-            stage,
-            location,
-        });
-        return { ok: true };
-    }
-    async adminAssign(orderId, adminId, riderId) {
-        const updated = await this.prisma.order.update({
-            where: { id: orderId },
-            data: { riderId, status: 'OUT_FOR_DELIVERY' },
-        });
-        await this.prisma.user.update({
-            where: { id: riderId },
-            data: { status: 'BUSY' },
-        });
-        await this.notify.create(updated.customerId, 'ORDER_ASSIGNED_BY_ADMIN', `Order #${orderId} assigned by admin.`, { orderId }, adminId);
-        return updated;
-    }
-    async pharmacyRespond(pharmacyId, orderId, action) {
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-        });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found.');
-        if (action === 'REJECTED') {
-            await this.prisma.orderOffer.updateMany({
-                where: { orderId, pharmacyId },
-                data: { status: 'REJECTED' },
-            });
-            return { ok: true };
-        }
-        const updated = await this.prisma.order.update({
-            where: { id: orderId },
-            data: { pharmacyId, status: 'ACCEPTED' },
-        });
-        await this.prisma.orderOffer.updateMany({
-            where: { orderId, pharmacyId: { not: pharmacyId } },
-            data: { status: 'REJECTED' },
-        });
-        return updated;
-    }
-    async riderRespond(riderId, orderId, action) {
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-        });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found.');
-        if (action === 'ACCEPTED') {
-            await this.surge.recordRiderAvailability(riderId, false);
-            return this.prisma.order.update({
-                where: { id: orderId },
-                data: { riderId, status: 'OUT_FOR_DELIVERY' },
-            });
-        }
-        await this.prisma.orderOffer.updateMany({
-            where: { orderId, riderId },
-            data: { status: 'REJECTED' },
-        });
-        return { ok: true };
-    }
-    async findByUser(userId, role) {
-        if (role === 'ADMIN')
-            return this.prisma.order.findMany({ include: { items: true } });
-        if (role === 'PHARMACY')
-            return this.prisma.order.findMany({
-                where: { pharmacyId: userId },
-                include: { items: true },
-            });
-        if (role === 'RIDER')
-            return this.prisma.order.findMany({
-                where: { riderId: userId },
-                include: { items: true },
-            });
-        return this.prisma.order.findMany({
-            where: { customerId: userId },
-            include: { items: true },
-        });
     }
 };
 exports.OrdersService = OrdersService;

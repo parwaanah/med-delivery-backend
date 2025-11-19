@@ -1,10 +1,9 @@
 import { PrismaService } from '../utils/prisma.service';
-import { WsGateway } from '../ws/ws.gateway';
-export declare class NotificationService {
+export declare class NotificationsService {
     private prisma;
-    private wsGateway;
-    constructor(prisma: PrismaService, wsGateway: WsGateway);
-    create(receiverId: number, type: string, message: string, meta?: any, senderId?: number): Promise<{
+    private readonly logger;
+    constructor(prisma: PrismaService);
+    findAll(): Promise<{
         message: string;
         type: string;
         meta: import("@prisma/client/runtime/library").JsonValue | null;
@@ -13,5 +12,5 @@ export declare class NotificationService {
         id: number;
         senderId: number | null;
         receiverId: number;
-    }>;
+    }[]>;
 }

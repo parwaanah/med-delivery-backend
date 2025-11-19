@@ -40,7 +40,12 @@ let RidersController = class RidersController {
         return this.ridersService.updateStatus(Number(id), dto);
     }
     async updateLocation(id, body) {
-        return this.ridersService.updateLocation(Number(id), body.lat, body.lon);
+        const lat = typeof body.latitude === 'number' ? body.latitude : body.lat;
+        const lon = typeof body.longitude === 'number' ? body.longitude : body.lon;
+        if (typeof lat !== 'number' || typeof lon !== 'number') {
+            throw new common_1.BadRequestException('latitude and longitude (or lat and lon) are required and must be numbers');
+        }
+        return this.ridersService.updateLocation(Number(id), lat, lon);
     }
     remove(id) {
         return this.ridersService.remove(Number(id));
@@ -94,13 +99,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], RidersController.prototype, "updateStatus", null);
 __decorate([
+    openapi.ApiOperation({ description: "Update live location.\nAccepts either:\n  { \"latitude\": 19.0, \"longitude\": 72.0 }\nor\n  { \"lat\": 19.0, \"lon\": 72.0 }\n\nNormalizes incoming fields and passes numeric values to service." }),
     (0, common_1.Patch)(':id/location'),
     (0, roles_decorator_1.Roles)('rider', 'admin'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, rider_dto_1.UpdateLocationDto]),
     __metadata("design:returntype", Promise)
 ], RidersController.prototype, "updateLocation", null);
 __decorate([

@@ -40,15 +40,22 @@ let OrdersProcessor = OrdersProcessor_1 = class OrdersProcessor {
                 const { orderId } = job.data;
                 if (!orderId)
                     return;
-                const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+                const order = await this.prisma.order.findUnique({
+                    where: { id: orderId },
+                    select: { id: true, riderId: true, status: true, pharmacyId: true, customerId: true }
+                });
                 if (!order)
                     return;
-                if (!order.riderId && (order.status === 'ACCEPTED' || order.status === 'ASSIGNED')) {
-                    const admin = await this.prisma.user.findFirst({ where: { role: 'ADMIN' } });
+                if (!order.riderId && order.status === 'PENDING') {
+                    const admin = await this.prisma.user.findFirst({
+                        where: { role: 'ADMIN' },
+                        select: { id: true }
+                    });
                     if (admin) {
-                        await this.notify.create(admin.id, 'ORDER_ESCALATION', `No rider accepted order ${orderId} within timeframe`, { orderId });
+                        await this.notify.create(admin.id, 'ORDER_ESCALATION', `⚠ No rider accepted order #${orderId} within the expected time.`, { orderId });
                         this.ws.notifyUser(admin.id, 'order_escalation', { orderId });
                     }
+                    this.logger.warn(`⏰ Escalation triggered for order ${orderId} — no rider accepted.`);
                 }
             }
             catch (err) {
@@ -57,22 +64,19 @@ let OrdersProcessor = OrdersProcessor_1 = class OrdersProcessor {
         }, {
             connection: this.redisClient,
         });
-        this.worker.on('completed', (job) => this.logger.log(`Worker completed job ${job.id}`));
-        this.worker.on('failed', (job, err) => this.logger.warn(`Worker failed job ${job?.id}: ${err?.message}`));
+        this.worker.on('completed', (job) => this.logger.log(`Order escalation check completed for job ${job.id}`));
+        this.worker.on('failed', (job, err) => this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`));
         this.logger.log('✅ OrdersProcessor worker started (order_assign)');
     }
     async onModuleDestroy() {
         try {
-            await this.worker?.close();
+            await this.worker.close();
         }
-        catch {
-        }
+        catch { }
         try {
-            await this.redisClient?.quit();
+            await this.redisClient.quit();
         }
-        catch {
-        }
-        this.logger.log('🧹 OrdersProcessor shut down');
+        catch { }
     }
 };
 exports.OrdersProcessor = OrdersProcessor;

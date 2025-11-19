@@ -1496,3 +1496,269 @@ Argument `id` is missing.
     at async OrdersService.updateStage (C:\Users\OMEN\med-delivery\backend\dist\src\orders\orders.service.js:138:23)
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
     at async C:\Users\OMEN\med-delivery\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[2025-11-16T14:35:36.436Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.437Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.438Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.439Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.439Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.440Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.440Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.441Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.441Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.442Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.442Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.443Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.443Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.444Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.444Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.445Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.445Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.446Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.446Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.447Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.447Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.448Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.449Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.449Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.450Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.450Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.450Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.451Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.451Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.452Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.624Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.625Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.625Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.626Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.626Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.626Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.627Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.627Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.628Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.628Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.629Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.629Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.630Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.630Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.631Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.631Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.631Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.632Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.632Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.633Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.633Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.634Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.634Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.635Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.635Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.636Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.637Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.637Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.637Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:35:36.638Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.904Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.905Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.906Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.906Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.907Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.907Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.908Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.908Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.909Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.909Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.910Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.911Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.912Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.912Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.913Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.913Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.914Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.914Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.915Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.915Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.916Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.916Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.917Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.917Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.918Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.918Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.919Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.920Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.920Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.921Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:30.921Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.171Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.172Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.173Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.173Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.174Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.174Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.174Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.175Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.175Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.176Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.177Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.177Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.177Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.178Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.178Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.179Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.179Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.180Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.180Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.181Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.182Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.182Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.183Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.183Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.184Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.184Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.185Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.185Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.186Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.186Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-16T14:43:31.187Z] [ERROR] [GeoSurgeService] recalcAndBroadcast error
+MaxRetriesPerRequestError: Reached the max retries per request limit (which is 20). Refer to "maxRetriesPerRequest" option for details.
+[2025-11-17T10:24:33.790Z] [ERROR] [NotificationService] Notification failed:
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.notification.create()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\utils\notification.service.js:23:51
+
+  20 }
+  21 async create(receiverId, type, message, meta = {}, senderId) {
+  22     try {
+→ 23         return await this.prisma.notification.create(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "22P05", message: "character with byte sequence 0xe2 0x9a 0xa0 in encoding \"UTF8\" has no equivalent in encoding \"WIN1252\"", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+[2025-11-17T14:05:06.769Z] [ERROR] [NotificationService] Notification failed:
+PrismaClientUnknownRequestError: 
+Invalid `this.prisma.notification.create()` invocation in
+C:\Users\OMEN\med-delivery\backend\dist\src\utils\notification.service.js:23:51
+
+  20 }
+  21 async create(receiverId, type, message, meta = {}, senderId) {
+  22     try {
+→ 23         return await this.prisma.notification.create(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "22P05", message: "character with byte sequence 0xe2 0x9a 0xa0 in encoding \"UTF8\" has no equivalent in encoding \"WIN1252\"", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })

@@ -8,126 +8,96 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var GeoSurgeService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GeoSurgeService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const ioredis_1 = __importDefault(require("ioredis"));
 const geo_surge_live_gateway_1 = require("../ws/geo-surge-live.gateway");
-let GeoSurgeService = class GeoSurgeService {
+let GeoSurgeService = GeoSurgeService_1 = class GeoSurgeService {
     constructor(config, gateway) {
         this.config = config;
         this.gateway = gateway;
-        this.logger = new common_1.Logger('GeoSurgeService');
-        this.key = 'geo:points';
-        this.calcIntervalMs = 15 * 1000;
+        this.logger = new common_1.Logger(GeoSurgeService_1.name);
+        this.GEO_KEY = 'geosurge:riders';
+        this.redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        this.initRedis();
     }
-    onModuleInit() {
-        const url = this.config.get('REDIS_URL') ?? 'redis://127.0.0.1:6379';
-        this.redis = new ioredis_1.default(url);
-        this.logger.log(`✅ GeoSurge connected to Redis → ${url}`);
-        this.interval = setInterval(() => this.recalcAndBroadcast().catch(err => this.logger.error('recalc err', err)), this.calcIntervalMs);
-    }
-    onModuleDestroy() {
-        if (this.interval)
-            clearInterval(this.interval);
+    initRedis() {
         try {
-            this.redis.disconnect();
+            this.redis = new ioredis_1.default(this.redisUrl);
+            this.redis.on('connect', () => this.logger.log(`✅ GeoSurge connected → ${this.redisUrl}`));
+            this.redis.on('error', (err) => this.logger.warn('Redis error:', err?.message ?? JSON.stringify(err)));
         }
-        catch { }
+        catch (err) {
+            this.logger.error('Failed to init Redis for GeoSurge', err?.message ?? JSON.stringify(err));
+        }
     }
-    async addPoint(memberId, lon, lat) {
-        await this.redis.geoadd(this.key, lon, lat, memberId);
-        await this.redis.hset(`geo:meta:${memberId}`, { lon: String(lon), lat: String(lat), updated: String(Date.now()) });
-    }
-    async removePoint(memberId) {
-        await this.redis.zrem(this.key, memberId);
-        await this.redis.del(`geo:meta:${memberId}`);
-    }
-    async findNearbyPoints(lon, lat, radiusKm = 2, withMeta = true, limit = 200) {
+    async addPoint(id, lon, lat, meta = {}) {
         try {
-            const raw = await this.redis.georadius(this.key, lon, lat, radiusKm, 'km', 'WITHDIST', 'COUNT', limit, 'ASC');
-            if (!raw || !raw.length)
+            await this.redis.geoadd(this.GEO_KEY, lon, lat, id);
+            await this.redis.hset(`geo:meta:${id}`, 'lon', String(lon), 'lat', String(lat), 'meta', JSON.stringify(meta));
+        }
+        catch (err) {
+            this.logger.warn(`addPoint failed for ${id}`, err?.message ?? JSON.stringify(err));
+        }
+    }
+    async removePoint(id) {
+        try {
+            await this.redis.zrem(this.GEO_KEY, id);
+            await this.redis.del(`geo:meta:${id}`);
+        }
+        catch (err) {
+            this.logger.warn('removePoint failed', err?.message ?? JSON.stringify(err));
+        }
+    }
+    async findNearbyPoints(lon, lat, km = 5, includeMeta = true, limit = 50) {
+        try {
+            const raw = await this.redis.geosearch(this.GEO_KEY, 'FROMLONLAT', lon, lat, 'BYRADIUS', km, 'km', 'WITHDIST', 'COUNT', limit, 'ASC');
+            if (!raw || raw.length === 0)
                 return [];
-            const points = [];
+            const items = [];
             for (const entry of raw) {
                 const memberId = entry[0];
-                const distKm = Number(entry[1]);
-                const p = { memberId, lon: 0, lat: 0, distKm };
-                if (withMeta) {
-                    try {
-                        const meta = await this.redis.hgetall(`geo:meta:${memberId}`);
-                        if (meta && Object.keys(meta).length)
-                            p.meta = meta;
-                        if (meta?.lon && meta?.lat) {
-                            p.lon = parseFloat(meta.lon);
-                            p.lat = parseFloat(meta.lat);
-                        }
-                    }
-                    catch (err) {
-                    }
+                const distKm = parseFloat(entry[1]);
+                let meta = {};
+                if (includeMeta) {
+                    const h = await this.redis.hgetall(`geo:meta:${memberId}`);
+                    if (h.meta)
+                        meta = JSON.parse(h.meta);
                 }
-                points.push(p);
+                items.push({
+                    memberId,
+                    distKm,
+                    meta,
+                });
             }
-            return points;
+            return items;
         }
         catch (err) {
-            this.logger.warn('findNearbyPoints failed', err?.message ?? err);
+            this.logger.warn('findNearbyPoints failed', err?.message ?? JSON.stringify(err));
             return [];
         }
     }
-    async recalcAndBroadcast() {
+    broadcastGeo(zones) {
         try {
-            const raw = await this.redis.zrange(this.key, 0, -1);
-            if (!raw || raw.length === 0) {
-                this.gateway.broadcastGeo([]);
-                return [];
-            }
-            const members = raw;
-            const coords = await Promise.all(members.map(m => this.redis.geopos(this.key, m)));
-            const points = members.map((m, i) => {
-                const p = coords[i]?.[0];
-                return p ? { id: m, lon: parseFloat(p[0]), lat: parseFloat(p[1]) } : null;
-            }).filter(Boolean);
-            const buckets = new Map();
-            for (const pt of points) {
-                const key = `${pt.lon.toFixed(3)}:${pt.lat.toFixed(3)}`;
-                if (!buckets.has(key))
-                    buckets.set(key, { lon: pt.lon, lat: pt.lat, members: [] });
-                buckets.get(key).members.push(pt.id);
-            }
-            const zones = [];
-            for (const [k, v] of buckets) {
-                const radiusKm = 0.3;
-                const nearby = await this.redis.georadius(this.key, v.lon, v.lat, radiusKm, 'km');
-                const count = nearby?.length ?? v.members.length;
-                const multiplier = Number((1 + Math.min(2, count / 8)).toFixed(2));
-                zones.push({
-                    id: k,
-                    lon: v.lon,
-                    lat: v.lat,
-                    count,
-                    multiplier,
-                    lastUpdated: Date.now(),
-                });
-            }
-            zones.sort((a, b) => b.multiplier - a.multiplier);
-            const top = zones.slice(0, 200);
-            this.gateway.broadcastGeo(top);
-            this.logger.log(`🔺 GeoSurge broadcast ${top.length} zones`);
-            return top;
+            if (this.gateway)
+                this.gateway.broadcastGeo(zones);
         }
-        catch (err) {
-            this.logger.error('recalcAndBroadcast error', err);
-            return [];
-        }
+        catch (_) { }
     }
 };
 exports.GeoSurgeService = GeoSurgeService;
-exports.GeoSurgeService = GeoSurgeService = __decorate([
+exports.GeoSurgeService = GeoSurgeService = GeoSurgeService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService, geo_surge_live_gateway_1.GeoSurgeLiveGateway])
+    __param(1, (0, common_1.Optional)()),
+    __metadata("design:paramtypes", [config_1.ConfigService,
+        geo_surge_live_gateway_1.GeoSurgeLiveGateway])
 ], GeoSurgeService);

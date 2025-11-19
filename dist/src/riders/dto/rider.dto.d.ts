@@ -14,3 +14,9 @@ export declare class UpdateRiderDto {
 export declare class UpdateStatusDto {
     status: string;
 }
+export declare class UpdateLocationDto {
+    latitude?: number;
+    longitude?: number;
+    lat?: number;
+    lon?: number;
+}

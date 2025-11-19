@@ -1,4 +1,3 @@
-// src/queues/queue.module.ts
 import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import IORedis from 'ioredis';
@@ -14,12 +13,8 @@ import { WsGateway } from '../ws/ws.gateway';
     {
       provide: 'REDIS',
       useFactory: (config: ConfigService) => {
-        const redisUrl =
-          config.get<string>('REDIS_URL') ?? 'redis://127.0.0.1:6379';
-        return new IORedis(redisUrl, {
-          enableReadyCheck: true,
-          // general Redis usage (NOT for BullMQ)
-        });
+        const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        return new IORedis(redisUrl, { enableReadyCheck: true });
       },
       inject: [ConfigService],
     },
@@ -27,9 +22,7 @@ import { WsGateway } from '../ws/ws.gateway';
     {
       provide: 'ORDER_ASSIGN_QUEUE',
       useFactory: (config: ConfigService) => {
-        const redisUrl =
-          config.get<string>('REDIS_URL') ?? 'redis://127.0.0.1:6379';
-        // BullMQ connection must disable retries
+        const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
         const bullConn = new IORedis(redisUrl, {
           enableReadyCheck: true,
           maxRetriesPerRequest: null,

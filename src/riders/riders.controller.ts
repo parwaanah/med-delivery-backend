@@ -1,3 +1,4 @@
+// src/riders/riders.controller.ts
 import {
   Controller,
   Get,
@@ -8,12 +9,14 @@ import {
   Put,
   Patch,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { RidersService } from './riders.service';
 import {
   CreateRiderDto,
   UpdateRiderDto,
   UpdateStatusDto,
+  UpdateLocationDto,
 } from './dto/rider.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -54,13 +57,33 @@ export class RidersController {
     return this.ridersService.updateStatus(Number(id), dto);
   }
 
+  /**
+   * Update live location.
+   * Accepts either:
+   *   { "latitude": 19.0, "longitude": 72.0 }
+   * or
+   *   { "lat": 19.0, "lon": 72.0 }
+   *
+   * Normalizes incoming fields and passes numeric values to service.
+   */
   @Patch(':id/location')
   @Roles('rider', 'admin')
   async updateLocation(
     @Param('id') id: string,
-    @Body() body: { lat: number; lon: number },
+    @Body() body: UpdateLocationDto,
   ) {
-    return this.ridersService.updateLocation(Number(id), body.lat, body.lon);
+    // normalize numeric values (prefer canonical names, fall back to short)
+    const lat = typeof body.latitude === 'number' ? body.latitude : body.lat;
+    const lon =
+      typeof body.longitude === 'number' ? body.longitude : body.lon;
+
+    if (typeof lat !== 'number' || typeof lon !== 'number') {
+      throw new BadRequestException(
+        'latitude and longitude (or lat and lon) are required and must be numbers',
+      );
+    }
+
+    return this.ridersService.updateLocation(Number(id), lat, lon);
   }
 
   @Delete(':id')
