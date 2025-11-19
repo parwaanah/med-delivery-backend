@@ -61545,3 +61545,836 @@
 [2025-11-19T17:55:39.423Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
 [2025-11-19T17:55:39.429Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
 [2025-11-19T17:55:39.432Z] [INFO] [Request] GET /health 200 (7ms) user=anonymous ip=::1
+[2025-11-19T17:56:39.395Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T17:56:39.398Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T17:56:39.400Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:56:39.403Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T17:56:39.407Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:56:39.467Z] [INFO] [Request] GET /health 200 (62ms) user=anonymous ip=::1
+[2025-11-19T17:57:39.394Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:57:39.396Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:57:39.398Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:57:39.402Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T17:57:39.404Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:57:39.407Z] [INFO] [Request] GET /health 200 (2ms) user=anonymous ip=::1
+[2025-11-19T17:58:39.398Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:58:39.401Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T17:58:39.403Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:58:39.405Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:58:39.408Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:58:39.410Z] [INFO] [Request] GET /health 200 (4ms) user=anonymous ip=::1
+[2025-11-19T17:59:06.032Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T17:59:06.035Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T17:59:06.036Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T17:59:06.038Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T17:59:06.042Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-19T17:59:06.044Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-19T17:59:06.045Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-19T17:59:06.046Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-19T17:59:06.047Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-19T17:59:06.048Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-19T17:59:06.048Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-19T17:59:06.049Z] [INFO] [RouterExplorer] Mapped {/auth/request-password-reset, POST} route
+[2025-11-19T17:59:06.049Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-19T17:59:06.050Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-19T17:59:06.051Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-19T17:59:06.052Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-19T17:59:06.053Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-19T17:59:06.053Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-19T17:59:06.054Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-19T17:59:06.055Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-19T17:59:06.055Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-19T17:59:06.056Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-19T17:59:06.056Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-19T17:59:06.057Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-19T17:59:06.058Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-19T17:59:06.058Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-19T17:59:06.058Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-19T17:59:06.059Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-19T17:59:06.059Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-19T17:59:06.060Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-19T17:59:06.060Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-19T17:59:06.061Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-19T17:59:06.061Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-19T17:59:06.062Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-19T17:59:06.062Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-19T17:59:06.063Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-19T17:59:06.063Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-19T17:59:06.064Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/recalc, GET} route
+[2025-11-19T17:59:06.064Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-19T17:59:06.065Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-19T17:59:06.065Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-19T17:59:06.066Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-19T17:59:06.066Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-19T17:59:06.066Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-19T17:59:06.067Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-19T17:59:06.067Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-19T17:59:06.068Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-19T17:59:06.069Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-19T17:59:06.069Z] [INFO] [RouterExplorer] Mapped {/payments/refund, POST} route
+[2025-11-19T17:59:06.069Z] [INFO] [RouterExplorer] Mapped {/payments/admin/list, GET} route
+[2025-11-19T17:59:06.070Z] [INFO] [RouterExplorer] Mapped {/payments/by-order/:orderId, GET} route
+[2025-11-19T17:59:06.070Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-19T17:59:06.071Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-19T17:59:06.071Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-19T17:59:06.072Z] [INFO] [RouterExplorer] Mapped {/admin/users, GET} route
+[2025-11-19T17:59:06.072Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-19T17:59:06.073Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-19T17:59:06.074Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-19T17:59:06.074Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id, DELETE} route
+[2025-11-19T17:59:06.074Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-19T17:59:06.075Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-19T17:59:06.075Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-19T17:59:06.076Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-19T17:59:06.076Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-19T17:59:06.077Z] [INFO] [RoutesResolver] AdminOrdersController {/admin/orders}:
+[2025-11-19T17:59:06.077Z] [INFO] [RouterExplorer] Mapped {/admin/orders/debug/redis, GET} route
+[2025-11-19T17:59:06.078Z] [INFO] [RouterExplorer] Mapped {/admin/orders, GET} route
+[2025-11-19T17:59:06.078Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign, POST} route
+[2025-11-19T17:59:06.079Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T17:59:06.079Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-19T17:59:06.080Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-19T17:59:06.080Z] [INFO] [RoutesResolver] AdminEscalationController {/admin/orders}:
+[2025-11-19T17:59:06.081Z] [INFO] [RouterExplorer] Mapped {/admin/orders/escalated, GET} route
+[2025-11-19T17:59:06.081Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T17:59:06.081Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign/:riderId, POST} route
+[2025-11-19T17:59:06.082Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-19T17:59:06.082Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-19T17:59:06.083Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-19T17:59:06.083Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-19T17:59:06.084Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-19T17:59:06.084Z] [INFO] [RoutesResolver] NotificationsController {/notifications}:
+[2025-11-19T17:59:06.085Z] [INFO] [RouterExplorer] Mapped {/notifications, GET} route
+[2025-11-19T17:59:06.102Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected → redis://127.0.0.1:6379
+[2025-11-19T17:59:06.446Z] [INFO] [OrdersProcessor] ✅ OrdersProcessor worker started (order_assign)
+[2025-11-19T17:59:06.692Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-19T17:59:39.422Z] [INFO] [Request] GET /admin/metrics 401 (11ms) user=anonymous ip=::1
+[2025-11-19T17:59:39.426Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:59:39.429Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:59:39.431Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T17:59:39.438Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T17:59:39.441Z] [INFO] [Request] GET /health 200 (8ms) user=anonymous ip=::1
+[2025-11-19T18:00:39.393Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:00:39.397Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:00:39.401Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:00:39.406Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:00:39.411Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:00:39.415Z] [INFO] [Request] GET /health 200 (7ms) user=anonymous ip=::1
+[2025-11-19T18:01:39.399Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:01:39.401Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:01:39.404Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:01:39.406Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:01:39.410Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:01:39.412Z] [INFO] [Request] GET /health 200 (4ms) user=anonymous ip=::1
+[2025-11-19T18:02:39.393Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:02:39.397Z] [INFO] [Request] GET /admin/orders 401 (3ms) user=anonymous ip=::1
+[2025-11-19T18:02:39.401Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:02:39.405Z] [INFO] [Request] GET /admin/users 401 (3ms) user=anonymous ip=::1
+[2025-11-19T18:02:39.410Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:02:39.413Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1
+[2025-11-19T18:03:29.323Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T18:03:29.326Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T18:03:29.327Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T18:03:29.329Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T18:03:29.333Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-19T18:03:29.335Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-19T18:03:29.336Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-19T18:03:29.337Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-19T18:03:29.337Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-19T18:03:29.338Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-19T18:03:29.339Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-19T18:03:29.339Z] [INFO] [RouterExplorer] Mapped {/auth/request-password-reset, POST} route
+[2025-11-19T18:03:29.340Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-19T18:03:29.340Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-19T18:03:29.341Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-19T18:03:29.342Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-19T18:03:29.342Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-19T18:03:29.343Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-19T18:03:29.344Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-19T18:03:29.344Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-19T18:03:29.345Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-19T18:03:29.345Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-19T18:03:29.346Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-19T18:03:29.346Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-19T18:03:29.347Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-19T18:03:29.347Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-19T18:03:29.348Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-19T18:03:29.348Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-19T18:03:29.349Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-19T18:03:29.349Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-19T18:03:29.350Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-19T18:03:29.350Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-19T18:03:29.351Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-19T18:03:29.351Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-19T18:03:29.352Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-19T18:03:29.352Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-19T18:03:29.353Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-19T18:03:29.353Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/recalc, GET} route
+[2025-11-19T18:03:29.353Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-19T18:03:29.354Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-19T18:03:29.354Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-19T18:03:29.355Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-19T18:03:29.355Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-19T18:03:29.356Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-19T18:03:29.356Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-19T18:03:29.357Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-19T18:03:29.358Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-19T18:03:29.358Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-19T18:03:29.359Z] [INFO] [RouterExplorer] Mapped {/payments/refund, POST} route
+[2025-11-19T18:03:29.359Z] [INFO] [RouterExplorer] Mapped {/payments/admin/list, GET} route
+[2025-11-19T18:03:29.360Z] [INFO] [RouterExplorer] Mapped {/payments/by-order/:orderId, GET} route
+[2025-11-19T18:03:29.360Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-19T18:03:29.360Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-19T18:03:29.361Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-19T18:03:29.361Z] [INFO] [RouterExplorer] Mapped {/admin/users, GET} route
+[2025-11-19T18:03:29.362Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-19T18:03:29.362Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-19T18:03:29.363Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-19T18:03:29.363Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id, DELETE} route
+[2025-11-19T18:03:29.364Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-19T18:03:29.365Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-19T18:03:29.365Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-19T18:03:29.366Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-19T18:03:29.366Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-19T18:03:29.367Z] [INFO] [RoutesResolver] AdminOrdersController {/admin/orders}:
+[2025-11-19T18:03:29.367Z] [INFO] [RouterExplorer] Mapped {/admin/orders/debug/redis, GET} route
+[2025-11-19T18:03:29.368Z] [INFO] [RouterExplorer] Mapped {/admin/orders, GET} route
+[2025-11-19T18:03:29.368Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign, POST} route
+[2025-11-19T18:03:29.368Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T18:03:29.369Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-19T18:03:29.369Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-19T18:03:29.370Z] [INFO] [RoutesResolver] AdminEscalationController {/admin/orders}:
+[2025-11-19T18:03:29.370Z] [INFO] [RouterExplorer] Mapped {/admin/orders/escalated, GET} route
+[2025-11-19T18:03:29.371Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T18:03:29.371Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign/:riderId, POST} route
+[2025-11-19T18:03:29.372Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-19T18:03:29.372Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-19T18:03:29.373Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-19T18:03:29.373Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-19T18:03:29.374Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-19T18:03:29.374Z] [INFO] [RoutesResolver] NotificationsController {/notifications}:
+[2025-11-19T18:03:29.374Z] [INFO] [RouterExplorer] Mapped {/notifications, GET} route
+[2025-11-19T18:03:29.387Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected → redis://127.0.0.1:6379
+[2025-11-19T18:03:29.611Z] [INFO] [OrdersProcessor] ✅ OrdersProcessor worker started (order_assign)
+[2025-11-19T18:03:29.845Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-19T18:03:39.422Z] [INFO] [Request] GET /admin/metrics 401 (7ms) user=anonymous ip=::1
+[2025-11-19T18:03:39.426Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:03:39.428Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:03:39.430Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:03:39.437Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:03:39.440Z] [INFO] [Request] GET /health 200 (8ms) user=anonymous ip=::1
+[2025-11-19T18:04:39.401Z] [INFO] [Request] GET /admin/metrics 401 (3ms) user=anonymous ip=::1
+[2025-11-19T18:04:39.405Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:04:39.409Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:04:39.413Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:04:39.417Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:04:39.419Z] [INFO] [Request] GET /health 200 (4ms) user=anonymous ip=::1
+[2025-11-19T18:05:39.402Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:05:39.406Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:05:39.409Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:05:39.413Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:05:39.417Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:05:39.420Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1
+[2025-11-19T18:06:39.407Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:06:39.409Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:06:39.411Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:06:39.414Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:06:39.418Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:06:39.421Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:07:39.403Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:07:39.405Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:07:39.408Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:07:39.410Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:07:39.413Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:07:39.416Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:08:39.409Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:08:39.412Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:08:39.416Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:08:39.419Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:08:39.425Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:08:39.506Z] [INFO] [Request] GET /health 200 (84ms) user=anonymous ip=::1
+[2025-11-19T18:09:39.406Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:09:39.409Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:09:39.412Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:09:39.417Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:09:39.421Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:09:39.425Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1
+[2025-11-19T18:10:39.407Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:10:39.410Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:10:39.413Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:10:39.416Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:10:39.420Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:10:39.423Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:11:39.404Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:11:39.407Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:11:39.409Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:11:39.413Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:11:39.418Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:11:39.421Z] [INFO] [Request] GET /health 200 (7ms) user=anonymous ip=::1
+[2025-11-19T18:12:39.395Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:12:39.398Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:12:39.401Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:12:39.403Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:12:39.407Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:12:39.410Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:13:39.405Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:13:39.408Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:13:39.410Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:13:39.413Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:13:39.417Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:13:39.420Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1
+[2025-11-19T18:14:39.394Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:14:39.397Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:14:39.399Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:14:39.402Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:14:39.407Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:14:39.580Z] [INFO] [Request] GET /health 200 (175ms) user=anonymous ip=::1
+[2025-11-19T18:15:39.404Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:15:39.408Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:15:39.411Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:15:39.414Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:15:39.418Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:15:39.420Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:16:39.392Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:16:39.395Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:16:39.397Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:16:39.400Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:16:39.404Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:16:39.407Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1
+[2025-11-19T18:17:39.406Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:17:39.408Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:17:39.411Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:17:39.413Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:17:39.417Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:17:39.419Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:18:39.399Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:18:39.402Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:18:39.405Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:18:39.409Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:18:39.412Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:18:39.414Z] [INFO] [Request] GET /health 200 (4ms) user=anonymous ip=::1
+[2025-11-19T18:19:39.415Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:19:39.418Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:19:39.421Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:19:39.424Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:19:39.428Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:19:39.430Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:19:45.975Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T18:19:45.978Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T18:19:45.980Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T18:19:45.982Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T18:19:45.988Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-19T18:19:45.991Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-19T18:19:45.992Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-19T18:19:45.993Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-19T18:19:45.995Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-19T18:19:45.996Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-19T18:19:45.997Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-19T18:19:45.997Z] [INFO] [RouterExplorer] Mapped {/auth/request-password-reset, POST} route
+[2025-11-19T18:19:45.998Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-19T18:19:45.999Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-19T18:19:46.000Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-19T18:19:46.001Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-19T18:19:46.003Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-19T18:19:46.003Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-19T18:19:46.004Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-19T18:19:46.004Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-19T18:19:46.005Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-19T18:19:46.006Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-19T18:19:46.007Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-19T18:19:46.007Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-19T18:19:46.008Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-19T18:19:46.009Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-19T18:19:46.010Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-19T18:19:46.010Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-19T18:19:46.011Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-19T18:19:46.012Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-19T18:19:46.012Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-19T18:19:46.013Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-19T18:19:46.014Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-19T18:19:46.015Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-19T18:19:46.015Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-19T18:19:46.016Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-19T18:19:46.017Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-19T18:19:46.017Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/recalc, GET} route
+[2025-11-19T18:19:46.018Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-19T18:19:46.018Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-19T18:19:46.019Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-19T18:19:46.019Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-19T18:19:46.020Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-19T18:19:46.021Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-19T18:19:46.022Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-19T18:19:46.022Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-19T18:19:46.023Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-19T18:19:46.024Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-19T18:19:46.024Z] [INFO] [RouterExplorer] Mapped {/payments/refund, POST} route
+[2025-11-19T18:19:46.025Z] [INFO] [RouterExplorer] Mapped {/payments/admin/list, GET} route
+[2025-11-19T18:19:46.025Z] [INFO] [RouterExplorer] Mapped {/payments/by-order/:orderId, GET} route
+[2025-11-19T18:19:46.026Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-19T18:19:46.026Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-19T18:19:46.027Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-19T18:19:46.028Z] [INFO] [RouterExplorer] Mapped {/admin/users, GET} route
+[2025-11-19T18:19:46.029Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-19T18:19:46.030Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-19T18:19:46.030Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-19T18:19:46.031Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id, DELETE} route
+[2025-11-19T18:19:46.032Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-19T18:19:46.032Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-19T18:19:46.033Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-19T18:19:46.034Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-19T18:19:46.034Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-19T18:19:46.035Z] [INFO] [RoutesResolver] AdminOrdersController {/admin/orders}:
+[2025-11-19T18:19:46.036Z] [INFO] [RouterExplorer] Mapped {/admin/orders/debug/redis, GET} route
+[2025-11-19T18:19:46.036Z] [INFO] [RouterExplorer] Mapped {/admin/orders, GET} route
+[2025-11-19T18:19:46.037Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign, POST} route
+[2025-11-19T18:19:46.038Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T18:19:46.038Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-19T18:19:46.039Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-19T18:19:46.039Z] [INFO] [RoutesResolver] AdminEscalationController {/admin/orders}:
+[2025-11-19T18:19:46.040Z] [INFO] [RouterExplorer] Mapped {/admin/orders/escalated, GET} route
+[2025-11-19T18:19:46.040Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T18:19:46.041Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign/:riderId, POST} route
+[2025-11-19T18:19:46.042Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-19T18:19:46.042Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-19T18:19:46.043Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-19T18:19:46.044Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-19T18:19:46.044Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-19T18:19:46.045Z] [INFO] [RoutesResolver] NotificationsController {/notifications}:
+[2025-11-19T18:19:46.045Z] [INFO] [RouterExplorer] Mapped {/notifications, GET} route
+[2025-11-19T18:19:46.068Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected → redis://127.0.0.1:6379
+[2025-11-19T18:19:46.383Z] [INFO] [OrdersProcessor] ✅ OrdersProcessor worker started (order_assign)
+[2025-11-19T18:19:46.663Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-19T18:20:39.418Z] [INFO] [Request] GET /admin/metrics 401 (8ms) user=anonymous ip=::1
+[2025-11-19T18:20:39.423Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:20:39.426Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:20:39.431Z] [INFO] [Request] GET /admin/users 401 (3ms) user=anonymous ip=::1
+[2025-11-19T18:20:39.439Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:20:39.444Z] [INFO] [Request] GET /health 200 (11ms) user=anonymous ip=::1
+[2025-11-19T18:21:39.398Z] [INFO] [Request] GET /admin/metrics 401 (3ms) user=anonymous ip=::1
+[2025-11-19T18:21:39.402Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:21:39.407Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:21:39.411Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:21:39.416Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:21:39.418Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:22:39.403Z] [INFO] [Request] GET /admin/metrics 401 (3ms) user=anonymous ip=::1
+[2025-11-19T18:22:39.407Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:22:39.410Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:22:39.413Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:22:39.417Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:22:39.420Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1
+[2025-11-19T18:23:39.407Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:23:39.410Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:23:39.413Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:23:39.416Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:23:39.420Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:23:39.423Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:24:39.404Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:24:39.407Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:24:39.409Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:24:39.412Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:24:39.415Z] [INFO] [Request] GET /admin/audit/logs 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:24:39.417Z] [INFO] [Request] GET /health 200 (4ms) user=anonymous ip=::1
+[2025-11-19T18:25:39.407Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:25:39.410Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:25:39.413Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:25:39.418Z] [INFO] [Request] GET /admin/users 401 (4ms) user=anonymous ip=::1
+[2025-11-19T18:25:39.424Z] [INFO] [Request] GET /admin/audit/logs 401 (3ms) user=anonymous ip=::1
+[2025-11-19T18:25:39.501Z] [INFO] [Request] GET /health 200 (81ms) user=anonymous ip=::1
+[2025-11-19T18:26:39.395Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:26:39.398Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:26:39.401Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:26:39.404Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:26:39.408Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:26:39.410Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T18:27:39.400Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:27:39.402Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:27:39.405Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:27:39.407Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T18:27:39.412Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T18:27:39.415Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1
+[2025-11-19T19:02:10.557Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:02:10.560Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T19:02:10.561Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:02:10.562Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T19:02:10.566Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-19T19:02:10.568Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-19T19:02:10.569Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-19T19:02:10.570Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-19T19:02:10.571Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-19T19:02:10.572Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-19T19:02:10.572Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-19T19:02:10.573Z] [INFO] [RouterExplorer] Mapped {/auth/request-password-reset, POST} route
+[2025-11-19T19:02:10.573Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-19T19:02:10.574Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-19T19:02:10.575Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-19T19:02:10.576Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-19T19:02:10.577Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-19T19:02:10.577Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-19T19:02:10.578Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-19T19:02:10.578Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-19T19:02:10.579Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-19T19:02:10.579Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-19T19:02:10.580Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-19T19:02:10.580Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-19T19:02:10.581Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-19T19:02:10.581Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-19T19:02:10.582Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-19T19:02:10.582Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-19T19:02:10.583Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-19T19:02:10.583Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-19T19:02:10.584Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-19T19:02:10.584Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-19T19:02:10.585Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-19T19:02:10.585Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-19T19:02:10.586Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-19T19:02:10.586Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-19T19:02:10.587Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-19T19:02:10.587Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/recalc, GET} route
+[2025-11-19T19:02:10.587Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-19T19:02:10.588Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-19T19:02:10.589Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-19T19:02:10.589Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-19T19:02:10.590Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-19T19:02:10.590Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-19T19:02:10.591Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-19T19:02:10.591Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-19T19:02:10.591Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-19T19:02:10.592Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-19T19:02:10.592Z] [INFO] [RouterExplorer] Mapped {/payments/refund, POST} route
+[2025-11-19T19:02:10.593Z] [INFO] [RouterExplorer] Mapped {/payments/admin/list, GET} route
+[2025-11-19T19:02:10.593Z] [INFO] [RouterExplorer] Mapped {/payments/by-order/:orderId, GET} route
+[2025-11-19T19:02:10.594Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-19T19:02:10.594Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-19T19:02:10.594Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-19T19:02:10.595Z] [INFO] [RouterExplorer] Mapped {/admin/users, GET} route
+[2025-11-19T19:02:10.595Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-19T19:02:10.596Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-19T19:02:10.596Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-19T19:02:10.597Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id, DELETE} route
+[2025-11-19T19:02:10.597Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-19T19:02:10.598Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-19T19:02:10.598Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-19T19:02:10.599Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-19T19:02:10.599Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-19T19:02:10.600Z] [INFO] [RoutesResolver] AdminOrdersController {/admin/orders}:
+[2025-11-19T19:02:10.600Z] [INFO] [RouterExplorer] Mapped {/admin/orders/debug/redis, GET} route
+[2025-11-19T19:02:10.601Z] [INFO] [RouterExplorer] Mapped {/admin/orders, GET} route
+[2025-11-19T19:02:10.601Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign, POST} route
+[2025-11-19T19:02:10.602Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:02:10.602Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-19T19:02:10.603Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-19T19:02:10.603Z] [INFO] [RoutesResolver] AdminEscalationController {/admin/orders}:
+[2025-11-19T19:02:10.604Z] [INFO] [RouterExplorer] Mapped {/admin/orders/escalated, GET} route
+[2025-11-19T19:02:10.605Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:02:10.606Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign/:riderId, POST} route
+[2025-11-19T19:02:10.606Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-19T19:02:10.606Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-19T19:02:10.607Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-19T19:02:10.607Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-19T19:02:10.608Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-19T19:02:10.608Z] [INFO] [RoutesResolver] NotificationsController {/notifications}:
+[2025-11-19T19:02:10.609Z] [INFO] [RouterExplorer] Mapped {/notifications, GET} route
+[2025-11-19T19:02:10.647Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected → redis://127.0.0.1:6379
+[2025-11-19T19:02:11.119Z] [INFO] [OrderAssignWorker] ✅ OrderAssignWorker started (queue=order_assign)
+[2025-11-19T19:02:13.513Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:02:13.516Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T19:02:13.517Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:02:13.518Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T19:02:13.522Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-19T19:02:13.524Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-19T19:02:13.525Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-19T19:02:13.525Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-19T19:02:13.526Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-19T19:02:13.527Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-19T19:02:13.527Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-19T19:02:13.528Z] [INFO] [RouterExplorer] Mapped {/auth/request-password-reset, POST} route
+[2025-11-19T19:02:13.528Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-19T19:02:13.529Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-19T19:02:13.530Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-19T19:02:13.530Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-19T19:02:13.531Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-19T19:02:13.531Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-19T19:02:13.532Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-19T19:02:13.533Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-19T19:02:13.533Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-19T19:02:13.534Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-19T19:02:13.534Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-19T19:02:13.535Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-19T19:02:13.535Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-19T19:02:13.536Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-19T19:02:13.536Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-19T19:02:13.537Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-19T19:02:13.537Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-19T19:02:13.538Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-19T19:02:13.538Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-19T19:02:13.538Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-19T19:02:13.539Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-19T19:02:13.539Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-19T19:02:13.540Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-19T19:02:13.540Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-19T19:02:13.541Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-19T19:02:13.541Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/recalc, GET} route
+[2025-11-19T19:02:13.542Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-19T19:02:13.543Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-19T19:02:13.543Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-19T19:02:13.543Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-19T19:02:13.544Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-19T19:02:13.544Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-19T19:02:13.545Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-19T19:02:13.545Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-19T19:02:13.546Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-19T19:02:13.546Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-19T19:02:13.547Z] [INFO] [RouterExplorer] Mapped {/payments/refund, POST} route
+[2025-11-19T19:02:13.547Z] [INFO] [RouterExplorer] Mapped {/payments/admin/list, GET} route
+[2025-11-19T19:02:13.547Z] [INFO] [RouterExplorer] Mapped {/payments/by-order/:orderId, GET} route
+[2025-11-19T19:02:13.548Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-19T19:02:13.548Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-19T19:02:13.549Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-19T19:02:13.549Z] [INFO] [RouterExplorer] Mapped {/admin/users, GET} route
+[2025-11-19T19:02:13.549Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-19T19:02:13.550Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-19T19:02:13.550Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-19T19:02:13.551Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id, DELETE} route
+[2025-11-19T19:02:13.551Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-19T19:02:13.552Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-19T19:02:13.552Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-19T19:02:13.553Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-19T19:02:13.553Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-19T19:02:13.554Z] [INFO] [RoutesResolver] AdminOrdersController {/admin/orders}:
+[2025-11-19T19:02:13.554Z] [INFO] [RouterExplorer] Mapped {/admin/orders/debug/redis, GET} route
+[2025-11-19T19:02:13.555Z] [INFO] [RouterExplorer] Mapped {/admin/orders, GET} route
+[2025-11-19T19:02:13.555Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign, POST} route
+[2025-11-19T19:02:13.556Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:02:13.556Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-19T19:02:13.557Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-19T19:02:13.557Z] [INFO] [RoutesResolver] AdminEscalationController {/admin/orders}:
+[2025-11-19T19:02:13.557Z] [INFO] [RouterExplorer] Mapped {/admin/orders/escalated, GET} route
+[2025-11-19T19:02:13.558Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:02:13.558Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign/:riderId, POST} route
+[2025-11-19T19:02:13.559Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-19T19:02:13.559Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-19T19:02:13.560Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-19T19:02:13.560Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-19T19:02:13.561Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-19T19:02:13.561Z] [INFO] [RoutesResolver] NotificationsController {/notifications}:
+[2025-11-19T19:02:13.562Z] [INFO] [RouterExplorer] Mapped {/notifications, GET} route
+[2025-11-19T19:02:13.578Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected → redis://127.0.0.1:6379
+[2025-11-19T19:02:14.012Z] [INFO] [OrderAssignWorker] ✅ OrderAssignWorker started (queue=order_assign)
+[2025-11-19T19:02:14.309Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-19T19:02:39.421Z] [INFO] [Request] GET /admin/metrics 401 (11ms) user=anonymous ip=::1
+[2025-11-19T19:02:39.425Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:02:39.429Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:02:39.432Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:02:39.441Z] [INFO] [Request] GET /admin/audit/logs 401 (3ms) user=anonymous ip=::1
+[2025-11-19T19:02:39.449Z] [INFO] [Request] GET /health 200 (15ms) user=anonymous ip=::1
+[2025-11-19T19:03:39.400Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:03:39.403Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:03:39.408Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:03:39.413Z] [INFO] [Request] GET /admin/users 401 (3ms) user=anonymous ip=::1
+[2025-11-19T19:03:39.417Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:03:39.421Z] [INFO] [Request] GET /health 200 (7ms) user=anonymous ip=::1
+[2025-11-19T19:04:39.403Z] [INFO] [Request] GET /admin/metrics 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:04:39.406Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:04:39.408Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:04:39.412Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:04:39.416Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:04:39.418Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T19:05:39.397Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:05:39.399Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:05:39.401Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:05:39.404Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:05:39.408Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:05:39.410Z] [INFO] [Request] GET /health 200 (4ms) user=anonymous ip=::1
+[2025-11-19T19:06:39.399Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:06:39.402Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:06:39.405Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:06:39.407Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:06:39.412Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::ffff:127.0.0.1
+[2025-11-19T19:06:39.414Z] [INFO] [Request] GET /health 200 (5ms) user=anonymous ip=::1
+[2025-11-19T19:07:39.396Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:07:39.398Z] [INFO] [Request] GET /admin/orders 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:07:39.401Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:07:39.403Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:07:39.408Z] [INFO] [Request] GET /admin/audit/logs 401 (3ms) user=anonymous ip=::1
+[2025-11-19T19:07:39.474Z] [INFO] [Request] GET /health 200 (69ms) user=anonymous ip=::1
+[2025-11-19T19:08:03.924Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:08:03.927Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T19:08:03.928Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:08:03.932Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-19T19:08:03.934Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-19T19:08:03.935Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-19T19:08:03.936Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-19T19:08:03.936Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-19T19:08:03.937Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-19T19:08:03.937Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-19T19:08:03.938Z] [INFO] [RouterExplorer] Mapped {/auth/request-password-reset, POST} route
+[2025-11-19T19:08:03.938Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-19T19:08:03.939Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-19T19:08:03.940Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-19T19:08:03.941Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-19T19:08:03.942Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-19T19:08:03.943Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-19T19:08:03.943Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-19T19:08:03.944Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-19T19:08:03.944Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-19T19:08:03.945Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-19T19:08:03.945Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-19T19:08:03.946Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-19T19:08:03.946Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-19T19:08:03.947Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-19T19:08:03.947Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-19T19:08:03.948Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-19T19:08:03.949Z] [INFO] [RouterExplorer] Mapped {/riders, GET} route
+[2025-11-19T19:08:03.949Z] [INFO] [RouterExplorer] Mapped {/riders/:id, GET} route
+[2025-11-19T19:08:03.950Z] [INFO] [RouterExplorer] Mapped {/riders, POST} route
+[2025-11-19T19:08:03.950Z] [INFO] [RouterExplorer] Mapped {/riders/:id, PUT} route
+[2025-11-19T19:08:03.951Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-19T19:08:03.951Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-19T19:08:03.952Z] [INFO] [RouterExplorer] Mapped {/riders/:id, DELETE} route
+[2025-11-19T19:08:03.952Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-19T19:08:03.953Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-19T19:08:03.954Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/recalc, GET} route
+[2025-11-19T19:08:03.954Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-19T19:08:03.955Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-19T19:08:03.955Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-19T19:08:03.956Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-19T19:08:03.957Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-19T19:08:03.957Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-19T19:08:03.958Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-19T19:08:03.958Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-19T19:08:03.959Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-19T19:08:03.959Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-19T19:08:03.960Z] [INFO] [RouterExplorer] Mapped {/payments/refund, POST} route
+[2025-11-19T19:08:03.961Z] [INFO] [RouterExplorer] Mapped {/payments/admin/list, GET} route
+[2025-11-19T19:08:03.961Z] [INFO] [RouterExplorer] Mapped {/payments/by-order/:orderId, GET} route
+[2025-11-19T19:08:03.962Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-19T19:08:03.962Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-19T19:08:03.963Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-19T19:08:03.963Z] [INFO] [RouterExplorer] Mapped {/admin/users, GET} route
+[2025-11-19T19:08:03.964Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-19T19:08:03.964Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-19T19:08:03.965Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-19T19:08:03.965Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id, DELETE} route
+[2025-11-19T19:08:03.966Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-19T19:08:03.966Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-19T19:08:03.967Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-19T19:08:03.967Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-19T19:08:03.968Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-19T19:08:03.968Z] [INFO] [RoutesResolver] AdminOrdersController {/admin/orders}:
+[2025-11-19T19:08:03.969Z] [INFO] [RouterExplorer] Mapped {/admin/orders/debug/redis, GET} route
+[2025-11-19T19:08:03.969Z] [INFO] [RouterExplorer] Mapped {/admin/orders, GET} route
+[2025-11-19T19:08:03.970Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign, POST} route
+[2025-11-19T19:08:03.971Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:08:03.971Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-19T19:08:03.972Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-19T19:08:03.972Z] [INFO] [RoutesResolver] AdminEscalationController {/admin/orders}:
+[2025-11-19T19:08:03.973Z] [INFO] [RouterExplorer] Mapped {/admin/orders/escalated, GET} route
+[2025-11-19T19:08:03.973Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:08:03.974Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign/:riderId, POST} route
+[2025-11-19T19:08:03.974Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-19T19:08:03.975Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-19T19:08:03.975Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-19T19:08:03.976Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-19T19:08:03.976Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-19T19:08:03.977Z] [INFO] [RoutesResolver] NotificationsController {/notifications}:
+[2025-11-19T19:08:03.977Z] [INFO] [RouterExplorer] Mapped {/notifications, GET} route
+[2025-11-19T19:08:03.992Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected → redis://127.0.0.1:6379
+[2025-11-19T19:08:04.348Z] [INFO] [OrderAssignWorker] ✅ OrderAssignWorker started (queue=order_assign)
+[2025-11-19T19:08:04.792Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-19T19:08:39.440Z] [INFO] [Request] GET /admin/metrics 401 (13ms) user=anonymous ip=::1
+[2025-11-19T19:08:39.449Z] [INFO] [Request] GET /admin/orders 401 (4ms) user=anonymous ip=::1
+[2025-11-19T19:08:39.454Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:08:39.459Z] [INFO] [Request] GET /admin/users 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:08:39.470Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:08:39.475Z] [INFO] [Request] GET /health 200 (13ms) user=anonymous ip=::1
+[2025-11-19T19:17:25.675Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:17:25.679Z] [INFO] [WebSocketsController] RiderLiveGateway subscribed to the "rider_update" message
+[2025-11-19T19:17:25.680Z] [INFO] [WebSocketsController] ChatLiveGateway subscribed to the "send_message" message
+[2025-11-19T19:17:25.685Z] [INFO] [RoutesResolver] RidersController {/riders}:
+[2025-11-19T19:17:25.688Z] [INFO] [RouterExplorer] Mapped {/riders/:id/location, PATCH} route
+[2025-11-19T19:17:25.689Z] [INFO] [RouterExplorer] Mapped {/riders/:id/status, PATCH} route
+[2025-11-19T19:17:25.690Z] [INFO] [RoutesResolver] GeoSurgeController {/admin/geo-surge}:
+[2025-11-19T19:17:25.691Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/status, GET} route
+[2025-11-19T19:17:25.692Z] [INFO] [RouterExplorer] Mapped {/admin/geo-surge/recalc, GET} route
+[2025-11-19T19:17:25.693Z] [INFO] [RoutesResolver] SurgeController {/admin/surge}:
+[2025-11-19T19:17:25.693Z] [INFO] [RouterExplorer] Mapped {/admin/surge/status, GET} route
+[2025-11-19T19:17:25.694Z] [INFO] [RouterExplorer] Mapped {/admin/surge/override, POST} route
+[2025-11-19T19:17:25.695Z] [INFO] [RouterExplorer] Mapped {/admin/surge/reset, POST} route
+[2025-11-19T19:17:25.695Z] [INFO] [RoutesResolver] HealthController {/health}:
+[2025-11-19T19:17:25.696Z] [INFO] [RouterExplorer] Mapped {/health, GET} route
+[2025-11-19T19:17:25.697Z] [INFO] [RoutesResolver] AuthController {/auth}:
+[2025-11-19T19:17:25.698Z] [INFO] [RouterExplorer] Mapped {/auth/register, POST} route
+[2025-11-19T19:17:25.698Z] [INFO] [RouterExplorer] Mapped {/auth/login, POST} route
+[2025-11-19T19:17:25.699Z] [INFO] [RouterExplorer] Mapped {/auth/refresh, POST} route
+[2025-11-19T19:17:25.699Z] [INFO] [RouterExplorer] Mapped {/auth/logout, POST} route
+[2025-11-19T19:17:25.700Z] [INFO] [RouterExplorer] Mapped {/auth/request-password-reset, POST} route
+[2025-11-19T19:17:25.701Z] [INFO] [RoutesResolver] UsersController {/users}:
+[2025-11-19T19:17:25.702Z] [INFO] [RouterExplorer] Mapped {/users, GET} route
+[2025-11-19T19:17:25.702Z] [INFO] [RouterExplorer] Mapped {/users/:id, GET} route
+[2025-11-19T19:17:25.703Z] [INFO] [RouterExplorer] Mapped {/users/:id, PUT} route
+[2025-11-19T19:17:25.704Z] [INFO] [RouterExplorer] Mapped {/users/:id, DELETE} route
+[2025-11-19T19:17:25.705Z] [INFO] [RoutesResolver] PharmaciesController {/pharmacies}:
+[2025-11-19T19:17:25.705Z] [INFO] [RouterExplorer] Mapped {/pharmacies, GET} route
+[2025-11-19T19:17:25.706Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, GET} route
+[2025-11-19T19:17:25.707Z] [INFO] [RouterExplorer] Mapped {/pharmacies, POST} route
+[2025-11-19T19:17:25.707Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, PUT} route
+[2025-11-19T19:17:25.708Z] [INFO] [RouterExplorer] Mapped {/pharmacies/:id, DELETE} route
+[2025-11-19T19:17:25.708Z] [INFO] [RoutesResolver] OrdersController {/orders}:
+[2025-11-19T19:17:25.709Z] [INFO] [RouterExplorer] Mapped {/orders, POST} route
+[2025-11-19T19:17:25.709Z] [INFO] [RouterExplorer] Mapped {/orders, GET} route
+[2025-11-19T19:17:25.710Z] [INFO] [RouterExplorer] Mapped {/orders/pharmacy/:orderId/respond, POST} route
+[2025-11-19T19:17:25.711Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/respond, POST} route
+[2025-11-19T19:17:25.711Z] [INFO] [RouterExplorer] Mapped {/orders/rider/:orderId/stage, PATCH} route
+[2025-11-19T19:17:25.712Z] [INFO] [RouterExplorer] Mapped {/orders/admin/:orderId/assign/:riderId, POST} route
+[2025-11-19T19:17:25.712Z] [INFO] [RoutesResolver] PaymentsController {/payments}:
+[2025-11-19T19:17:25.713Z] [INFO] [RouterExplorer] Mapped {/payments/create-intent, POST} route
+[2025-11-19T19:17:25.713Z] [INFO] [RouterExplorer] Mapped {/payments/webhook, POST} route
+[2025-11-19T19:17:25.714Z] [INFO] [RouterExplorer] Mapped {/payments/refund, POST} route
+[2025-11-19T19:17:25.715Z] [INFO] [RouterExplorer] Mapped {/payments/admin/list, GET} route
+[2025-11-19T19:17:25.715Z] [INFO] [RouterExplorer] Mapped {/payments/by-order/:orderId, GET} route
+[2025-11-19T19:17:25.715Z] [INFO] [RoutesResolver] AdminController {/admin}:
+[2025-11-19T19:17:25.716Z] [INFO] [RouterExplorer] Mapped {/admin/status, GET} route
+[2025-11-19T19:17:25.717Z] [INFO] [RoutesResolver] AdminUsersController {/admin/users}:
+[2025-11-19T19:17:25.717Z] [INFO] [RouterExplorer] Mapped {/admin/users, GET} route
+[2025-11-19T19:17:25.718Z] [INFO] [RouterExplorer] Mapped {/admin/users/pending, GET} route
+[2025-11-19T19:17:25.719Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/approve, PATCH} route
+[2025-11-19T19:17:25.719Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id/reject, PATCH} route
+[2025-11-19T19:17:25.720Z] [INFO] [RouterExplorer] Mapped {/admin/users/:id, DELETE} route
+[2025-11-19T19:17:25.720Z] [INFO] [RoutesResolver] AdminAuditController {/admin/audit}:
+[2025-11-19T19:17:25.721Z] [INFO] [RouterExplorer] Mapped {/admin/audit/logs, GET} route
+[2025-11-19T19:17:25.721Z] [INFO] [RouterExplorer] Mapped {/admin/audit/stats, GET} route
+[2025-11-19T19:17:25.722Z] [INFO] [RoutesResolver] AdminMetricsController {/admin/metrics}:
+[2025-11-19T19:17:25.722Z] [INFO] [RouterExplorer] Mapped {/admin/metrics, GET} route
+[2025-11-19T19:17:25.723Z] [INFO] [RoutesResolver] AdminOrdersController {/admin/orders}:
+[2025-11-19T19:17:25.723Z] [INFO] [RouterExplorer] Mapped {/admin/orders/debug/redis, GET} route
+[2025-11-19T19:17:25.724Z] [INFO] [RouterExplorer] Mapped {/admin/orders, GET} route
+[2025-11-19T19:17:25.724Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign, POST} route
+[2025-11-19T19:17:25.725Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:17:25.725Z] [INFO] [RoutesResolver] AdminQueueController {/admin/queue}:
+[2025-11-19T19:17:25.726Z] [INFO] [RouterExplorer] Mapped {/admin/queue/status, GET} route
+[2025-11-19T19:17:25.726Z] [INFO] [RoutesResolver] AdminEscalationController {/admin/orders}:
+[2025-11-19T19:17:25.727Z] [INFO] [RouterExplorer] Mapped {/admin/orders/escalated, GET} route
+[2025-11-19T19:17:25.728Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/riders, GET} route
+[2025-11-19T19:17:25.728Z] [INFO] [RouterExplorer] Mapped {/admin/orders/:id/assign/:riderId, POST} route
+[2025-11-19T19:17:25.729Z] [INFO] [RoutesResolver] WebhooksController {/webhooks}:
+[2025-11-19T19:17:25.729Z] [INFO] [RouterExplorer] Mapped {/webhooks/pharmacy, POST} route
+[2025-11-19T19:17:25.730Z] [INFO] [RouterExplorer] Mapped {/webhooks/rider, POST} route
+[2025-11-19T19:17:25.731Z] [INFO] [RoutesResolver] MetricsController {/metrics}:
+[2025-11-19T19:17:25.731Z] [INFO] [RouterExplorer] Mapped {/metrics, GET} route
+[2025-11-19T19:17:25.732Z] [INFO] [RoutesResolver] NotificationsController {/notifications}:
+[2025-11-19T19:17:25.732Z] [INFO] [RouterExplorer] Mapped {/notifications, GET} route
+[2025-11-19T19:17:25.750Z] [INFO] [GeoSurgeService] ✅ GeoSurge connected → redis://127.0.0.1:6379
+[2025-11-19T19:17:26.172Z] [INFO] [OrderAssignWorker] ✅ OrderAssignWorker started (queue=order_assign)
+[2025-11-19T19:17:26.460Z] [INFO] [NestApplication] Nest application successfully started
+[2025-11-19T19:17:39.409Z] [INFO] [Request] GET /admin/metrics 401 (7ms) user=anonymous ip=::1
+[2025-11-19T19:17:39.413Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:17:39.416Z] [INFO] [Request] GET /admin/users/pending 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:17:39.419Z] [INFO] [Request] GET /admin/users 401 (1ms) user=anonymous ip=::1
+[2025-11-19T19:17:39.428Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:17:39.432Z] [INFO] [Request] GET /health 200 (11ms) user=anonymous ip=::1
+[2025-11-19T19:18:39.398Z] [INFO] [Request] GET /admin/metrics 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:18:39.402Z] [INFO] [Request] GET /admin/orders 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:18:39.406Z] [INFO] [Request] GET /admin/users/pending 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:18:39.411Z] [INFO] [Request] GET /admin/users 401 (3ms) user=anonymous ip=::1
+[2025-11-19T19:18:39.416Z] [INFO] [Request] GET /admin/audit/logs 401 (2ms) user=anonymous ip=::1
+[2025-11-19T19:18:39.419Z] [INFO] [Request] GET /health 200 (6ms) user=anonymous ip=::1

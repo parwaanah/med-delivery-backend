@@ -1,5 +1,5 @@
 // src/admin/admin.module.ts
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 
 import { AdminController } from './admin.controller';
@@ -12,25 +12,24 @@ import { AdminEscalationController } from './admin-escalation.controller';
 
 import { EscalationService } from './escalation.service';
 
-// IMPORT MODULES (not individual services)
 import { OrdersModule } from '../orders/orders.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { SurgeModule } from '../surge/surge.module';
 import { GeoSurgeModule } from '../geosurge/geo-surge.module';
-
-// WebSocket module
 import { WsModule } from '../ws/ws.module';
 
-// Utils
 import { NotificationService } from '../utils/notification.service';
 
 @Module({
   imports: [
-    WsModule,         // WebSocket Gateway + WS services
-    OrdersModule,     // Provides OrdersService (needed by Admin)
-    PaymentsModule,   // Provides PaymentsService
-    SurgeModule,      // Provides SurgeService
-    GeoSurgeModule,   // Provides GeoSurgeService
+    WsModule,
+
+    // ❗ Critical fix: break circular deps
+    forwardRef(() => OrdersModule),
+
+    PaymentsModule,
+    SurgeModule,
+    GeoSurgeModule,
   ],
 
   controllers: [

@@ -17,6 +17,7 @@ const rider_live_gateway_1 = require("./rider-live.gateway");
 const chat_live_gateway_1 = require("./chat-live.gateway");
 const geo_surge_live_gateway_1 = require("./geo-surge-live.gateway");
 const chat_module_1 = require("../chat/chat.module");
+const riders_module_1 = require("../riders/riders.module");
 let WsModule = class WsModule {
 };
 exports.WsModule = WsModule;
@@ -24,13 +25,14 @@ exports.WsModule = WsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule,
-            chat_module_1.ChatModule,
+            (0, common_1.forwardRef)(() => chat_module_1.ChatModule),
+            (0, common_1.forwardRef)(() => riders_module_1.RidersModule),
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
                 useFactory: (config) => ({
                     secret: config.get('JWT_SECRET') || 'supersecret',
-                    signOptions: { expiresIn: '1h' },
+                    signOptions: { expiresIn: config.get('JWT_EXPIRES_IN') || '1h' },
                 }),
             }),
         ],

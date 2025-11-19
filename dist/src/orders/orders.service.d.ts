@@ -26,43 +26,43 @@ export declare class OrdersService {
     private computeRiderScore;
     createOrder(customerId: number, dto: CreateOrderDto): Promise<({
         items: {
-            id: number;
-            orderId: number;
             name: string;
-            quantity: number;
-            price: number;
+            id: number;
             medicineId: number | null;
+            price: number;
+            quantity: number;
+            orderId: number;
         }[];
     } & {
-        id: number;
         status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
-        customerId: number;
-        pharmacyId: number;
-        riderId: number | null;
-        totalPrice: number;
+        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
+        pharmacyId: number;
+        customerId: number;
+        riderId: number | null;
+        totalPrice: number;
     }) | {
         order: {
             items: {
-                id: number;
-                orderId: number;
                 name: string;
-                quantity: number;
-                price: number;
+                id: number;
                 medicineId: number | null;
+                price: number;
+                quantity: number;
+                orderId: number;
             }[];
         } & {
-            id: number;
             status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
-            customerId: number;
-            pharmacyId: number;
-            riderId: number | null;
-            totalPrice: number;
+            id: number;
             updatedAt: Date;
             deletedAt: Date | null;
+            pharmacyId: number;
+            customerId: number;
+            riderId: number | null;
+            totalPrice: number;
         };
         candidates: number[];
         scores: {
@@ -77,15 +77,15 @@ export declare class OrdersService {
         ok: boolean;
     }>;
     adminAssign(orderId: number, adminId: number, riderId: number): Promise<{
-        id: number;
         status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
-        customerId: number;
-        pharmacyId: number;
-        riderId: number | null;
-        totalPrice: number;
+        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
+        pharmacyId: number;
+        customerId: number;
+        riderId: number | null;
+        totalPrice: number;
     }>;
     pharmacyRespond(pharmacyId: number, orderId: number, action: 'ACCEPTED' | 'REJECTED'): Promise<{
         ok: boolean;
@@ -94,81 +94,81 @@ export declare class OrdersService {
         paymentError?: undefined;
     } | {
         order: {
-            id: number;
             status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
-            customerId: number;
-            pharmacyId: number;
-            riderId: number | null;
-            totalPrice: number;
+            id: number;
             updatedAt: Date;
             deletedAt: Date | null;
+            pharmacyId: number;
+            customerId: number;
+            riderId: number | null;
+            totalPrice: number;
         };
         payment: {
             rzpOrder: any;
             transaction: {
+                status: string;
+                createdAt: Date;
+                id: string;
+                method: string | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
-                method: string | null;
-                id: string;
                 orderId: number | null;
                 provider: string;
                 providerOrder: string | null;
                 providerPayment: string | null;
-                status: string;
                 rawData: import("@prisma/client/runtime/library").JsonValue | null;
-                createdAt: Date;
             };
         };
         ok?: undefined;
         paymentError?: undefined;
     } | {
         order: {
-            id: number;
             status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
-            customerId: number;
-            pharmacyId: number;
-            riderId: number | null;
-            totalPrice: number;
+            id: number;
             updatedAt: Date;
             deletedAt: Date | null;
+            pharmacyId: number;
+            customerId: number;
+            riderId: number | null;
+            totalPrice: number;
         };
         paymentError: any;
         ok?: undefined;
         payment?: undefined;
     }>;
     riderRespond(riderId: number, orderId: number, action: 'ACCEPTED' | 'REJECTED'): Promise<{
-        id: number;
         status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
-        customerId: number;
-        pharmacyId: number;
-        riderId: number | null;
-        totalPrice: number;
+        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
+        pharmacyId: number;
+        customerId: number;
+        riderId: number | null;
+        totalPrice: number;
     } | {
         ok: boolean;
     }>;
     findByUser(userId: number, role: string): Promise<({
         items: {
-            id: number;
-            orderId: number;
             name: string;
-            quantity: number;
-            price: number;
+            id: number;
             medicineId: number | null;
+            price: number;
+            quantity: number;
+            orderId: number;
         }[];
     } & {
-        id: number;
         status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
-        customerId: number;
-        pharmacyId: number;
-        riderId: number | null;
-        totalPrice: number;
+        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
+        pharmacyId: number;
+        customerId: number;
+        riderId: number | null;
+        totalPrice: number;
     })[]>;
 }

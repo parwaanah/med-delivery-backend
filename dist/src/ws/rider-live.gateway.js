@@ -11,44 +11,37 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var RiderLiveGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RiderLiveGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
-const common_1 = require("@nestjs/common");
-let RiderLiveGateway = RiderLiveGateway_1 = class RiderLiveGateway {
-    constructor() {
-        this.logger = new common_1.Logger(RiderLiveGateway_1.name);
+const riders_service_1 = require("../riders/riders.service");
+let RiderLiveGateway = class RiderLiveGateway {
+    constructor(riders) {
+        this.riders = riders;
     }
-    broadcast(event, data) {
-        this.server.emit(event, data);
-        this.logger.log(`📡 Broadcast event: ${event}`, JSON.stringify(data));
+    handleConnection(client) {
+        console.log('Rider WS connected:', client.id);
     }
-    notifyAdmins(event, data) {
-        this.server.to('admin').emit(event, data);
-        this.logger.log(`🧭 Sent admin notification → ${event}`, JSON.stringify(data));
+    handleDisconnect(client) {
+        console.log('Rider WS disconnected:', client.id);
     }
-    handleRiderUpdate(payload) {
-        this.logger.log(`📍 Rider update received`, JSON.stringify(payload));
-        this.broadcast('rider_update', payload);
+    async updateLocation(client, data) {
+        if (!data?.riderId)
+            return;
+        await this.riders.updateLocationWS(data.riderId, data.lat, data.lon);
     }
 };
 exports.RiderLiveGateway = RiderLiveGateway;
 __decorate([
-    (0, websockets_1.WebSocketServer)(),
-    __metadata("design:type", socket_io_1.Server)
-], RiderLiveGateway.prototype, "server", void 0);
-__decorate([
     (0, websockets_1.SubscribeMessage)('rider_update'),
-    __param(0, (0, websockets_1.MessageBody)()),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], RiderLiveGateway.prototype, "handleRiderUpdate", null);
-exports.RiderLiveGateway = RiderLiveGateway = RiderLiveGateway_1 = __decorate([
-    (0, websockets_1.WebSocketGateway)({
-        cors: { origin: '*' },
-        namespace: '/rider-live',
-    })
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", Promise)
+], RiderLiveGateway.prototype, "updateLocation", null);
+exports.RiderLiveGateway = RiderLiveGateway = __decorate([
+    (0, websockets_1.WebSocketGateway)({ cors: true }),
+    __metadata("design:paramtypes", [riders_service_1.RidersService])
 ], RiderLiveGateway);

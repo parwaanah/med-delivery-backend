@@ -1,60 +1,21 @@
 import { PrismaService } from '../utils/prisma.service';
-import { CreateRiderDto, UpdateRiderDto, UpdateStatusDto } from './dto/rider.dto';
+import { NotificationService } from '../utils/notification.service';
 import { GeoSurgeService } from '../geosurge/geo-surge.service';
-import { RiderLiveGateway } from '../ws/rider-live.gateway';
+import { SurgeService } from '../surge/surge.service';
+import { WsGateway } from '../ws/ws.gateway';
 export declare class RidersService {
     private prisma;
-    private geoSurge;
-    private riderGateway;
+    private notify;
+    private geo;
+    private surge;
+    private ws;
     private readonly logger;
-    constructor(prisma: PrismaService, geoSurge: GeoSurgeService, riderGateway: RiderLiveGateway);
-    findAll(): Promise<{
-        name: string;
-        email: string;
-        status: string;
-        createdAt: Date;
-        id: number;
-        latitude: number | null;
-        longitude: number | null;
-    }[]>;
-    findOne(id: number): Promise<{
-        name: string;
-        email: string;
-        status: string;
-        createdAt: Date;
-        id: number;
-        latitude: number | null;
-        longitude: number | null;
-    }>;
-    create(dto: CreateRiderDto): Promise<{
-        name: string;
-        email: string;
-        status: string;
-        id: number;
-        latitude: number | null;
-        longitude: number | null;
-    }>;
-    update(id: number, dto: UpdateRiderDto): Promise<{
-        name: string;
-        email: string;
-        status: string;
-        id: number;
-        latitude: number | null;
-        longitude: number | null;
-    }>;
-    updateStatus(id: number, dto: UpdateStatusDto): Promise<{
-        name: string;
-        email: string;
-        status: string;
-        id: number;
-    }>;
-    remove(id: number): Promise<{
-        message: string;
-    }>;
-    updateLocation(id: number, lat: number, lon: number): Promise<{
+    constructor(prisma: PrismaService, notify: NotificationService, geo: GeoSurgeService, surge: SurgeService, ws: WsGateway);
+    updateLocationWS(riderId: number, lat: number, lon: number): Promise<void>;
+    updateLocation(riderId: number, lat: number, lon: number): Promise<{
         ok: boolean;
-        id: number;
-        lat: number;
-        lon: number;
+    }>;
+    updateStatus(riderId: number, status: 'AVAILABLE' | 'BUSY' | 'OFFLINE'): Promise<{
+        ok: boolean;
     }>;
 }

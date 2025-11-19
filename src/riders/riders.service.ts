@@ -1,18 +1,10 @@
 // src/riders/riders.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
-import {
-  CreateRiderDto,
-  UpdateRiderDto,
-  UpdateStatusDto,
-} from './dto/rider.dto';
+import { NotificationService } from '../utils/notification.service';
 import { GeoSurgeService } from '../geosurge/geo-surge.service';
-import { RiderLiveGateway } from '../ws/rider-live.gateway';
+import { SurgeService } from '../surge/surge.service';
+import { WsGateway } from '../ws/ws.gateway';
 
 @Injectable()
 export class RidersService {
@@ -20,177 +12,57 @@ export class RidersService {
 
   constructor(
     private prisma: PrismaService,
-    private geoSurge: GeoSurgeService,
-    private riderGateway: RiderLiveGateway,
+    private notify: NotificationService,
+    private geo: GeoSurgeService,
+    private surge: SurgeService,
+    private ws: WsGateway,
   ) {}
 
-  async findAll() {
-    return this.prisma.user.findMany({
-      where: { role: 'RIDER' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        latitude: true,
-        longitude: true,
-        createdAt: true,
-      },
-    });
+  async updateLocationWS(riderId: number, lat: number, lon: number) {
+    await this.updateLocation(riderId, lat, lon);
   }
 
-  async findOne(id: number) {
-    const rider = await this.prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        latitude: true,
-        longitude: true,
-        createdAt: true,
-      },
-    });
-    if (!rider) throw new NotFoundException('Rider not found');
-    return rider;
-  }
-
-  async create(dto: CreateRiderDto) {
-    const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-    if (existing) throw new ForbiddenException('Email already in use');
-
-    const rider = await this.prisma.user.create({
-      data: {
-        name: dto.name,
-        email: dto.email,
-        password: dto.password,
-        role: 'RIDER',
-        status: 'AVAILABLE',
-        latitude: dto.latitude ?? 28.61,
-        longitude: dto.longitude ?? 77.20,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        latitude: true,
-        longitude: true,
-      },
-    });
-
-    // add to GeoSurge map
-    try {
-      await this.geoSurge.addPoint(
-        `rider:${rider.id}`,
-        rider.longitude ?? 77.2,
-        rider.latitude ?? 28.61,
-      );
-    } catch (err) {
-      this.logger.warn(`GeoSurge addPoint failed for rider:${rider.id}`);
-    }
-
-    return rider;
-  }
-
-  async update(id: number, dto: UpdateRiderDto) {
-    const rider = await this.prisma.user.findUnique({ where: { id } });
-    if (!rider) throw new NotFoundException('Rider not found');
-
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: {
-        name: dto.name ?? rider.name,
-        email: dto.email ?? rider.email,
-        latitude: dto.latitude ?? rider.latitude,
-        longitude: dto.longitude ?? rider.longitude,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        latitude: true,
-        longitude: true,
-      },
-    });
-
-    try {
-      if (updated.latitude && updated.longitude) {
-        await this.geoSurge.addPoint(`rider:${id}`, updated.longitude, updated.latitude);
-      }
-    } catch (err) {
-      this.logger.warn(`GeoSurge updatePoint failed for rider:${id}`);
-    }
-
-    return updated;
-  }
-
-  async updateStatus(id: number, dto: UpdateStatusDto) {
-    const rider = await this.prisma.user.findUnique({ where: { id } });
-    if (!rider) throw new NotFoundException('Rider not found');
-
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: { status: dto.status },
-      select: { id: true, name: true, email: true, status: true },
-    });
-
-    try {
-      if (dto.status === 'AVAILABLE') {
-        const lat = rider.latitude ?? 28.61;
-        const lon = rider.longitude ?? 77.2;
-        await this.geoSurge.addPoint(`rider:${rider.id}`, lon, lat);
-      } else {
-        await this.geoSurge.removePoint(`rider:${rider.id}`);
-      }
-    } catch (err) {
-      this.logger.warn('GeoSurge rider status sync failed', err);
-    }
-
-    return updated;
-  }
-
-  async remove(id: number) {
-    const rider = await this.prisma.user.findUnique({ where: { id } });
-    if (!rider) throw new NotFoundException('Rider not found');
-
-    await this.prisma.user.delete({ where: { id } });
-    try {
-      await this.geoSurge.removePoint(`rider:${id}`);
-    } catch {}
-
-    return { message: 'Rider deleted successfully' };
-  }
-
-  // Live GPS endpoint for dashboard + GeoSurge
-  async updateLocation(id: number, lat: number, lon: number) {
-    const rider = await this.prisma.user.findUnique({ where: { id } });
-    if (!rider) throw new NotFoundException('Rider not found');
-
+  async updateLocation(riderId: number, lat: number, lon: number) {
     await this.prisma.user.update({
-      where: { id },
+      where: { id: riderId },
       data: { latitude: lat, longitude: lon },
     });
 
+    // update geosurge redis index
     try {
-      await this.geoSurge.addPoint(`rider:${id}`, lon, lat);
+      await this.geo.addPoint(`rider:${riderId}`, lon, lat, {
+        lat: String(lat),
+        lon: String(lon),
+      });
     } catch (err) {
-      this.logger.warn(`GeoSurge addPoint failed for rider:${id}`, err);
+      this.logger.warn(
+        `Geo update failed for rider ${riderId}: ${(err as any)?.message}`,
+      );
     }
 
-    // Broadcast to admin map via WebSocket
-    this.riderGateway.notifyAdmins('rider_location', {
-      id,
+    // send WS broadcast
+    this.ws.broadcast('rider_location', {
+      riderId,
       lat,
       lon,
-      status: rider.status,
-      timestamp: Date.now(),
     });
 
-    return { ok: true, id, lat, lon };
+    return { ok: true };
+  }
+
+  async updateStatus(riderId: number, status: 'AVAILABLE' | 'BUSY' | 'OFFLINE') {
+    await this.prisma.user.update({
+      where: { id: riderId },
+      data: { status },
+    });
+
+    // Surge engine: rider availability
+    try {
+      await this.surge.recordRiderAvailability(riderId, status === 'AVAILABLE');
+    } catch {}
+
+    // notify admin
+    this.ws.broadcast('rider_status', { riderId, status });
+    return { ok: true };
   }
 }

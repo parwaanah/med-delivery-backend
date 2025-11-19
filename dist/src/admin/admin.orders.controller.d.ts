@@ -15,40 +15,40 @@ export declare class AdminOrdersController {
     getAllOrders(): Promise<{
         total: number;
         orders: ({
-            customer: {
-                email: string;
-            };
             pharmacy: {
                 email: string;
             };
             rider: {
                 email: string;
             } | null;
+            customer: {
+                email: string;
+            };
         } & {
-            id: number;
             status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
-            customerId: number;
-            pharmacyId: number;
-            riderId: number | null;
-            totalPrice: number;
+            id: number;
             updatedAt: Date;
             deletedAt: Date | null;
+            pharmacyId: number;
+            customerId: number;
+            riderId: number | null;
+            totalPrice: number;
         })[];
     }>;
     assignRider(id: string, body: {
         adminId: number;
         riderId: number;
     }): Promise<{
-        id: number;
         status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
-        customerId: number;
-        pharmacyId: number;
-        riderId: number | null;
-        totalPrice: number;
+        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
+        pharmacyId: number;
+        customerId: number;
+        riderId: number | null;
+        totalPrice: number;
     } | {
         error: string;
     }>;

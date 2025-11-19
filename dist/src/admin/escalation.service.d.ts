@@ -15,7 +15,7 @@ export declare class EscalationService {
     findCandidatesForOrder(orderId: number, radiusKm?: number, limit?: number): Promise<{
         riderId: number | null;
         score: number;
-        meta: any;
         distKm: number | null;
+        meta: any;
     }[]>;
 }

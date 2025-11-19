@@ -1,37 +1,39 @@
 // src/ws/rider-live.gateway.ts
 import {
   WebSocketGateway,
-  WebSocketServer,
   SubscribeMessage,
+  ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Socket } from 'socket.io';
+import { RidersService } from '../riders/riders.service';
 
-@WebSocketGateway({
-  cors: { origin: '*' },
-  namespace: '/rider-live',
-})
-export class RiderLiveGateway {
-  @WebSocketServer() server!: Server;
-  private readonly logger = new Logger(RiderLiveGateway.name);
+@WebSocketGateway({ cors: true })
+export class RiderLiveGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  constructor(private riders: RidersService) {}
 
-  // ✅ Generic broadcast to all clients (dashboards, maps, etc.)
-  broadcast(event: string, data: any) {
-    this.server.emit(event, data);
-    this.logger.log(`📡 Broadcast event: ${event}`, JSON.stringify(data));
+  handleConnection(client: Socket) {
+    console.log('Rider WS connected:', client.id);
   }
 
-  // ✅ Specific admin broadcast (matches notifyAdmins pattern used elsewhere)
-  notifyAdmins(event: string, data: any) {
-    this.server.to('admin').emit(event, data);
-    this.logger.log(`🧭 Sent admin notification → ${event}`, JSON.stringify(data));
+  handleDisconnect(client: Socket) {
+    console.log('Rider WS disconnected:', client.id);
   }
 
-  // ✅ Direct rider update listener (optional)
   @SubscribeMessage('rider_update')
-  handleRiderUpdate(@MessageBody() payload: any) {
-    this.logger.log(`📍 Rider update received`, JSON.stringify(payload));
-    this.broadcast('rider_update', payload);
+  async updateLocation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: { riderId: number; lat: number; lon: number },
+  ) {
+    if (!data?.riderId) return;
+
+    await this.riders.updateLocationWS(
+      data.riderId,
+      data.lat,
+      data.lon,
+    );
   }
 }

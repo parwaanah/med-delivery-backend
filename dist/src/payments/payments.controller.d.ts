@@ -12,45 +12,45 @@ export declare class PaymentsController {
     createIntent(body: CreateIntentDto): Promise<{
         rzpOrder: any;
         transaction: {
+            status: string;
+            createdAt: Date;
+            id: string;
+            method: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             currency: string;
-            method: string | null;
-            id: string;
             orderId: number | null;
             provider: string;
             providerOrder: string | null;
             providerPayment: string | null;
-            status: string;
             rawData: import("@prisma/client/runtime/library").JsonValue | null;
-            createdAt: Date;
         };
     }>;
     webhook(req: Request, res: Response, signature: string): Promise<Response<any, Record<string, any>>>;
     refund(dto: RefundDto): Promise<import("razorpay/dist/types/refunds").Refunds.RazorpayRefund>;
     adminList(): Promise<{
+        status: string;
+        createdAt: Date;
+        id: string;
+        method: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         currency: string;
-        method: string | null;
-        id: string;
         orderId: number | null;
         provider: string;
         providerOrder: string | null;
         providerPayment: string | null;
-        status: string;
         rawData: import("@prisma/client/runtime/library").JsonValue | null;
-        createdAt: Date;
     }[]>;
     byOrder(orderId: string): Promise<{
+        status: string;
+        createdAt: Date;
+        id: string;
+        method: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         currency: string;
-        method: string | null;
-        id: string;
         orderId: number | null;
         provider: string;
         providerOrder: string | null;
         providerPayment: string | null;
-        status: string;
         rawData: import("@prisma/client/runtime/library").JsonValue | null;
-        createdAt: Date;
     }[]>;
 }

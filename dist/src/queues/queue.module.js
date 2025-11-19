@@ -5,51 +5,52 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QueueModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const ioredis_1 = __importDefault(require("ioredis"));
-const bullmq_1 = require("bullmq");
-const orders_processor_1 = require("./orders.processor");
+const bullmq_1 = require("@nestjs/bullmq");
+const bullmq_2 = require("bullmq");
+const order_assign_worker_1 = require("./order-assign.worker");
 const prisma_service_1 = require("../utils/prisma.service");
 const notification_service_1 = require("../utils/notification.service");
-const ws_gateway_1 = require("../ws/ws.gateway");
+const ws_module_1 = require("../ws/ws.module");
+const orders_module_1 = require("../orders/orders.module");
+const admin_module_1 = require("../admin/admin.module");
 let QueueModule = class QueueModule {
 };
 exports.QueueModule = QueueModule;
 exports.QueueModule = QueueModule = __decorate([
-    (0, common_1.Global)(),
     (0, common_1.Module)({
+        imports: [
+            (0, common_1.forwardRef)(() => orders_module_1.OrdersModule),
+            (0, common_1.forwardRef)(() => admin_module_1.AdminModule),
+            ws_module_1.WsModule,
+            bullmq_1.BullModule.forRoot({
+                connection: {
+                    host: '127.0.0.1',
+                    port: 6379,
+                },
+            }),
+            bullmq_1.BullModule.registerQueue({
+                name: 'order_assign',
+            }),
+        ],
         providers: [
-            {
-                provide: 'REDIS',
-                useFactory: (config) => {
-                    const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
-                    return new ioredis_1.default(redisUrl, { enableReadyCheck: true });
-                },
-                inject: [config_1.ConfigService],
-            },
-            {
-                provide: 'ORDER_ASSIGN_QUEUE',
-                useFactory: (config) => {
-                    const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
-                    const bullConn = new ioredis_1.default(redisUrl, {
-                        enableReadyCheck: true,
-                        maxRetriesPerRequest: null,
-                    });
-                    return new bullmq_1.Queue('order_assign', { connection: bullConn });
-                },
-                inject: [config_1.ConfigService],
-            },
+            order_assign_worker_1.OrderAssignWorker,
             prisma_service_1.PrismaService,
             notification_service_1.NotificationService,
-            ws_gateway_1.WsGateway,
-            orders_processor_1.OrdersProcessor,
+            {
+                provide: 'ORDER_ASSIGN_QUEUE',
+                useFactory: () => {
+                    return new bullmq_2.Queue('order_assign', {
+                        connection: { host: '127.0.0.1', port: 6379 },
+                    });
+                },
+            },
         ],
-        exports: ['ORDER_ASSIGN_QUEUE', 'REDIS'],
+        exports: [
+            'ORDER_ASSIGN_QUEUE',
+            order_assign_worker_1.OrderAssignWorker,
+        ],
     })
 ], QueueModule);

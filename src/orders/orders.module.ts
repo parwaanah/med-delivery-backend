@@ -1,27 +1,28 @@
-import { Module } from '@nestjs/common';
+// src/orders/orders.module.ts
+import { Module, forwardRef } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { UtilsModule } from '../utils/utils.module';
-import { WsModule } from '../ws/ws.module';
+
+import { PrismaService } from '../utils/prisma.service';
+import { NotificationService } from '../utils/notification.service';
+import { PaymentsModule } from '../payments/payments.module';
 import { SurgeModule } from '../surge/surge.module';
 import { GeoSurgeModule } from '../geosurge/geo-surge.module';
+import { WsModule } from '../ws/ws.module';
+
+// ✔ Import QueueModule with forwardRef so ORDER_ASSIGN_QUEUE becomes available
 import { QueueModule } from '../queues/queue.module';
-import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
   imports: [
-    UtilsModule,     // provides PrismaService, NotificationService, etc.
-    WsModule,        // WebSocket gateway
+    forwardRef(() => QueueModule),     // ❤️ FIX #1: gives OrdersService access to ORDER_ASSIGN_QUEUE
+    PaymentsModule,
     SurgeModule,
     GeoSurgeModule,
-    QueueModule,     // provides ORDER_ASSIGN_QUEUE token
-    PaymentsModule,  // provides PaymentsService
+    WsModule,
   ],
   controllers: [OrdersController],
-  providers: [
-    OrdersService,
-    // don't re-provide PrismaService or WsGateway here — provided through UtilsModule / WsModule
-  ],
-  exports: [OrdersService],
+  providers: [OrdersService, PrismaService, NotificationService],
+  exports: [OrdersService],            // so AdminModule can use OrdersService
 })
 export class OrdersModule {}

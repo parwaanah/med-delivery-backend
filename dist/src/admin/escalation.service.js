@@ -24,7 +24,9 @@ let EscalationService = EscalationService_1 = class EscalationService {
         this.defaultRiderSearchKm = 5;
         this.riderSpeedKmPerHr = 30;
     }
-    toRad(v) { return (v * Math.PI) / 180; }
+    toRad(v) {
+        return (v * Math.PI) / 180;
+    }
     haversineKm(lat1, lon1, lat2, lon2) {
         const R = 6371;
         const dLat = this.toRad(lat2 - lat1);
@@ -48,8 +50,9 @@ let EscalationService = EscalationService_1 = class EscalationService {
                 });
                 score += r?.status === 'AVAILABLE' ? 40 : 10;
             }
-            else
+            else {
                 score += 10;
+            }
         }
         catch {
             score += 5;
@@ -62,8 +65,9 @@ let EscalationService = EscalationService_1 = class EscalationService {
             const km = this.haversineKm(parseFloat(meta.lat), parseFloat(meta.lon), pickLat, pickLon);
             score += Math.max(0, 30 - Math.min(30, km * 6));
         }
-        else
+        else {
             score += 5;
+        }
         try {
             if (!isNaN(riderId)) {
                 const since = new Date(Date.now() - 30 * 60 * 1000);
@@ -72,8 +76,9 @@ let EscalationService = EscalationService_1 = class EscalationService {
                 });
                 score += Math.max(0, 30 - Math.min(20, assigned * 6));
             }
-            else
+            else {
                 score += 10;
+            }
         }
         catch {
             score += 10;
@@ -89,7 +94,7 @@ let EscalationService = EscalationService_1 = class EscalationService {
     async findCandidatesForOrder(orderId, radiusKm = this.defaultRiderSearchKm, limit = 20) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
-            select: { id: true, pharmacyId: true, customerId: true },
+            select: { id: true, pharmacyId: true },
         });
         if (!order)
             return [];
@@ -103,15 +108,25 @@ let EscalationService = EscalationService_1 = class EscalationService {
             pickLat = pharm.latitude;
             pickLon = pharm.longitude;
         }
-        const points = await this.geoSurge.findNearbyPoints(pickLon ?? 0, pickLat ?? 0, radiusKm, true, 100);
-        const riderPoints = points.filter((pt) => /^rider:\d+$/.test(pt.memberId));
+        else {
+            this.logger.warn(`Pharmacy ${order.pharmacyId} has no coordinates.`);
+            return [];
+        }
+        const points = await this.geoSurge.findNearbyPoints(pickLon, pickLat, radiusKm, true, 100);
+        const riderPoints = points.filter((p) => /^rider:\d+$/.test(p.memberId));
         const scored = [];
         for (const rp of riderPoints) {
             const score = await this.computeRiderScore(rp, pickLat, pickLon);
-            const m = rp.memberId.match(/^rider:(\d+)$/);
-            scored.push({ riderId: m ? Number(m[1]) : null, score, meta: rp.meta, distKm: rp.distKm ?? null });
+            const match = rp.memberId.match(/^rider:(\d+)$/);
+            scored.push({
+                riderId: match ? Number(match[1]) : null,
+                score,
+                distKm: rp.distKm ?? null,
+                meta: rp.meta,
+            });
         }
-        scored.sort((a, b) => (b.score - a.score) || ((a.distKm || 0) - (b.distKm || 0)));
+        scored.sort((a, b) => b.score - a.score ||
+            ((a.distKm || 0) - (b.distKm || 0)));
         return scored.slice(0, limit);
     }
 };

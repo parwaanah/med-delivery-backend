@@ -10,29 +10,27 @@ exports.OrdersModule = void 0;
 const common_1 = require("@nestjs/common");
 const orders_service_1 = require("./orders.service");
 const orders_controller_1 = require("./orders.controller");
-const utils_module_1 = require("../utils/utils.module");
-const ws_module_1 = require("../ws/ws.module");
+const prisma_service_1 = require("../utils/prisma.service");
+const notification_service_1 = require("../utils/notification.service");
+const payments_module_1 = require("../payments/payments.module");
 const surge_module_1 = require("../surge/surge.module");
 const geo_surge_module_1 = require("../geosurge/geo-surge.module");
+const ws_module_1 = require("../ws/ws.module");
 const queue_module_1 = require("../queues/queue.module");
-const payments_module_1 = require("../payments/payments.module");
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
 exports.OrdersModule = OrdersModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            utils_module_1.UtilsModule,
-            ws_module_1.WsModule,
+            (0, common_1.forwardRef)(() => queue_module_1.QueueModule),
+            payments_module_1.PaymentsModule,
             surge_module_1.SurgeModule,
             geo_surge_module_1.GeoSurgeModule,
-            queue_module_1.QueueModule,
-            payments_module_1.PaymentsModule,
+            ws_module_1.WsModule,
         ],
         controllers: [orders_controller_1.OrdersController],
-        providers: [
-            orders_service_1.OrdersService,
-        ],
+        providers: [orders_service_1.OrdersService, prisma_service_1.PrismaService, notification_service_1.NotificationService],
         exports: [orders_service_1.OrdersService],
     })
 ], OrdersModule);

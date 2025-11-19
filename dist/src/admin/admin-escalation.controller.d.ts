@@ -10,19 +10,24 @@ export declare class AdminEscalationController {
         total: number;
         items: {
             notification: {
-                id: number;
+                message: string;
+                type: string;
+                meta: import("@prisma/client/runtime/library").JsonValue | null;
                 status: string;
                 createdAt: Date;
+                id: number;
                 senderId: number | null;
                 receiverId: number;
-                type: string;
-                message: string;
-                meta: import("@prisma/client/runtime/library").JsonValue | null;
             };
             order: ({
-                customer: {
-                    email: string;
-                };
+                items: {
+                    name: string;
+                    id: number;
+                    medicineId: number | null;
+                    price: number;
+                    quantity: number;
+                    orderId: number;
+                }[];
                 pharmacy: {
                     email: string;
                     latitude: number | null;
@@ -31,24 +36,19 @@ export declare class AdminEscalationController {
                 rider: {
                     email: string;
                 } | null;
-                items: {
-                    id: number;
-                    orderId: number;
-                    name: string;
-                    quantity: number;
-                    price: number;
-                    medicineId: number | null;
-                }[];
+                customer: {
+                    email: string;
+                };
             } & {
-                id: number;
                 status: import(".prisma/client").$Enums.OrderStatus;
                 createdAt: Date;
-                customerId: number;
-                pharmacyId: number;
-                riderId: number | null;
-                totalPrice: number;
+                id: number;
                 updatedAt: Date;
                 deletedAt: Date | null;
+                pharmacyId: number;
+                customerId: number;
+                riderId: number | null;
+                totalPrice: number;
             }) | null;
         }[];
     }>;
@@ -56,28 +56,28 @@ export declare class AdminEscalationController {
         total: number;
         candidates: {
             user: {
-                id: number;
-                status: string;
                 name: string;
                 email: string;
+                status: string;
+                id: number;
                 latitude: number | null;
                 longitude: number | null;
             } | null;
             riderId: number | null;
             score: number;
-            meta: any;
             distKm: number | null;
+            meta: any;
         }[];
     }>;
     assign(id: string, riderId: string): Promise<{
-        id: number;
         status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
-        customerId: number;
-        pharmacyId: number;
-        riderId: number | null;
-        totalPrice: number;
+        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
+        pharmacyId: number;
+        customerId: number;
+        riderId: number | null;
+        totalPrice: number;
     }>;
 }

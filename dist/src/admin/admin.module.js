@@ -30,7 +30,7 @@ exports.AdminModule = AdminModule = __decorate([
     (0, common_1.Module)({
         imports: [
             ws_module_1.WsModule,
-            orders_module_1.OrdersModule,
+            (0, common_1.forwardRef)(() => orders_module_1.OrdersModule),
             payments_module_1.PaymentsModule,
             surge_module_1.SurgeModule,
             geo_surge_module_1.GeoSurgeModule,

@@ -1,42 +1,57 @@
-import { Module, Global } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import IORedis from 'ioredis';
+// src/queues/queue.module.ts
+import { Module, forwardRef } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { OrdersProcessor } from './orders.processor';
+
+import { OrderAssignWorker } from './order-assign.worker';
+
+// Modules required by worker
 import { PrismaService } from '../utils/prisma.service';
 import { NotificationService } from '../utils/notification.service';
-import { WsGateway } from '../ws/ws.gateway';
+import { EscalationService } from '../admin/escalation.service';
+import { WsModule } from '../ws/ws.module';
 
-@Global()
+// Fix circular dependency
+import { OrdersModule } from '../orders/orders.module';
+import { AdminModule } from '../admin/admin.module';
+
 @Module({
-  providers: [
-    {
-      provide: 'REDIS',
-      useFactory: (config: ConfigService) => {
-        const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
-        return new IORedis(redisUrl, { enableReadyCheck: true });
+  imports: [
+    forwardRef(() => OrdersModule),
+    forwardRef(() => AdminModule),
+    WsModule,
+
+    // BullMQ connection
+    BullModule.forRoot({
+      connection: {
+        host: '127.0.0.1',
+        port: 6379,
       },
-      inject: [ConfigService],
-    },
+    }),
+
+    BullModule.registerQueue({
+      name: 'order_assign',
+    }),
+  ],
+
+  providers: [
+    OrderAssignWorker,
+    PrismaService,
+    NotificationService,
 
     {
       provide: 'ORDER_ASSIGN_QUEUE',
-      useFactory: (config: ConfigService) => {
-        const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
-        const bullConn = new IORedis(redisUrl, {
-          enableReadyCheck: true,
-          maxRetriesPerRequest: null,
+      useFactory: () => {
+        return new Queue('order_assign', {
+          connection: { host: '127.0.0.1', port: 6379 },
         });
-        return new Queue('order_assign', { connection: bullConn });
       },
-      inject: [ConfigService],
     },
-
-    PrismaService,
-    NotificationService,
-    WsGateway,
-    OrdersProcessor,
   ],
-  exports: ['ORDER_ASSIGN_QUEUE', 'REDIS'],
+
+  exports: [
+    'ORDER_ASSIGN_QUEUE',
+    OrderAssignWorker,
+  ],
 })
 export class QueueModule {}
