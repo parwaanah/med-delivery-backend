@@ -1,154 +1,467 @@
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { RespondOfferDto } from './dto/respond-offer.dto';
+import { Request } from 'express';
 export declare class OrdersController {
     private readonly ordersService;
     constructor(ordersService: OrdersService);
-    create(req: any, dto: CreateOrderDto): Promise<({
+    create(req: Request & {
+        user: any;
+    }, dto: CreateOrderDto): Promise<({
         items: {
-            name: string;
             id: number;
-            medicineId: number | null;
-            price: number;
+            name: string;
             quantity: number;
+            price: number;
+            medicineId: number | null;
             orderId: number;
         }[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
+        totalPrice: number;
         createdAt: Date;
-        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
-        pharmacyId: number;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode;
+        requiresPrescription: boolean;
+        id: number;
         customerId: number;
+        pharmacyId: number;
         riderId: number | null;
-        totalPrice: number;
+        prescriptionId: number | null;
     }) | {
         order: {
             items: {
-                name: string;
                 id: number;
-                medicineId: number | null;
-                price: number;
+                name: string;
                 quantity: number;
+                price: number;
+                medicineId: number | null;
                 orderId: number;
             }[];
         } & {
             status: import(".prisma/client").$Enums.OrderStatus;
+            totalPrice: number;
             createdAt: Date;
-            id: number;
             updatedAt: Date;
             deletedAt: Date | null;
-            pharmacyId: number;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
             customerId: number;
+            pharmacyId: number;
             riderId: number | null;
+            prescriptionId: number | null;
+        };
+        payment: {
+            mock: boolean;
+            status: string;
+            id: string;
+        };
+        candidates?: undefined;
+        scores?: undefined;
+    } | {
+        order: {
+            items: {
+                id: number;
+                name: string;
+                quantity: number;
+                price: number;
+                medicineId: number | null;
+                orderId: number;
+            }[];
+        } & {
+            status: import(".prisma/client").$Enums.OrderStatus;
             totalPrice: number;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
+            customerId: number;
+            pharmacyId: number;
+            riderId: number | null;
+            prescriptionId: number | null;
+        };
+        payment: {
+            mock: boolean;
+            razorpayOrder: {
+                id: string;
+                amount: number;
+                currency: string;
+                status: string;
+            };
+            transaction: {
+                status: string;
+                createdAt: Date;
+                id: string;
+                provider: string;
+                providerOrder: string | null;
+                providerPayment: string | null;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                currency: string;
+                method: string | null;
+                rawData: import("@prisma/client/runtime/library").JsonValue | null;
+                orderId: number | null;
+            };
+        } | {
+            razorpayOrder: any;
+            transaction: {
+                status: string;
+                createdAt: Date;
+                id: string;
+                provider: string;
+                providerOrder: string | null;
+                providerPayment: string | null;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                currency: string;
+                method: string | null;
+                rawData: import("@prisma/client/runtime/library").JsonValue | null;
+                orderId: number | null;
+            };
+            mock?: undefined;
+        };
+        candidates?: undefined;
+        scores?: undefined;
+    } | {
+        order: {
+            items: {
+                id: number;
+                name: string;
+                quantity: number;
+                price: number;
+                medicineId: number | null;
+                orderId: number;
+            }[];
+        } & {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            totalPrice: number;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
+            customerId: number;
+            pharmacyId: number;
+            riderId: number | null;
+            prescriptionId: number | null;
         };
         candidates: number[];
         scores: {
             pharmacyId: number;
             score: number;
         }[];
-    }>;
-    findAll(req: any): Promise<({
-        items: {
-            name: string;
-            id: number;
-            medicineId: number | null;
-            price: number;
-            quantity: number;
-            orderId: number;
-        }[];
-    } & {
-        status: import(".prisma/client").$Enums.OrderStatus;
-        createdAt: Date;
-        id: number;
-        updatedAt: Date;
-        deletedAt: Date | null;
-        pharmacyId: number;
-        customerId: number;
-        riderId: number | null;
-        totalPrice: number;
-    })[]>;
-    pharmacyRespond(req: any, orderId: string, dto: RespondOfferDto): Promise<{
-        ok: boolean;
-        order?: undefined;
-        payment?: undefined;
-        paymentError?: undefined;
+        payment: {
+            mock: boolean;
+            status: string;
+            id: string;
+        };
     } | {
         order: {
+            items: {
+                id: number;
+                name: string;
+                quantity: number;
+                price: number;
+                medicineId: number | null;
+                orderId: number;
+            }[];
+        } & {
             status: import(".prisma/client").$Enums.OrderStatus;
+            totalPrice: number;
             createdAt: Date;
-            id: number;
             updatedAt: Date;
             deletedAt: Date | null;
-            pharmacyId: number;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
             customerId: number;
+            pharmacyId: number;
             riderId: number | null;
-            totalPrice: number;
+            prescriptionId: number | null;
         };
+        candidates: number[];
+        scores: {
+            pharmacyId: number;
+            score: number;
+        }[];
+        payment?: undefined;
+    } | {
+        order: {
+            items: {
+                id: number;
+                name: string;
+                quantity: number;
+                price: number;
+                medicineId: number | null;
+                orderId: number;
+            }[];
+        } & {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            totalPrice: number;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
+            customerId: number;
+            pharmacyId: number;
+            riderId: number | null;
+            prescriptionId: number | null;
+        };
+        candidates: number[];
+        scores: {
+            pharmacyId: number;
+            score: number;
+        }[];
         payment: {
-            rzpOrder: any;
+            mock: boolean;
+            razorpayOrder: {
+                id: string;
+                amount: number;
+                currency: string;
+                status: string;
+            };
             transaction: {
                 status: string;
                 createdAt: Date;
                 id: string;
-                method: string | null;
-                amount: import("@prisma/client/runtime/library").Decimal;
-                currency: string;
-                orderId: number | null;
                 provider: string;
                 providerOrder: string | null;
                 providerPayment: string | null;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                currency: string;
+                method: string | null;
                 rawData: import("@prisma/client/runtime/library").JsonValue | null;
+                orderId: number | null;
             };
+        } | {
+            razorpayOrder: any;
+            transaction: {
+                status: string;
+                createdAt: Date;
+                id: string;
+                provider: string;
+                providerOrder: string | null;
+                providerPayment: string | null;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                currency: string;
+                method: string | null;
+                rawData: import("@prisma/client/runtime/library").JsonValue | null;
+                orderId: number | null;
+            };
+            mock?: undefined;
         };
-        ok?: undefined;
-        paymentError?: undefined;
-    } | {
-        order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
-            createdAt: Date;
-            id: number;
-            updatedAt: Date;
-            deletedAt: Date | null;
-            pharmacyId: number;
-            customerId: number;
-            riderId: number | null;
-            totalPrice: number;
-        };
-        paymentError: any;
-        ok?: undefined;
-        payment?: undefined;
     }>;
-    riderRespond(req: any, orderId: string, dto: RespondOfferDto): Promise<{
-        status: import(".prisma/client").$Enums.OrderStatus;
+    uploadPrescription(req: Request & {
+        user: any;
+    }, id: string, url: string): Promise<{
         createdAt: Date;
         id: number;
-        updatedAt: Date;
-        deletedAt: Date | null;
-        pharmacyId: number;
         customerId: number;
-        riderId: number | null;
-        totalPrice: number;
-    } | {
-        ok: boolean;
+        url: string;
+        verified: boolean;
     }>;
-    riderStage(req: any, orderId: string, body: {
-        stage: 'REACHED_PHARMACY' | 'PICKED_UP' | 'DELIVERED';
-        location?: any;
+    requestPrescription(req: Request & {
+        user: any;
+    }, orderId: string, dto: {
+        message?: string;
     }): Promise<{
         ok: boolean;
     }>;
-    adminAssign(req: any, orderId: string, riderId: string): Promise<{
+    pharmacyRespond(req: Request & {
+        user: any;
+    }, orderId: string, dto: {
+        action: 'ACCEPTED' | 'REJECTED';
+    }): Promise<{
+        ok: boolean;
+        order?: undefined;
+        payment?: undefined;
+    } | {
+        order: {
+            items: {
+                id: number;
+                name: string;
+                quantity: number;
+                price: number;
+                medicineId: number | null;
+                orderId: number;
+            }[];
+        } & {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            totalPrice: number;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
+            customerId: number;
+            pharmacyId: number;
+            riderId: number | null;
+            prescriptionId: number | null;
+        };
+        payment: {
+            mock: boolean;
+            status: string;
+        };
+        ok?: undefined;
+    } | {
+        order: {
+            items: {
+                id: number;
+                name: string;
+                quantity: number;
+                price: number;
+                medicineId: number | null;
+                orderId: number;
+            }[];
+        } & {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            totalPrice: number;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
+            customerId: number;
+            pharmacyId: number;
+            riderId: number | null;
+            prescriptionId: number | null;
+        };
+        payment: {
+            mock: boolean;
+            razorpayOrder: {
+                id: string;
+                amount: number;
+                currency: string;
+                status: string;
+            };
+            transaction: {
+                status: string;
+                createdAt: Date;
+                id: string;
+                provider: string;
+                providerOrder: string | null;
+                providerPayment: string | null;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                currency: string;
+                method: string | null;
+                rawData: import("@prisma/client/runtime/library").JsonValue | null;
+                orderId: number | null;
+            };
+        } | {
+            razorpayOrder: any;
+            transaction: {
+                status: string;
+                createdAt: Date;
+                id: string;
+                provider: string;
+                providerOrder: string | null;
+                providerPayment: string | null;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                currency: string;
+                method: string | null;
+                rawData: import("@prisma/client/runtime/library").JsonValue | null;
+                orderId: number | null;
+            };
+            mock?: undefined;
+        };
+        ok?: undefined;
+    } | {
+        order: {
+            items: {
+                id: number;
+                name: string;
+                quantity: number;
+                price: number;
+                medicineId: number | null;
+                orderId: number;
+            }[];
+        } & {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            totalPrice: number;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            paymentMode: import(".prisma/client").$Enums.PaymentMode;
+            requiresPrescription: boolean;
+            id: number;
+            customerId: number;
+            pharmacyId: number;
+            riderId: number | null;
+            prescriptionId: number | null;
+        };
+        ok?: undefined;
+        payment?: undefined;
+    }>;
+    riderRespond(req: Request & {
+        user: any;
+    }, orderId: string, dto: {
+        action: 'ACCEPTED' | 'REJECTED';
+    }): Promise<{
         status: import(".prisma/client").$Enums.OrderStatus;
+        totalPrice: number;
         createdAt: Date;
-        id: number;
         updatedAt: Date;
         deletedAt: Date | null;
-        pharmacyId: number;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode;
+        requiresPrescription: boolean;
+        id: number;
         customerId: number;
+        pharmacyId: number;
         riderId: number | null;
-        totalPrice: number;
+        prescriptionId: number | null;
+    } | {
+        ok: boolean;
     }>;
+    updateStage(req: Request & {
+        user: any;
+    }, orderId: string, dto: {
+        stage: string;
+        lat?: number;
+        lng?: number;
+    }): Promise<{
+        ok: boolean;
+    }>;
+    list(req: Request & {
+        user: any;
+    }): Promise<({
+        prescription: {
+            createdAt: Date;
+            id: number;
+            customerId: number;
+            url: string;
+            verified: boolean;
+        } | null;
+        items: {
+            id: number;
+            name: string;
+            quantity: number;
+            price: number;
+            medicineId: number | null;
+            orderId: number;
+        }[];
+    } & {
+        status: import(".prisma/client").$Enums.OrderStatus;
+        totalPrice: number;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode;
+        requiresPrescription: boolean;
+        id: number;
+        customerId: number;
+        pharmacyId: number;
+        riderId: number | null;
+        prescriptionId: number | null;
+    })[]>;
+    getTimeline(orderId: string): Promise<{
+        event: string;
+        data: any;
+        at: Date;
+    }[]>;
 }

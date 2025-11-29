@@ -2,14 +2,17 @@
 import { Module } from '@nestjs/common';
 import { PharmaciesService } from './pharmacies.service';
 import { PharmaciesController } from './pharmacies.controller';
-import { PharmacyInventoryService } from './pharmacy-inventory.service';
-import { UtilsModule } from '../utils/utils.module';
-import { SurgeModule } from '../surge/surge.module';
+import { PrismaService } from '../utils/prisma.service';
+
+// 🚀 IMPORTANT: import GeoSurgeModule to inject GeoSurgeService
+import { GeoSurgeModule } from '../geosurge/geo-surge.module';
 
 @Module({
-  imports: [UtilsModule, SurgeModule],
+  imports: [
+    GeoSurgeModule, // <-- FIX: provides GeoSurgeService to this module
+  ],
   controllers: [PharmaciesController],
-  providers: [PharmaciesService, PharmacyInventoryService],
-  exports: [PharmaciesService, PharmacyInventoryService],
+  providers: [PharmaciesService, PrismaService],
+  exports: [PharmaciesService],
 })
 export class PharmaciesModule {}

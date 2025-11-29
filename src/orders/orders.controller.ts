@@ -1,64 +1,144 @@
+// src/orders/orders.controller.ts
 import {
   Controller,
   Post,
-  Body,
-  UseGuards,
-  Req,
-  Param,
   Get,
   Patch,
+  Param,
+  Body,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+
+import { Request } from 'express';
+
+// ✅ Correct paths based on YOUR structure
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { RespondOfferDto } from './dto/respond-offer.dto';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  // ----------------------------------------------------------
+  // CUSTOMER: create order
+  // ----------------------------------------------------------
   @Post()
-  @Roles('customer')
-  create(@Req() req: any, @Body() dto: CreateOrderDto) {
-    const userId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-    return this.ordersService.createOrder(userId, dto);
+  @Roles('CUSTOMER')
+  create(
+    @Req() req: Request & { user: any },
+    @Body() dto: CreateOrderDto,
+  ) {
+    return this.ordersService.createOrder(req.user.id, dto);
   }
 
+  // ----------------------------------------------------------
+  // CUSTOMER: upload prescription
+  // ----------------------------------------------------------
+  @Post(':id/prescription')
+  @Roles('CUSTOMER')
+  uploadPrescription(
+    @Req() req: Request & { user: any },
+    @Param('id') id: string,
+    @Body('url') url: string,
+  ) {
+    return this.ordersService.uploadPrescription(
+      req.user.id,
+      url,
+      Number(id),
+    );
+  }
+
+  // ----------------------------------------------------------
+  // PHARMACY: ask customer for prescription
+  // ----------------------------------------------------------
+  @Post(':id/request-prescription')
+  @Roles('PHARMACY')
+  requestPrescription(
+    @Req() req: Request & { user: any },
+    @Param('id') orderId: string,
+    @Body() dto: { message?: string },
+  ) {
+    return this.ordersService.pharmacyRequestPrescription(
+      req.user.id,
+      Number(orderId),
+      dto.message,
+    );
+  }
+
+  // ----------------------------------------------------------
+  // PHARMACY: accept / reject
+  // ----------------------------------------------------------
+  @Post(':id/pharmacy-response')
+  @Roles('PHARMACY')
+  pharmacyRespond(
+    @Req() req: Request & { user: any },
+    @Param('id') orderId: string,
+    @Body() dto: { action: 'ACCEPTED' | 'REJECTED' },
+  ) {
+    return this.ordersService.pharmacyRespond(
+      req.user.id,
+      Number(orderId),
+      dto.action,
+    );
+  }
+
+  // ----------------------------------------------------------
+  // RIDER: accept / reject
+  // ----------------------------------------------------------
+  @Post(':id/rider-response')
+  @Roles('RIDER')
+  riderRespond(
+    @Req() req: Request & { user: any },
+    @Param('id') orderId: string,
+    @Body() dto: { action: 'ACCEPTED' | 'REJECTED' },
+  ) {
+    return this.ordersService.riderRespond(
+      req.user.id,
+      Number(orderId),
+      dto.action,
+    );
+  }
+
+  // ----------------------------------------------------------
+  // RIDER: update stage (picked, on the way, delivered)
+  // ----------------------------------------------------------
+  @Patch(':id/stage')
+  @Roles('RIDER')
+  updateStage(
+    @Req() req: Request & { user: any },
+    @Param('id') orderId: string,
+    @Body() dto: { stage: string; lat?: number; lng?: number },
+  ) {
+    return this.ordersService.updateStage(
+      req.user.id,
+      Number(orderId),
+      dto.stage,
+      { lat: dto.lat, lng: dto.lng },
+    );
+  }
+
+  // ----------------------------------------------------------
+  // ROLE-BASED ORDER LISTING
+  // ----------------------------------------------------------
   @Get()
-  findAll(@Req() req: any) {
-    const userId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-    const role = (req.user?.role ?? '').toUpperCase();
-    return this.ordersService.findByUser(userId, role);
+  list(@Req() req: Request & { user: any }) {
+    return this.ordersService.findByUser(
+      req.user.id,
+      req.user.role,
+    );
   }
 
-  @Post('pharmacy/:orderId/respond')
-  @Roles('pharmacy')
-  pharmacyRespond(@Req() req: any, @Param('orderId') orderId: string, @Body() dto: RespondOfferDto) {
-    const pharmacyId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-    return this.ordersService.pharmacyRespond(pharmacyId, Number(orderId), dto.action);
-  }
-
-  @Post('rider/:orderId/respond')
-  @Roles('rider')
-  riderRespond(@Req() req: any, @Param('orderId') orderId: string, @Body() dto: RespondOfferDto) {
-    const riderId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-    return this.ordersService.riderRespond(riderId, Number(orderId), dto.action);
-  }
-
-  @Patch('rider/:orderId/stage')
-  @Roles('rider')
-  riderStage(@Req() req: any, @Param('orderId') orderId: string, @Body() body: { stage: 'REACHED_PHARMACY' | 'PICKED_UP' | 'DELIVERED'; location?: any }) {
-    const riderId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-    return this.ordersService.updateStage(riderId, Number(orderId), body.stage, body.location);
-  }
-
-  @Post('admin/:orderId/assign/:riderId')
-  @Roles('admin')
-  adminAssign(@Req() req: any, @Param('orderId') orderId: string, @Param('riderId') riderId: string) {
-    const adminId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-    return this.ordersService.adminAssign(Number(orderId), adminId, Number(riderId));
+  // ----------------------------------------------------------
+  // TIMELINE
+  // ----------------------------------------------------------
+  @Get(':id/timeline')
+  getTimeline(@Param('id') orderId: string) {
+    return this.ordersService.getTimeline(Number(orderId));
   }
 }

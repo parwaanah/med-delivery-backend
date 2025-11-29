@@ -50,10 +50,7 @@ const bodyParser = __importStar(require("body-parser"));
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { cors: true });
     app.useLogger(new global_logger_service_1.GlobalLogger());
-    app.useGlobalPipes(new common_1.ValidationPipe({
-        whitelist: true,
-        transform: true,
-    }));
+    app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
     const config = app.get(config_1.ConfigService);
     const port = config.get('PORT') || 3001;
     const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
@@ -61,16 +58,21 @@ async function bootstrap() {
     app.use((0, helmet_1.default)({
         contentSecurityPolicy: false,
     }));
-    app.use((0, express_rate_limit_1.default)({
-        windowMs: 60_000,
-        max: 120,
-        standardHeaders: true,
-        legacyHeaders: false,
-        message: {
-            statusCode: 429,
-            message: 'Too many requests, please slow down.',
-        },
-    }));
+    if (process.env.DISABLE_RATELIMIT === '1') {
+        console.log('⚡ LOADTEST MODE ENABLED — RateLimit DISABLED');
+    }
+    else {
+        app.use((0, express_rate_limit_1.default)({
+            windowMs: 60_000,
+            max: 120,
+            standardHeaders: true,
+            legacyHeaders: false,
+            message: {
+                statusCode: 429,
+                message: 'Too many requests, please slow down.',
+            },
+        }));
+    }
     app.enableCors({
         origin: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -92,9 +94,9 @@ async function bootstrap() {
     const prisma = app.get(prisma_service_1.PrismaService);
     if (prisma?.enableShutdownHooks)
         await prisma.enableShutdownHooks(app);
-    await (0, redis_logger_1.checkRedisConnection)(redisUrl).catch((err) => console.warn('⚠️ Redis check failed:', err instanceof Error ? err.message : err));
+    await (0, redis_logger_1.checkRedisConnection)(redisUrl).catch((err) => console.warn('⚠️ Redis check failed:', err?.message || err));
     console.log('💓 System Health OK — Redis + Prisma connected');
-    console.log('🔐 Security: Helmet + RateLimit active');
+    console.log('🔐 Security: Helmet active');
     await app.listen(port);
     console.log(`🚀 Server: http://localhost:${port}`);
     console.log(`📘 Swagger: http://localhost:${port}/docs`);

@@ -11,38 +11,32 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var AuthController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const auth_dto_1 = require("./dto/auth.dto");
-const swagger_1 = require("@nestjs/swagger");
-let AuthController = AuthController_1 = class AuthController {
-    constructor(authService) {
-        this.authService = authService;
-        this.logger = new common_1.Logger(AuthController_1.name);
+let AuthController = class AuthController {
+    constructor(auth) {
+        this.auth = auth;
     }
-    async register(dto) {
-        return this.authService.register(dto);
+    register(dto) {
+        return this.auth.register(dto);
     }
-    async login(req, dto) {
-        const ip = req.ip || req.connection?.remoteAddress || undefined;
-        const ua = req.headers['user-agent'] || undefined;
-        return this.authService.login(dto, ip, ua);
+    login(req, dto) {
+        return this.auth.login(dto, req.ip, req.headers['user-agent']);
     }
-    async refresh(dto) {
-        return this.authService.refreshToken(dto.refreshToken);
+    refresh(dto) {
+        return this.auth.refreshToken(dto.refreshToken);
     }
-    async logout(sessionId) {
-        return this.authService.logout(sessionId);
+    logout(sessionId) {
+        return this.auth.logout(sessionId);
     }
-    async requestPasswordReset(body) {
-        const email = body.email?.trim();
+    reset(email) {
         if (!email)
-            throw new common_1.BadRequestException('Email is required');
-        return this.authService.requestPasswordReset(email);
+            throw new common_1.BadRequestException('Email required');
+        return this.auth.requestPasswordReset(email);
     }
 };
 exports.AuthController = AuthController;
@@ -52,7 +46,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
@@ -61,7 +55,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, auth_dto_1.LoginDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('refresh'),
@@ -69,7 +63,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RefreshTokenDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "refresh", null);
 __decorate([
     (0, common_1.Post)('logout'),
@@ -77,18 +71,17 @@ __decorate([
     __param(0, (0, common_1.Body)('sessionId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logout", null);
 __decorate([
     (0, common_1.Post)('request-password-reset'),
     openapi.ApiResponse({ status: 201 }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Body)('email')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "requestPasswordReset", null);
-exports.AuthController = AuthController = AuthController_1 = __decorate([
-    (0, swagger_1.ApiTags)('Auth'),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "reset", null);
+exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], AuthController);

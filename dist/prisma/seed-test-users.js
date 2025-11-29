@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
-const bcrypt = __importStar(require("bcryptjs"));
+const bcrypt = __importStar(require("bcrypt"));
 const prisma = new client_1.PrismaClient();
 async function seed() {
     const users = [

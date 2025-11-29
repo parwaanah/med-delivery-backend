@@ -10,17 +10,18 @@ exports.PharmaciesModule = void 0;
 const common_1 = require("@nestjs/common");
 const pharmacies_service_1 = require("./pharmacies.service");
 const pharmacies_controller_1 = require("./pharmacies.controller");
-const pharmacy_inventory_service_1 = require("./pharmacy-inventory.service");
-const utils_module_1 = require("../utils/utils.module");
-const surge_module_1 = require("../surge/surge.module");
+const prisma_service_1 = require("../utils/prisma.service");
+const geo_surge_module_1 = require("../geosurge/geo-surge.module");
 let PharmaciesModule = class PharmaciesModule {
 };
 exports.PharmaciesModule = PharmaciesModule;
 exports.PharmaciesModule = PharmaciesModule = __decorate([
     (0, common_1.Module)({
-        imports: [utils_module_1.UtilsModule, surge_module_1.SurgeModule],
+        imports: [
+            geo_surge_module_1.GeoSurgeModule,
+        ],
         controllers: [pharmacies_controller_1.PharmaciesController],
-        providers: [pharmacies_service_1.PharmaciesService, pharmacy_inventory_service_1.PharmacyInventoryService],
-        exports: [pharmacies_service_1.PharmaciesService, pharmacy_inventory_service_1.PharmacyInventoryService],
+        providers: [pharmacies_service_1.PharmaciesService, prisma_service_1.PrismaService],
+        exports: [pharmacies_service_1.PharmaciesService],
     })
 ], PharmaciesModule);

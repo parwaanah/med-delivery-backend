@@ -13,17 +13,11 @@ import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  // ❗ DO NOT enable rawBody globally — create app normally
   const app = await NestFactory.create(AppModule, { cors: true });
 
-  // Logger + Validation
+  // Logging + Validation
   app.useLogger(new GlobalLogger());
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') || 3001;
@@ -31,25 +25,32 @@ async function bootstrap() {
 
   console.log('🧠 Using Redis URL:', redisUrl);
 
-  // Security middlewares
+  // SECURITY HEADERS
   app.use(
     helmet({
       contentSecurityPolicy: false,
     }),
   );
 
-  app.use(
-    rateLimit({
-      windowMs: 60_000,
-      max: 120,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: {
-        statusCode: 429,
-        message: 'Too many requests, please slow down.',
-      },
-    }),
-  );
+  // =====================================================================
+  // 🔥 LOADTEST MODE — DISABLE RATE LIMIT (DISABLE_RATELIMIT=1 in .env)
+  // =====================================================================
+  if (process.env.DISABLE_RATELIMIT === '1') {
+    console.log('⚡ LOADTEST MODE ENABLED — RateLimit DISABLED');
+  } else {
+    app.use(
+      rateLimit({
+        windowMs: 60_000,
+        max: 120,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: {
+          statusCode: 429,
+          message: 'Too many requests, please slow down.',
+        },
+      }),
+    );
+  }
 
   // CORS
   app.enableCors({
@@ -58,23 +59,21 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // --------------------------
-  // 🟢 RAZORPAY WEBHOOK RAW BODY
-  // --------------------------
+  // Razorpay webhook requires RAW body
   app.use(
     '/payments/webhook',
     bodyParser.raw({
-      type: '*/*', // Razorpay sends many content-types
+      type: '*/*',
       limit: '5mb',
     }),
   );
 
-  // JSON parser for all other routes
+  // JSON for all others
   app.use(bodyParser.json());
 
-  // --------------------------
+  // ------------------------------------------------------------
   // Swagger
-  // --------------------------
+  // ------------------------------------------------------------
   const swaggerCfg = new DocumentBuilder()
     .setTitle('Medicine Delivery API')
     .setDescription('API documentation')
@@ -85,21 +84,19 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerCfg);
   SwaggerModule.setup('docs', app, document);
 
-  // Prisma shutdown hook
+  // Prisma shutdown hooks
   const prisma = app.get(PrismaService);
   if (prisma?.enableShutdownHooks) await prisma.enableShutdownHooks(app);
 
-  // Redis test
+  // Redis
   await checkRedisConnection(redisUrl).catch((err) =>
-    console.warn(
-      '⚠️ Redis check failed:',
-      err instanceof Error ? err.message : err,
-    ),
+    console.warn('⚠️ Redis check failed:', err?.message || err),
   );
 
   console.log('💓 System Health OK — Redis + Prisma connected');
-  console.log('🔐 Security: Helmet + RateLimit active');
+  console.log('🔐 Security: Helmet active');
 
+  // Start server
   await app.listen(port);
 
   console.log(`🚀 Server: http://localhost:${port}`);

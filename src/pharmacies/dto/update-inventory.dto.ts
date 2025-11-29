@@ -1,7 +1,21 @@
-// src/pharmacies/dto/update-inventory.dto.ts
-import { IsInt, IsNumber } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class UpdateInventoryDto {
+  @IsOptional()
   @IsNumber()
-  delta!: number;
+  mrp?: number;
+
+  @IsOptional()
+  @IsNumber()
+  sellingPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  stock?: number;
 }

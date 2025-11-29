@@ -1,3 +1,6 @@
 export declare class UpdateInventoryDto {
-    delta: number;
+    mrp?: number;
+    sellingPrice?: number;
+    discount?: number;
+    stock?: number;
 }

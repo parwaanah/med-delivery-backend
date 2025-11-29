@@ -37,249 +37,514 @@ let OrdersService = OrdersService_1 = class OrdersService {
         this.logger = new common_1.Logger(OrdersService_1.name);
         this.riderSpeedKmPerHr = 30;
         this.defaultRiderSearchKm = Number(this.config.get('RIDER_SEARCH_KM') || 5);
+        this.isLoadtest =
+            String(process.env.LOADTEST_MODE || this.config.get('LOADTEST_MODE') || '')
+                .trim()
+                .toLowerCase() === 'true';
+        if (this.isLoadtest)
+            this.logger.warn('LOADTEST_MODE ACTIVE → inventory bypass + payment bypass enabled.');
+    }
+    toRad(v) {
+        return (v * Math.PI) / 180;
     }
     haversineKm(lat1, lon1, lat2, lon2) {
-        const toRad = (v) => (v * Math.PI) / 180;
         const R = 6371;
-        const dLat = toRad(lat2 - lat1);
-        const dLon = toRad(lon2 - lon1);
+        const dLat = this.toRad(lat2 - lat1);
+        const dLon = this.toRad(lon2 - lon1);
         const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(toRad(lat1)) *
-                Math.cos(toRad(lat2)) *
+            Math.cos(this.toRad(lat1)) *
+                Math.cos(this.toRad(lat2)) *
                 Math.sin(dLon / 2) ** 2;
         return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
-    estimateEtaMinutes(km) {
-        if (!km || km <= 0)
-            return 5;
-        const hours = km / this.riderSpeedKmPerHr;
-        return Math.max(2, Math.round(hours * 60));
-    }
-    async computePharmacyScore(pharmacyId, pickupLat, pickupLon, medicineCount = 0) {
-        const scoreParts = [];
-        if (medicineCount > 0) {
-            try {
-                const stocked = await this.prisma.pharmacyInventory.count({
-                    where: { pharmacyId, stock: { gt: 0 } },
-                });
-                scoreParts.push(Math.min(40, (stocked / medicineCount) * 40));
-            }
-            catch {
-                scoreParts.push(10);
-            }
-        }
-        else {
-            scoreParts.push(10);
-        }
+    async logTimeline(orderId, event, data) {
         try {
-            const since = new Date(Date.now() - 30 * 60 * 1000);
-            const accepted = await this.prisma.order.count({
-                where: {
-                    pharmacyId,
-                    status: client_1.OrderStatus.ACCEPTED,
-                    updatedAt: { gte: since },
+            await this.prisma.orderTimeline.create({
+                data: {
+                    orderId,
+                    event,
+                    data: data ? JSON.stringify(data) : undefined,
                 },
             });
-            scoreParts.push(Math.min(15, accepted * 3));
         }
-        catch {
-            scoreParts.push(5);
+        catch (e) {
+            this.logger.warn('Timeline failed', e?.message ?? e);
         }
-        if (pickupLat && pickupLon) {
-            try {
-                const p = await this.prisma.user.findUnique({
-                    where: { id: pharmacyId },
-                    select: { latitude: true, longitude: true },
-                });
-                if (p?.latitude != null && p?.longitude != null) {
-                    const km = this.haversineKm(Number(p.latitude), Number(p.longitude), pickupLat, pickupLon);
-                    scoreParts.push(Math.max(0, 20 - Math.min(20, km * 3)));
-                }
-                else {
-                    scoreParts.push(5);
-                }
-            }
-            catch {
-                scoreParts.push(5);
-            }
-        }
-        else {
-            scoreParts.push(5);
-        }
-        try {
-            const { multiplier } = await this.surge.getStatus();
-            scoreParts.push(Math.max(0, Math.min(10, (multiplier - 1) * 5)));
-        }
-        catch {
-            scoreParts.push(0);
-        }
-        return Math.round(Math.min(100, scoreParts.reduce((a, b) => a + b, 0)));
     }
-    async computeRiderScore(riderPoint, pickupLat, pickupLon) {
-        const meta = riderPoint.meta || {};
-        const match = riderPoint.memberId.match(/^rider:(\d+)$/);
-        const riderId = match ? Number(match[1]) : NaN;
-        let score = 0;
-        try {
-            if (!isNaN(riderId)) {
-                const r = await this.prisma.user.findUnique({
-                    where: { id: riderId },
-                    select: { status: true },
-                });
-                score += r?.status === 'AVAILABLE' ? 40 : 10;
+    resolveModeFromItems(items) {
+        let requiresPrescription = false;
+        let hasStrict = false;
+        let hasChronic = false;
+        let hasNonRx = false;
+        for (const it of items) {
+            const cat = it.category;
+            if (!cat) {
+                hasChronic = true;
+                continue;
+            }
+            const c = String(cat).toUpperCase();
+            if (c === 'STRICT_RX' || c === 'STRICT' || c === 'HARD') {
+                hasStrict = true;
+                requiresPrescription = true;
+            }
+            else if (c === 'CHRONIC' || c === 'SOFT') {
+                hasChronic = true;
             }
             else {
-                score += 10;
+                hasNonRx = true;
             }
         }
-        catch {
-            score += 5;
-        }
-        if (typeof riderPoint.distKm === 'number') {
-            const d = riderPoint.distKm;
-            score += Math.max(0, 30 - Math.min(30, d * 6));
-        }
-        else if (pickupLat && pickupLon && meta?.lat && meta?.lon) {
-            const km = this.haversineKm(parseFloat(meta.lat), parseFloat(meta.lon), pickupLat, pickupLon);
-            score += Math.max(0, 30 - Math.min(30, km * 6));
-        }
-        else {
-            score += 5;
-        }
-        try {
-            if (!isNaN(riderId)) {
-                const since = new Date(Date.now() - 30 * 60 * 1000);
-                const assigned = await this.prisma.order.count({
-                    where: { riderId, createdAt: { gte: since } },
-                });
-                score += Math.max(0, 30 - Math.min(20, assigned * 6));
-            }
-            else {
-                score += 10;
-            }
-        }
-        catch {
-            score += 10;
-        }
-        return Math.round(Math.min(100, score));
+        if (hasStrict)
+            return {
+                mode: client_1.PaymentMode.PAY_AFTER_VERIFICATION,
+                requiresPrescription: true,
+            };
+        if (hasChronic && !hasNonRx)
+            return { mode: client_1.PaymentMode.PAY_AFTER_ACCEPT, requiresPrescription: false };
+        if (hasNonRx && !hasChronic)
+            return { mode: client_1.PaymentMode.PAY_FIRST, requiresPrescription: false };
+        return { mode: client_1.PaymentMode.PAY_AFTER_ACCEPT, requiresPrescription: false };
+    }
+    async getAnyPharmacyId() {
+        const p = await this.prisma.user.findFirst({
+            where: { role: client_1.UserRole.PHARMACY },
+            select: { id: true },
+        });
+        return p?.id ?? 1;
     }
     async createOrder(customerId, dto) {
         if (!customerId || isNaN(+customerId))
-            throw new common_1.BadRequestException('Invalid or missing customer ID.');
+            throw new common_1.BadRequestException('Invalid customer');
         if (!dto.items?.length)
-            throw new common_1.BadRequestException('No items provided.');
-        const total = dto.items.reduce((s, it) => s + it.price * it.quantity, 0);
-        try {
-            await this.surge.incrementDemand(1);
-        }
-        catch (err) {
-            this.logger.warn('Surge increment failed', err);
-        }
+            throw new common_1.BadRequestException('No items provided');
+        const medicineIds = dto.items
+            .map((i) => i.medicineId)
+            .filter((v) => typeof v === 'number');
+        if (!medicineIds.length)
+            throw new common_1.BadRequestException('Invalid items');
+        const { mode, requiresPrescription } = this.resolveModeFromItems(dto.items);
         const orderGeoId = `order:${Date.now()}:${Math.random()
             .toString()
             .slice(2)}`;
-        try {
-            if (dto.pickupLat && dto.pickupLon) {
-                await this.geoSurge.addPoint(orderGeoId, dto.pickupLon, dto.pickupLat);
+        const user = await this.prisma.user.findUnique({
+            where: { id: customerId },
+        });
+        const pickupLat = user?.latitude != null ? Number(user.latitude) : null;
+        const pickupLon = user?.longitude != null ? Number(user.longitude) : null;
+        if (pickupLat != null && pickupLon != null) {
+            try {
+                await this.geoSurge.addPoint(orderGeoId, pickupLon, pickupLat);
             }
-        }
-        catch (err) {
-            this.logger.warn('GeoSurge addPoint failed', err);
+            catch { }
         }
         if (dto.pharmacyId) {
-            const pharmacy = await this.prisma.user.findUnique({
-                where: { id: dto.pharmacyId },
-            });
-            if (!pharmacy || pharmacy.role !== 'PHARMACY')
-                throw new common_1.NotFoundException('Pharmacy not found.');
-            const order = await this.prisma.order.create({
-                data: {
-                    customer: { connect: { id: customerId } },
-                    pharmacy: { connect: { id: dto.pharmacyId } },
-                    totalPrice: total,
-                    status: client_1.OrderStatus.PENDING,
-                    items: {
-                        create: dto.items.map((it) => ({
-                            medicineId: it.medicineId ?? undefined,
-                            name: it.name,
-                            quantity: it.quantity,
-                            price: it.price,
-                        })),
+            if (this.isLoadtest) {
+                const chosen = Number(dto.pharmacyId) || (await this.getAnyPharmacyId());
+                const validPharmacy = await this.prisma.user.findUnique({
+                    where: { id: chosen },
+                    select: { id: true },
+                });
+                const pharmacyId = validPharmacy?.id ?? (await this.getAnyPharmacyId());
+                let total = 0;
+                const itemsCreate = dto.items.map((it) => {
+                    const price = it.price ? Number(it.price) : 10;
+                    total += price * (it.quantity ?? 1);
+                    return {
+                        medicineId: it.medicineId ?? 0,
+                        name: it.name ??
+                            `LT_Item_${it.medicineId ?? Math.random().toString(36)}`,
+                        quantity: it.quantity ?? 1,
+                        price,
+                    };
+                });
+                const created = await this.prisma.order.create({
+                    data: {
+                        customerId,
+                        pharmacyId,
+                        totalPrice: total,
+                        status: client_1.OrderStatus.PENDING,
+                        paymentMode: mode,
+                        requiresPrescription,
+                        items: { create: itemsCreate },
                     },
+                    include: { items: true },
+                });
+                await this.prisma.orderOffer.create({
+                    data: {
+                        orderId: created.id,
+                        pharmacyId,
+                        offeredTo: 'PHARMACY',
+                    },
+                });
+                await this.logTimeline(created.id, 'ORDER_CREATED', {
+                    loadtest: true,
+                    mode,
+                    requiresPrescription,
+                });
+                this.notify.create(pharmacyId, 'ORDER_PLACED', `Order #${created.id}`, { orderId: created.id }, customerId);
+                this.ws.notifyUser(pharmacyId, 'order_placed', created);
+                if (mode === client_1.PaymentMode.PAY_FIRST) {
+                    try {
+                        await this.geoSurge.removePoint(orderGeoId);
+                    }
+                    catch { }
+                    return {
+                        order: created,
+                        payment: {
+                            mock: true,
+                            status: 'PAID',
+                            id: `mock_${created.id}`,
+                        },
+                    };
+                }
+                const delay = Number(this.config.get('ESCALATION_MINUTES') || 1) *
+                    60 *
+                    1000;
+                await this.orderAssignQueue.add('rider_escalation', { orderId: created.id }, { delay });
+                try {
+                    await this.geoSurge.removePoint(orderGeoId);
+                }
+                catch { }
+                return created;
+            }
+            const pharmacyId = Number(dto.pharmacyId);
+            const inv = await this.prisma.pharmacyInventory.findMany({
+                where: {
+                    pharmacyId,
+                    medicineId: { in: medicineIds },
                 },
-                include: { items: true },
             });
-            this.notify.create(dto.pharmacyId, 'ORDER_PLACED', `New order #${order.id}`, { orderId: order.id }, customerId);
-            this.ws.notifyUser(dto.pharmacyId, 'order_placed', order);
+            if (inv.length !== medicineIds.length)
+                throw new common_1.NotFoundException('Some items not available at pharmacy');
+            const order = await this.prisma.$transaction(async (tx) => {
+                let total = 0;
+                const itemsCreate = [];
+                for (const it of dto.items) {
+                    const row = inv.find((r) => r.medicineId === it.medicineId);
+                    if (!row)
+                        throw new common_1.BadRequestException('Item not stocked');
+                    if (row.stock < it.quantity)
+                        throw new common_1.BadRequestException(`Insufficient stock for ${it.medicineId}`);
+                    const price = Number(row.sellingPrice);
+                    total += price * it.quantity;
+                    const med = await tx.medicine.findUnique({
+                        where: { id: it.medicineId },
+                    });
+                    itemsCreate.push({
+                        medicineId: it.medicineId,
+                        name: med?.name ?? it.name ?? 'Item',
+                        quantity: it.quantity,
+                        price,
+                    });
+                }
+                const created = await tx.order.create({
+                    data: {
+                        customerId,
+                        pharmacyId,
+                        totalPrice: total,
+                        status: client_1.OrderStatus.PENDING,
+                        paymentMode: mode,
+                        requiresPrescription,
+                        items: { create: itemsCreate },
+                    },
+                    include: { items: true },
+                });
+                for (const it of dto.items) {
+                    await tx.pharmacyInventory.updateMany({
+                        where: {
+                            pharmacyId,
+                            medicineId: it.medicineId,
+                        },
+                        data: { stock: { decrement: it.quantity } },
+                    });
+                }
+                await tx.orderOffer.create({
+                    data: {
+                        orderId: created.id,
+                        pharmacyId,
+                        offeredTo: 'PHARMACY',
+                    },
+                });
+                return created;
+            });
+            await this.logTimeline(order.id, 'ORDER_CREATED', {
+                mode,
+                requiresPrescription,
+            });
+            this.notify.create(order.pharmacyId, 'ORDER_PLACED', `Order #${order.id}`, { orderId: order.id }, customerId);
+            this.ws.notifyUser(order.pharmacyId, 'order_placed', order);
+            if (mode === client_1.PaymentMode.PAY_FIRST) {
+                const payment = await this.payments.createPaymentForOrder(order.id);
+                try {
+                    await this.geoSurge.removePoint(orderGeoId);
+                }
+                catch { }
+                return { order, payment };
+            }
+            const delay = Number(this.config.get('ESCALATION_MINUTES') || 1) *
+                60 *
+                1000;
+            await this.orderAssignQueue.add('rider_escalation', { orderId: order.id }, { delay });
             try {
                 await this.geoSurge.removePoint(orderGeoId);
             }
             catch { }
-            const delayMs = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
-            await this.orderAssignQueue.add('rider_escalation', { orderId: order.id }, { delay: delayMs });
             return order;
         }
-        const medicineIds = dto.items
-            .map((i) => i.medicineId)
-            .filter((id) => typeof id === 'number');
-        if (!medicineIds.length)
-            throw new common_1.BadRequestException('No valid medicine IDs.');
-        const inv = await this.prisma.pharmacyInventory.groupBy({
+        if (this.isLoadtest) {
+            const best = (await this.getAnyPharmacyId()) ??
+                Number(this.config.get('LOADTEST_PHARMACY_ID'));
+            if (!best)
+                throw new common_1.NotFoundException('No pharmacy available');
+            let total = 0;
+            const itemsCreate = dto.items.map((it) => {
+                const price = it.price ? Number(it.price) : 10;
+                total += price * (it.quantity ?? 1);
+                return {
+                    medicineId: it.medicineId ?? 0,
+                    name: it.name ??
+                        `LT_Item_${it.medicineId ?? Math.random().toString(36)}`,
+                    quantity: it.quantity ?? 1,
+                    price,
+                };
+            });
+            const created = await this.prisma.$transaction(async (tx) => {
+                const ord = await tx.order.create({
+                    data: {
+                        customerId,
+                        pharmacyId: best,
+                        totalPrice: total,
+                        status: client_1.OrderStatus.PENDING,
+                        paymentMode: mode,
+                        requiresPrescription,
+                        items: { create: itemsCreate },
+                    },
+                    include: { items: true },
+                });
+                await tx.orderOffer.create({
+                    data: {
+                        orderId: ord.id,
+                        pharmacyId: best,
+                        offeredTo: 'PHARMACY',
+                    },
+                });
+                return ord;
+            });
+            await this.logTimeline(created.id, 'ORDER_CREATED', {
+                loadtest: true,
+                bestPharmacyId: best,
+                mode,
+                requiresPrescription,
+            });
+            this.notify.create(best, 'ORDER_AVAILABLE', `Order #${created.id}`, { orderId: created.id }, customerId);
+            this.ws.notifyUser(best, 'order_available', { orderId: created.id });
+            if (mode === client_1.PaymentMode.PAY_FIRST) {
+                try {
+                    await this.geoSurge.removePoint(orderGeoId);
+                }
+                catch { }
+                return {
+                    order: created,
+                    candidates: [best],
+                    scores: [{ pharmacyId: best, score: 1 }],
+                    payment: {
+                        mock: true,
+                        status: 'PAID',
+                        id: `mock_${created.id}`,
+                    },
+                };
+            }
+            const delay = Number(this.config.get('ESCALATION_MINUTES') || 1) *
+                60 *
+                1000;
+            await this.orderAssignQueue.add('rider_escalation', { orderId: created.id }, { delay });
+            try {
+                await this.geoSurge.removePoint(orderGeoId);
+            }
+            catch { }
+            return { order: created, candidates: [best], scores: [{ pharmacyId: best, score: 1 }] };
+        }
+        const grouped = await this.prisma.pharmacyInventory.groupBy({
             by: ['pharmacyId'],
-            where: { medicineId: { in: medicineIds }, stock: { gt: 0 } },
+            where: {
+                medicineId: { in: medicineIds },
+                stock: { gt: 0 },
+            },
             _count: { medicineId: true },
         });
-        const pharmacyIds = inv
-            .filter((c) => c._count.medicineId === medicineIds.length)
-            .map((c) => c.pharmacyId);
+        const pharmacyIds = grouped
+            .filter((g) => g._count.medicineId === medicineIds.length)
+            .map((g) => g.pharmacyId);
         if (!pharmacyIds.length)
-            throw new common_1.NotFoundException('No pharmacies with stock.');
-        const scores = await Promise.all(pharmacyIds.map(async (pid) => ({
-            pharmacyId: pid,
-            score: await this.computePharmacyScore(pid, dto.pickupLat, dto.pickupLon, medicineIds.length),
-        })));
-        scores.sort((a, b) => b.score - a.score);
+            throw new common_1.NotFoundException('No pharmacy has all items in stock');
+        const scores = pharmacyIds.map((pid) => ({ pharmacyId: pid, score: 1 }));
         const bestPharmacyId = scores[0].pharmacyId;
-        const order = await this.prisma.order.create({
-            data: {
-                customer: { connect: { id: customerId } },
-                pharmacy: { connect: { id: bestPharmacyId } },
-                totalPrice: total,
-                status: client_1.OrderStatus.PENDING,
-                items: {
-                    create: dto.items.map((it) => ({
-                        medicineId: it.medicineId ?? undefined,
-                        name: it.name,
-                        quantity: it.quantity,
-                        price: it.price,
-                    })),
+        const inv2 = await this.prisma.pharmacyInventory.findMany({
+            where: { pharmacyId: bestPharmacyId, medicineId: { in: medicineIds } },
+        });
+        const finalOrder = await this.prisma.$transaction(async (tx) => {
+            let total = 0;
+            const itemsCreate = [];
+            for (const it of dto.items) {
+                const row = inv2.find((r) => r.medicineId === it.medicineId);
+                if (!row)
+                    throw new common_1.BadRequestException('Item not in stock');
+                if (row.stock < it.quantity)
+                    throw new common_1.BadRequestException(`Low stock for ${it.medicineId}`);
+                const price = Number(row.sellingPrice);
+                total += price * it.quantity;
+                const med = await tx.medicine.findUnique({ where: { id: it.medicineId } });
+                itemsCreate.push({ medicineId: it.medicineId, name: med?.name ?? it.name ?? 'Item', quantity: it.quantity, price });
+            }
+            const created = await tx.order.create({
+                data: {
+                    customerId,
+                    pharmacyId: bestPharmacyId,
+                    totalPrice: total,
+                    status: client_1.OrderStatus.PENDING,
+                    paymentMode: mode,
+                    requiresPrescription,
+                    items: { create: itemsCreate },
                 },
-            },
-            include: { items: true },
+                include: { items: true },
+            });
+            for (const it of dto.items) {
+                await tx.pharmacyInventory.updateMany({
+                    where: { pharmacyId: bestPharmacyId, medicineId: it.medicineId },
+                    data: { stock: { decrement: it.quantity } },
+                });
+            }
+            for (const pid of pharmacyIds) {
+                await tx.orderOffer.create({
+                    data: { orderId: created.id, pharmacyId: pid, offeredTo: 'PHARMACY' },
+                });
+            }
+            return created;
+        });
+        await this.logTimeline(finalOrder.id, 'ORDER_CREATED', {
+            candidates: pharmacyIds,
+            bestPharmacyId,
+            mode,
+            requiresPrescription,
         });
         for (const pid of pharmacyIds) {
-            await this.prisma.orderOffer.create({
-                data: { orderId: order.id, pharmacyId: pid, offeredTo: 'PHARMACY' },
-            });
-            this.notify.create(pid, 'ORDER_AVAILABLE', `Order #${order.id} available`, { orderId: order.id }, customerId);
-            this.ws.notifyUser(pid, 'order_available', { orderId: order.id });
+            this.notify.create(pid, 'ORDER_AVAILABLE', `Order #${finalOrder.id}`, { orderId: finalOrder.id }, customerId);
+            this.ws.notifyUser(pid, 'order_available', { orderId: finalOrder.id });
         }
+        if (mode === client_1.PaymentMode.PAY_FIRST) {
+            const payment = await this.payments.createPaymentForOrder(finalOrder.id);
+            try {
+                await this.geoSurge.removePoint(orderGeoId);
+            }
+            catch { }
+            return { order: finalOrder, candidates: pharmacyIds, scores, payment };
+        }
+        const delay2 = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
+        await this.orderAssignQueue.add('rider_escalation', { orderId: finalOrder.id }, { delay: delay2 });
         try {
             await this.geoSurge.removePoint(orderGeoId);
         }
         catch { }
-        const delayMs = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
-        await this.orderAssignQueue.add('rider_escalation', { orderId: order.id }, { delay: delayMs });
-        return { order, candidates: pharmacyIds, scores };
+        return { order: finalOrder, candidates: pharmacyIds, scores };
+    }
+    async uploadPrescription(customerId, url, attachOrderId) {
+        if (!url)
+            throw new common_1.BadRequestException('Invalid URL');
+        const pres = await this.prisma.prescription.create({ data: { customerId, url } });
+        await this.logTimeline(attachOrderId ?? 0, 'PRESCRIPTION_UPLOADED', { url, prescriptionId: pres.id });
+        if (attachOrderId) {
+            try {
+                await this.prisma.order.update({ where: { id: attachOrderId }, data: { prescriptionId: pres.id } });
+                const order = await this.prisma.order.findUnique({ where: { id: attachOrderId } });
+                if (order && order.pharmacyId) {
+                    this.notify.create(order.pharmacyId, 'PRESCRIPTION_UPLOADED', 'Prescription added', { orderId: order.id, prescriptionId: pres.id }, customerId);
+                    this.ws.notifyUser(order.pharmacyId, 'prescription_uploaded', { orderId: order.id, prescriptionId: pres.id });
+                }
+            }
+            catch (e) {
+                this.logger.warn('Failed attaching prescription to order', e?.message ?? e);
+            }
+        }
+        return pres;
+    }
+    async pharmacyRequestPrescription(pharmacyId, orderId, message) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found');
+        if (order.pharmacyId !== pharmacyId)
+            throw new common_1.BadRequestException('Not authorized for this order');
+        await this.prisma.order.update({ where: { id: orderId }, data: { requiresPrescription: true } });
+        await this.logTimeline(orderId, 'PRESCRIPTION_REQUESTED_BY_PHARMACY', { pharmacyId, message });
+        this.notify.create(order.customerId, 'PRESCRIPTION_REQUIRED', message || 'Pharmacy requested a prescription for your order', { orderId }, pharmacyId);
+        this.ws.notifyUser(order.customerId, 'prescription_required', { orderId, message });
+        return { ok: true };
+    }
+    async pharmacyRespond(pharmacyId, orderId, action) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { items: true, prescription: true } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found');
+        if (action === 'REJECTED') {
+            await this.prisma.orderOffer.updateMany({ where: { orderId, pharmacyId }, data: { status: 'REJECTED' } });
+            await this.logTimeline(orderId, 'PHARMACY_REJECTED', { pharmacyId });
+            return { ok: true };
+        }
+        const updated = await this.prisma.order.update({ where: { id: orderId }, data: { status: client_1.OrderStatus.ACCEPTED, pharmacyId }, include: { items: true } });
+        await this.prisma.orderOffer.updateMany({ where: { orderId, pharmacyId: { not: pharmacyId } }, data: { status: 'REJECTED' } });
+        await this.logTimeline(orderId, 'PHARMACY_ACCEPTED', { pharmacyId });
+        if (updated.paymentMode === client_1.PaymentMode.PAY_AFTER_ACCEPT || updated.paymentMode === client_1.PaymentMode.PAY_AFTER_VERIFICATION) {
+            if (this.isLoadtest) {
+                this.ws.notifyUser(updated.customerId, 'payment_required', { orderId, payment: { mock: true, status: 'PAID', id: `mock_${orderId}` } });
+                return { order: updated, payment: { mock: true, status: 'PAID' } };
+            }
+            const payment = await this.payments.createPaymentForOrder(orderId);
+            this.ws.notifyUser(updated.customerId, 'payment_required', { orderId, payment });
+            return { order: updated, payment };
+        }
+        const delay = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60000;
+        await this.orderAssignQueue.add('rider_escalation', { orderId }, { delay });
+        return { order: updated };
+    }
+    async riderRespond(riderId, orderId, action) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found');
+        if (action === 'ACCEPTED') {
+            await this.prisma.user.update({ where: { id: riderId }, data: { status: 'BUSY' } });
+            const updated = await this.prisma.order.update({ where: { id: orderId }, data: { riderId, status: client_1.OrderStatus.OUT_FOR_DELIVERY } });
+            await this.logTimeline(orderId, 'RIDER_ACCEPTED', { riderId });
+            return updated;
+        }
+        await this.prisma.orderOffer.updateMany({ where: { orderId, riderId }, data: { status: 'REJECTED' } });
+        await this.logTimeline(orderId, 'RIDER_REJECTED', { riderId });
+        return { ok: true };
+    }
+    async adminAssign(orderId, adminId, riderId) {
+        const updated = await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+                riderId,
+                status: client_1.OrderStatus.OUT_FOR_DELIVERY,
+            },
+        });
+        await this.prisma.user.update({
+            where: { id: riderId },
+            data: { status: 'BUSY' },
+        });
+        await this.logTimeline(orderId, 'ASSIGNED_BY_ADMIN', {
+            adminId,
+            riderId,
+        });
+        this.notify.create(updated.customerId, 'ORDER_ASSIGNED_BY_ADMIN', `Order #${orderId} assigned`, { orderId }, adminId);
+        return updated;
     }
     async updateStage(riderId, orderId, stage, location) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
         });
         if (!order)
-            throw new common_1.NotFoundException('Order not found.');
+            throw new common_1.NotFoundException('Order not found');
         if (order.riderId !== riderId)
-            throw new common_1.BadRequestException('Not assigned to this rider.');
+            throw new common_1.BadRequestException('Not your order');
         await this.prisma.order.update({
             where: { id: orderId },
             data: { status: stage },
@@ -289,17 +554,22 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 where: { id: riderId },
                 data: { status: 'AVAILABLE' },
             });
-            await this.surge.recordRiderAvailability(riderId, true);
+            await this.logTimeline(orderId, 'DELIVERED', {
+                riderId,
+            });
             try {
                 await this.geoSurge.removePoint(`order:${orderId}`);
             }
             catch { }
-            await this.notify.create(order.customerId, 'ORDER_DELIVERED', `Order #${orderId} delivered.`, { orderId }, riderId);
+            this.notify.create(order.customerId, 'ORDER_DELIVERED', `Order #${orderId} delivered.`, { orderId }, riderId);
         }
-        if (location) {
+        if (location?.lat != null && location?.lng != null) {
             await this.prisma.user.update({
                 where: { id: riderId },
-                data: { latitude: location.lat, longitude: location.lng },
+                data: {
+                    latitude: location.lat,
+                    longitude: location.lng,
+                },
             });
         }
         this.ws.notifyUser(order.customerId, 'order_status_update', {
@@ -309,95 +579,68 @@ let OrdersService = OrdersService_1 = class OrdersService {
         });
         return { ok: true };
     }
-    async adminAssign(orderId, adminId, riderId) {
-        const updated = await this.prisma.order.update({
-            where: { id: orderId },
-            data: { riderId, status: client_1.OrderStatus.OUT_FOR_DELIVERY },
-        });
-        await this.prisma.user.update({
-            where: { id: riderId },
-            data: { status: 'BUSY' },
-        });
-        await this.notify.create(updated.customerId, 'ORDER_ASSIGNED_BY_ADMIN', `Order #${orderId} assigned by admin.`, { orderId }, adminId);
-        return updated;
-    }
-    async pharmacyRespond(pharmacyId, orderId, action) {
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-        });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found.');
-        if (action === 'REJECTED') {
-            await this.prisma.orderOffer.updateMany({
-                where: { orderId, pharmacyId },
-                data: { status: 'REJECTED' },
-            });
-            return { ok: true };
-        }
-        const updated = await this.prisma.order.update({
-            where: { id: orderId },
-            data: {
-                pharmacyId,
-                status: client_1.OrderStatus.ACCEPTED,
-            },
-        });
-        await this.prisma.orderOffer.updateMany({
-            where: { orderId, pharmacyId: { not: pharmacyId } },
-            data: { status: 'REJECTED' },
-        });
-        this.notify.create(updated.customerId, 'ORDER_ACCEPTED', `Order #${orderId} accepted. Complete payment.`, { orderId }, pharmacyId);
-        try {
-            const payment = await this.payments.createPaymentForOrder(orderId);
-            this.ws.notifyUser(updated.customerId, 'payment_required', {
-                orderId,
-                payment,
-            });
-            return { order: updated, payment };
-        }
-        catch (err) {
-            this.logger.error('Payment create failed:', err);
-            return {
-                order: updated,
-                paymentError: err?.message ?? String(err),
-            };
-        }
-    }
-    async riderRespond(riderId, orderId, action) {
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-        });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found.');
-        if (action === 'ACCEPTED') {
-            await this.surge.recordRiderAvailability(riderId, false);
-            return this.prisma.order.update({
-                where: { id: orderId },
-                data: { riderId, status: client_1.OrderStatus.OUT_FOR_DELIVERY },
-            });
-        }
-        await this.prisma.orderOffer.updateMany({
-            where: { orderId, riderId },
-            data: { status: 'REJECTED' },
-        });
-        return { ok: true };
-    }
     async findByUser(userId, role) {
-        if (role === 'ADMIN')
-            return this.prisma.order.findMany({ include: { items: true } });
-        if (role === 'PHARMACY')
+        if (role === client_1.UserRole.ADMIN)
+            return this.prisma.order.findMany({
+                include: { items: true, prescription: true },
+            });
+        if (role === client_1.UserRole.PHARMACY)
             return this.prisma.order.findMany({
                 where: { pharmacyId: userId },
-                include: { items: true },
+                include: { items: true, prescription: true },
             });
-        if (role === 'RIDER')
+        if (role === client_1.UserRole.RIDER)
             return this.prisma.order.findMany({
                 where: { riderId: userId },
-                include: { items: true },
+                include: { items: true, prescription: true },
             });
         return this.prisma.order.findMany({
             where: { customerId: userId },
-            include: { items: true },
+            include: { items: true, prescription: true },
         });
+    }
+    async getTimeline(orderId) {
+        const events = await this.prisma.orderTimeline.findMany({
+            where: { orderId },
+            orderBy: { createdAt: 'asc' },
+        });
+        return events.map((e) => ({
+            event: e.event,
+            data: e.data ? JSON.parse(e.data) : {},
+            at: e.createdAt,
+        }));
+    }
+    async getRiderScorePublic(rp, lat, lon) {
+        let base = 50;
+        if (typeof rp.distKm === 'number') {
+            base = Math.max(1, Math.round(Math.max(0, 100 - rp.distKm * 10)));
+        }
+        else if (lat != null && lon != null && rp.meta?.lat && rp.meta?.lon) {
+            try {
+                const km = this.haversineKm(Number(rp.meta.lat), Number(rp.meta.lon), lat, lon);
+                base = Math.max(1, Math.round(Math.max(0, 100 - km * 10)));
+            }
+            catch {
+                base = 10;
+            }
+        }
+        else {
+            base = 10;
+        }
+        try {
+            const match = (rp.memberId || '').match(/^rider:(\d+)$/);
+            const riderId = match ? Number(match[1]) : NaN;
+            if (!isNaN(riderId)) {
+                const r = await this.prisma.user.findUnique({
+                    where: { id: riderId },
+                    select: { status: true },
+                });
+                if (r?.status === 'AVAILABLE')
+                    base += 20;
+            }
+        }
+        catch { }
+        return Math.min(100, base);
     }
 };
 exports.OrdersService = OrdersService;

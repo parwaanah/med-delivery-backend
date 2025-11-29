@@ -39,6 +39,12 @@ let PharmaciesController = class PharmaciesController {
     remove(id) {
         return this.pharmaciesService.remove(Number(id));
     }
+    async updateLocation(id, lat, lon) {
+        if (!lat || !lon) {
+            throw new common_1.HttpException('lat & lon required', common_1.HttpStatus.BAD_REQUEST);
+        }
+        return this.pharmaciesService.updateLocation(Number(id), lat, lon);
+    }
 };
 exports.PharmaciesController = PharmaciesController;
 __decorate([
@@ -86,6 +92,17 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PharmaciesController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Patch)(':id/location'),
+    (0, roles_decorator_1.Roles)('admin', 'pharmacy'),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('lat')),
+    __param(2, (0, common_1.Body)('lon')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number, Number]),
+    __metadata("design:returntype", Promise)
+], PharmaciesController.prototype, "updateLocation", null);
 exports.PharmaciesController = PharmaciesController = __decorate([
     (0, common_1.Controller)('pharmacies'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

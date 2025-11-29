@@ -20,41 +20,39 @@ const create_order_dto_1 = require("./dto/create-order.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
-const respond_offer_dto_1 = require("./dto/respond-offer.dto");
 let OrdersController = class OrdersController {
     constructor(ordersService) {
         this.ordersService = ordersService;
     }
     create(req, dto) {
-        const userId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-        return this.ordersService.createOrder(userId, dto);
+        return this.ordersService.createOrder(req.user.id, dto);
     }
-    findAll(req) {
-        const userId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-        const role = (req.user?.role ?? '').toUpperCase();
-        return this.ordersService.findByUser(userId, role);
+    uploadPrescription(req, id, url) {
+        return this.ordersService.uploadPrescription(req.user.id, url, Number(id));
+    }
+    requestPrescription(req, orderId, dto) {
+        return this.ordersService.pharmacyRequestPrescription(req.user.id, Number(orderId), dto.message);
     }
     pharmacyRespond(req, orderId, dto) {
-        const pharmacyId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-        return this.ordersService.pharmacyRespond(pharmacyId, Number(orderId), dto.action);
+        return this.ordersService.pharmacyRespond(req.user.id, Number(orderId), dto.action);
     }
     riderRespond(req, orderId, dto) {
-        const riderId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-        return this.ordersService.riderRespond(riderId, Number(orderId), dto.action);
+        return this.ordersService.riderRespond(req.user.id, Number(orderId), dto.action);
     }
-    riderStage(req, orderId, body) {
-        const riderId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-        return this.ordersService.updateStage(riderId, Number(orderId), body.stage, body.location);
+    updateStage(req, orderId, dto) {
+        return this.ordersService.updateStage(req.user.id, Number(orderId), dto.stage, { lat: dto.lat, lng: dto.lng });
     }
-    adminAssign(req, orderId, riderId) {
-        const adminId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
-        return this.ordersService.adminAssign(Number(orderId), adminId, Number(riderId));
+    list(req) {
+        return this.ordersService.findByUser(req.user.id, req.user.role);
+    }
+    getTimeline(orderId) {
+        return this.ordersService.getTimeline(Number(orderId));
     }
 };
 exports.OrdersController = OrdersController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('customer'),
+    (0, roles_decorator_1.Roles)('CUSTOMER'),
     openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
@@ -63,57 +61,76 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "create", null);
 __decorate([
+    (0, common_1.Post)(':id/prescription'),
+    (0, roles_decorator_1.Roles)('CUSTOMER'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('url')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "uploadPrescription", null);
+__decorate([
+    (0, common_1.Post)(':id/request-prescription'),
+    (0, roles_decorator_1.Roles)('PHARMACY'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "requestPrescription", null);
+__decorate([
+    (0, common_1.Post)(':id/pharmacy-response'),
+    (0, roles_decorator_1.Roles)('PHARMACY'),
+    openapi.ApiResponse({ status: 201, type: Object }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "pharmacyRespond", null);
+__decorate([
+    (0, common_1.Post)(':id/rider-response'),
+    (0, roles_decorator_1.Roles)('RIDER'),
+    openapi.ApiResponse({ status: 201, type: Object }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "riderRespond", null);
+__decorate([
+    (0, common_1.Patch)(':id/stage'),
+    (0, roles_decorator_1.Roles)('RIDER'),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "updateStage", null);
+__decorate([
     (0, common_1.Get)(),
     openapi.ApiResponse({ status: 200, type: [Object] }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
-], OrdersController.prototype, "findAll", null);
+], OrdersController.prototype, "list", null);
 __decorate([
-    (0, common_1.Post)('pharmacy/:orderId/respond'),
-    (0, roles_decorator_1.Roles)('pharmacy'),
-    openapi.ApiResponse({ status: 201, type: Object }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('orderId')),
-    __param(2, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, respond_offer_dto_1.RespondOfferDto]),
-    __metadata("design:returntype", void 0)
-], OrdersController.prototype, "pharmacyRespond", null);
-__decorate([
-    (0, common_1.Post)('rider/:orderId/respond'),
-    (0, roles_decorator_1.Roles)('rider'),
-    openapi.ApiResponse({ status: 201, type: Object }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('orderId')),
-    __param(2, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, respond_offer_dto_1.RespondOfferDto]),
-    __metadata("design:returntype", void 0)
-], OrdersController.prototype, "riderRespond", null);
-__decorate([
-    (0, common_1.Patch)('rider/:orderId/stage'),
-    (0, roles_decorator_1.Roles)('rider'),
+    (0, common_1.Get)(':id/timeline'),
     openapi.ApiResponse({ status: 200 }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('orderId')),
-    __param(2, (0, common_1.Body)()),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], OrdersController.prototype, "riderStage", null);
-__decorate([
-    (0, common_1.Post)('admin/:orderId/assign/:riderId'),
-    (0, roles_decorator_1.Roles)('admin'),
-    openapi.ApiResponse({ status: 201 }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('orderId')),
-    __param(2, (0, common_1.Param)('riderId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String]),
-    __metadata("design:returntype", void 0)
-], OrdersController.prototype, "adminAssign", null);
+], OrdersController.prototype, "getTimeline", null);
 exports.OrdersController = OrdersController = __decorate([
     (0, common_1.Controller)('orders'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

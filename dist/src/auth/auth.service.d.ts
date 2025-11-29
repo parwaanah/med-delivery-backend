@@ -7,6 +7,7 @@ export declare class AuthService {
     private jwtService;
     private audit;
     private readonly logger;
+    private readonly LOADTEST;
     constructor(prisma: PrismaService, jwtService: JwtService, audit: AuditService);
     register(data: RegisterDto): Promise<{
         accessToken: string;
@@ -17,7 +18,7 @@ export declare class AuthService {
             role: any;
         };
     }>;
-    login(data: LoginDto, ip?: string, userAgent?: string): Promise<{
+    login(data: LoginDto, ip?: string, ua?: string): Promise<{
         accessToken: string;
         refreshToken: string;
         sessionId: number;
@@ -33,14 +34,13 @@ export declare class AuthService {
         refreshToken: string;
         sessionId: number;
     }>;
+    requestPasswordReset(email: string): Promise<{
+        message: string;
+        resetLink: string;
+    }>;
     logout(sessionId: number): Promise<{
         message: string;
     }>;
-    requestPasswordReset(email: string): Promise<{
-        message: string;
-        email: string;
-        resetLink: string;
-        timestamp: string;
-    }>;
     private generateToken;
 }
+export default AuthService;

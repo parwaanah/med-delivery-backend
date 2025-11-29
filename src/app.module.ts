@@ -1,4 +1,3 @@
-// src/app.module.ts
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -34,7 +33,7 @@ import { MetricsModule } from './metrics/metrics.module';
     ConfigModule.forRoot({ isGlobal: true }),
 
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'public'),  // <— Load from real folder
+      rootPath: join(process.cwd(), 'public'),
       serveRoot: '/public',
       serveStaticOptions: {
         index: false,
@@ -42,27 +41,30 @@ import { MetricsModule } from './metrics/metrics.module';
       },
     }),
 
-    // Core modules
     UtilsModule,
+    CacheModule,
+    MetricsModule,
     HealthModule,
+
     AuthModule,
     UsersModule,
     PharmaciesModule,
     RidersModule,
+
     OrdersModule,
+    PaymentsModule,
+    WebhooksModule,
+
     QueueModule,
     AdminModule,
     WsModule,
     SurgeModule,
     GeoSurgeModule,
-    PaymentsModule,
-    WebhooksModule,
+    ChatModule,
+    NotificationsModule,
+
     ReportsModule,
     ScheduleModule.forRoot(),
-    ChatModule,
-    CacheModule,
-    MetricsModule,
-    NotificationsModule,
   ],
   providers: [NotificationService, GlobalLogger, ChatLiveGateway],
 })

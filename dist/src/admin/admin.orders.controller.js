@@ -28,113 +28,33 @@ let AdminOrdersController = class AdminOrdersController {
         this.ordersService = ordersService;
         this.geo = geo;
     }
-    async debugRedis() {
-        const geoClient = this.geo['redis'];
-        const keys = await geoClient.keys('*');
-        const riderCount = await geoClient.zcard('geosurge:riders');
-        const allPoints = await geoClient.zrange('geosurge:riders', 0, -1, 'WITHSCORES');
-        const meta = {};
-        for (let i = 0; i < allPoints.length; i += 2) {
-            const memberId = allPoints[i];
-            const h = await geoClient.hgetall(`geo:meta:${memberId}`);
-            meta[memberId] = h;
-        }
-        return {
-            keys,
-            riderCount,
-            allPoints,
-            meta,
-        };
-    }
-    async getAllOrders() {
-        const orders = await this.prisma.order.findMany({
-            include: {
-                customer: { select: { email: true } },
-                pharmacy: { select: { email: true } },
-                rider: { select: { email: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 100,
-        });
-        return { total: orders.length, orders };
-    }
-    async assignRider(id, body) {
-        const orderId = Number(id);
-        const { adminId, riderId } = body;
-        if (!orderId || !riderId) {
-            return { error: 'Invalid orderId or riderId' };
-        }
-        return this.ordersService.adminAssign(orderId, adminId, riderId);
-    }
     async getCandidateRiders(id) {
         const orderId = Number(id);
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
-            include: {
-                pharmacy: { select: { latitude: true, longitude: true } },
-            },
+            include: { pharmacy: true },
         });
         if (!order)
             return { total: 0, candidates: [] };
-        console.log('🔍 ORDER ID:', orderId);
-        console.log('🔍 ORDER PHARMACY LAT/LON:', order.pharmacy?.latitude, order.pharmacy?.longitude);
-        const searchLat = order.pharmacy?.latitude;
-        const searchLon = order.pharmacy?.longitude;
-        if (!searchLat || !searchLon) {
+        const lat = order.pharmacy?.latitude;
+        const lon = order.pharmacy?.longitude;
+        if (!lat || !lon)
             return { total: 0, candidates: [] };
-        }
-        const rawPoints = await this.geo.findNearbyPoints(searchLon, searchLat, 5, true, 50);
-        if (!rawPoints || rawPoints.length === 0)
-            return { total: 0, candidates: [] };
-        const riderPoints = rawPoints.filter((p) => /^rider:\d+$/.test(p.memberId));
-        if (riderPoints.length === 0)
-            return { total: 0, candidates: [] };
+        const rawPoints = await this.geo.findNearbyPoints(lon, lat, 5, true, 50);
+        const riders = rawPoints.filter((p) => /^rider:\d+$/.test(p.memberId));
         const scored = [];
-        for (const rp of riderPoints) {
-            const score = await this.ordersService['computeRiderScore'](rp, searchLat, searchLon);
+        for (const rp of riders) {
+            const score = await this.ordersService.getRiderScorePublic(rp, lat, lon);
             scored.push({ ...rp, score });
         }
         scored.sort((a, b) => b.score - a.score);
-        return {
-            total: scored.length,
-            candidates: scored,
-        };
+        return { total: scored.length, candidates: scored };
     }
 };
 exports.AdminOrdersController = AdminOrdersController;
 __decorate([
-    (0, common_1.Get)('debug/redis'),
-    openapi.ApiResponse({ status: 200 }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], AdminOrdersController.prototype, "debugRedis", null);
-__decorate([
-    openapi.ApiOperation({ description: "\u2B50 GET ALL ORDERS (PROTECTED)" }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, 'ADMIN', 'admin'),
-    (0, common_1.Get)(),
-    openapi.ApiResponse({ status: 200 }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], AdminOrdersController.prototype, "getAllOrders", null);
-__decorate([
-    openapi.ApiOperation({ description: "\u2B50 MANUAL RIDER ASSIGN (NEW \u2014 PROTECTED)" }),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, 'ADMIN', 'admin'),
-    (0, common_1.Post)(':id/assign'),
-    openapi.ApiResponse({ status: 201, type: Object }),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], AdminOrdersController.prototype, "assignRider", null);
-__decorate([
-    openapi.ApiOperation({ description: "\u2B50 GET RIDER CANDIDATES FOR AN ORDER (PROTECTED)" }),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, 'ADMIN', 'admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Get)(':id/riders'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),

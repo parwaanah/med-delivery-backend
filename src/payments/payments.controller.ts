@@ -1,3 +1,4 @@
+// src/payments/payments.controller.ts
 import {
   Controller,
   Post,
@@ -26,7 +27,6 @@ export class PaymentsController {
     private prisma: PrismaService,
   ) {}
 
-  // Create a razorpay order for an existing order: returns razorpayOrder & transaction
   @Post('create-intent')
   async createIntent(@Body() body: CreateIntentDto) {
     const orderId = Number(body.orderId);
@@ -34,7 +34,6 @@ export class PaymentsController {
     return this.paymentsService.createPaymentForOrder(orderId);
   }
 
-  // Webhook: raw body validated by main.ts middleware. Controller verifies signature again.
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   async webhook(
@@ -44,13 +43,11 @@ export class PaymentsController {
   ) {
     try {
       const raw = (req as any).rawBody as Buffer;
-      if (!raw) {
-        return res.status(400).send('raw body missing');
-      }
+      if (!raw) return res.status(400).send('raw body missing');
+
       const valid = this.rzpService.verifyWebhookSignature(raw, signature);
-      if (!valid) {
-        return res.status(400).send('invalid signature');
-      }
+      if (!valid) return res.status(400).send('invalid signature');
+
       const json = JSON.parse(raw.toString('utf8'));
       await this.paymentsService.handleWebhookEvent(json);
       return res.status(200).send('ok');
@@ -60,19 +57,16 @@ export class PaymentsController {
     }
   }
 
-  // Admin: refund a transaction by TX id
   @Post('refund')
   async refund(@Body() dto: RefundDto) {
     return this.paymentsService.refundTransaction(dto.transactionId, dto.amount);
   }
 
-  // Admin: list transactions
   @Get('admin/list')
   async adminList() {
     return this.paymentsService.listTransactions();
   }
 
-  // Optional: fetch transactions by order id
   @Get('by-order/:orderId')
   async byOrder(@Param('orderId') orderId: string) {
     const idNum = Number(orderId);

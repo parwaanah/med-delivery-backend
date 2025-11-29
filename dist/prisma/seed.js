@@ -5,10 +5,10 @@ const prisma = new client_1.PrismaClient();
 async function main() {
     console.log("Seeding medicines + inventory...");
     const pharmacyId = 17;
-    const pharmacy = await prisma.user.findUnique({ where: { id: pharmacyId } });
+    let pharmacy = await prisma.user.findUnique({ where: { id: pharmacyId } });
     if (!pharmacy) {
         console.log(`❌ Pharmacy ID ${pharmacyId} not found. Creating default pharmacy...`);
-        await prisma.user.create({
+        pharmacy = await prisma.user.create({
             data: {
                 id: pharmacyId,
                 name: "Seed Pharmacy",
@@ -35,6 +35,7 @@ async function main() {
     }
     const allMeds = await prisma.medicine.findMany();
     for (const m of allMeds) {
+        const base = 25 + m.id;
         await prisma.pharmacyInventory.upsert({
             where: {
                 pharmacyId_medicineId: {
@@ -43,13 +44,17 @@ async function main() {
                 },
             },
             update: {
-                price: 25 + m.id,
+                mrp: base,
+                sellingPrice: base - 5,
+                discount: 10,
                 stock: 50,
             },
             create: {
                 pharmacyId,
                 medicineId: m.id,
-                price: 25 + m.id,
+                mrp: base,
+                sellingPrice: base - 5,
+                discount: 10,
                 stock: 50,
             },
         });

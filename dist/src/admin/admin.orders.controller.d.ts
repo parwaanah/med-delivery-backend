@@ -6,54 +6,13 @@ export declare class AdminOrdersController {
     private ordersService;
     private geo;
     constructor(prisma: PrismaService, ordersService: OrdersService, geo: GeoSurgeService);
-    debugRedis(): Promise<{
-        keys: string[];
-        riderCount: number;
-        allPoints: string[];
-        meta: Record<string, any>;
-    }>;
-    getAllOrders(): Promise<{
-        total: number;
-        orders: ({
-            pharmacy: {
-                email: string;
-            };
-            rider: {
-                email: string;
-            } | null;
-            customer: {
-                email: string;
-            };
-        } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
-            createdAt: Date;
-            id: number;
-            updatedAt: Date;
-            deletedAt: Date | null;
-            pharmacyId: number;
-            customerId: number;
-            riderId: number | null;
-            totalPrice: number;
-        })[];
-    }>;
-    assignRider(id: string, body: {
-        adminId: number;
-        riderId: number;
-    }): Promise<{
-        status: import(".prisma/client").$Enums.OrderStatus;
-        createdAt: Date;
-        id: number;
-        updatedAt: Date;
-        deletedAt: Date | null;
-        pharmacyId: number;
-        customerId: number;
-        riderId: number | null;
-        totalPrice: number;
-    } | {
-        error: string;
-    }>;
     getCandidateRiders(id: string): Promise<{
         total: number;
-        candidates: any[];
+        candidates: {
+            score: number;
+            memberId: string;
+            meta?: any;
+            distKm?: number;
+        }[];
     }>;
 }

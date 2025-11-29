@@ -1,146 +1,189 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+// src/payments/payments.service.ts
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { RazorpayService } from './razorpay.service';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, PaymentMode } from '@prisma/client';
 
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
 
-  constructor(private prisma: PrismaService, private rzp: RazorpayService) {}
+  constructor(
+    private prisma: PrismaService,
+    private razorpay: RazorpayService,
+  ) {}
 
-  /**
-   * Create Razorpay order + transaction record
-   */
+  // --------------------------------------------------------
+  // Create Payment Order (Razorpay or Mock)
+  // --------------------------------------------------------
   async createPaymentForOrder(orderId: number) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
-    if (!order) throw new BadRequestException('Order not found');
-
-    if (order.status === OrderStatus.PAID) {
-      throw new BadRequestException('Order is already paid');
-    }
-
-    const amount = Number(order.totalPrice ?? 0);
-    if (amount <= 0) throw new BadRequestException('Invalid order amount');
-
-    const amountInPaise = Math.round(amount * 100);
-
-    const rzpOrder = await this.rzp.createOrder(amountInPaise, 'INR', `order_${orderId}`);
-
-    // Local DB transaction (Transaction model expects amount as Decimal; Prisma client accepts number)
-    const tx = await this.prisma.transaction.create({
-      data: {
-        orderId: order.id,
-        provider: 'razorpay',
-        providerOrder: (rzpOrder as any)?.id ?? null,
-        providerPayment: null,
-        amount: amount,
-        currency: 'INR',
-        status: 'created',
-        rawData: rzpOrder as any,
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        totalPrice: true,
+        status: true,
+        customerId: true,
+        paymentMode: true,
       },
     });
 
-    return { rzpOrder, transaction: tx };
-  }
+    if (!order) throw new BadRequestException('Order not found');
 
-  /**
-   * Handle webhook event from Razorpay
-   */
-  async handleWebhookEvent(payload: any) {
-    const event = payload?.event ?? 'unknown';
+    // 🔥 LOADTEST MODE — MOCK PAYMENT (NO RAZORPAY CALLS)
+    if (process.env.LOADTEST_MODE === 'true') {
+      this.logger.warn(`💡 LOADTEST MODE ACTIVE → Mock payment used for order ${orderId}`);
 
-    // payment entity fallback detection
-    const paymentEntity =
-      payload?.payload?.payment?.entity ??
-      payload?.payload?.payment_entity?.entity ??
-      payload?.payload?.payment_entity ??
-      null;
-
-    const rzpOrderId =
-      paymentEntity?.order_id ??
-      payload?.payload?.order?.entity?.id ??
-      payload?.payload?.order_entity?.entity?.id ??
-      null;
-
-    // Save audit copy (PaymentAttempt)
-    try {
-      await this.prisma.paymentAttempt.create({
+      const tx = await this.prisma.transaction.create({
         data: {
-          providerOrder: rzpOrderId ?? null,
-          attemptData: payload as any,
+          orderId,
+          provider: 'mock',
+          providerOrder: `mock_${orderId}`,
+          amount: Number(order.totalPrice) * 100,
+          currency: 'INR',
+          status: 'SUCCESS',
         },
       });
-    } catch (err) {
-      this.logger.warn('Failed saving paymentAttempt audit', (err as any)?.message ?? err);
-    }
 
-    // Update transaction(s) for providerOrder
-    try {
-      await this.prisma.transaction.updateMany({
-        where: { providerOrder: rzpOrderId ?? '' },
-        data: {
-          providerPayment: paymentEntity?.id ?? undefined,
-          status: (paymentEntity?.status ?? event) as string,
-          method: paymentEntity?.method ?? undefined,
-          rawData: payload as any,
-        },
+      // optional auto-approve payment
+      await this.prisma.order.update({
+        where: { id: orderId },
+        data: { status: OrderStatus.PAID },
       });
-    } catch (err) {
-      this.logger.warn('Failed updating transaction(s)', (err as any)?.message ?? err);
+
+      return {
+        mock: true,
+        razorpayOrder: {
+          id: `mock_order_${orderId}`,
+          amount: Number(order.totalPrice) * 100,
+          currency: 'INR',
+          status: 'created',
+        },
+        transaction: tx,
+      };
     }
 
-    // Load one local transaction (if any)
-    const tx = await this.prisma.transaction.findFirst({
-      where: { providerOrder: rzpOrderId ?? '' },
+    // --------------------------------------------------------
+    // REAL RAZORPAY MODE
+    // --------------------------------------------------------
+    const amountPaise = Math.round(Number(order.totalPrice) * 100);
+
+    const rzpOrder = await this.razorpay.createOrder(
+      amountPaise,
+      'INR',
+      `order_${orderId}`,
+    );
+
+    const tx = await this.prisma.transaction.create({
+      data: {
+        orderId,
+        provider: 'razorpay',
+        providerOrder: rzpOrder.id,
+        amount: amountPaise,
+        currency: 'INR',
+        status: 'CREATED',
+      },
     });
 
-    if (!tx) {
-      this.logger.warn(`Webhook for unknown transaction: ${rzpOrderId}`);
-      return { ok: true };
-    }
-
-    const successStatuses = ['captured', 'authorized', 'paid'];
-    const statusFromProvider = String(paymentEntity?.status ?? event).toLowerCase();
-
-    if (successStatuses.includes(statusFromProvider)) {
-      const orderIdNum = Number(tx.orderId);
-      if (!isNaN(orderIdNum)) {
-        try {
-          await this.prisma.order.update({
-            where: { id: orderIdNum },
-            data: { status: OrderStatus.PAID },
-          });
-        } catch (err) {
-          this.logger.warn('Failed marking order PAID', (err as any)?.message ?? err);
-        }
-      } else {
-        this.logger.warn(`Invalid orderId on tx: ${tx.id} orderId=${tx.orderId}`);
-      }
-    }
-
-    this.logger.log(`Webhook processed: ${event}`);
-    return { ok: true };
+    return {
+      razorpayOrder: rzpOrder,
+      transaction: tx,
+    };
   }
 
-  async refundTransaction(txId: string, amount?: number) {
-    const tx = await this.prisma.transaction.findUnique({ where: { id: txId } });
-    if (!tx) throw new BadRequestException('Transaction not found');
-    if (!tx.providerPayment) throw new BadRequestException('Cannot refund — payment ID missing');
+  // --------------------------------------------------------
+  // Webhook Handler
+  // --------------------------------------------------------
+  async handleWebhookEvent(event: any) {
+    const type = event?.event;
 
-    const amountInPaise = amount ? Math.round(amount * 100) : undefined;
-    const refund = await this.rzp.refundPayment(tx.providerPayment, amountInPaise);
+    switch (type) {
+      case 'payment.authorized':
+      case 'payment.captured':
+        return this.handlePaymentSuccess(event.payload.payment.entity);
+      case 'payment.failed':
+        return this.handlePaymentFailed(event.payload.payment.entity);
+      default:
+        this.logger.warn(`Unhandled webhook event: ${type}`);
+    }
+  }
 
-    await this.prisma.transaction.create({
+  private async handlePaymentSuccess(payment: any) {
+    const providerOrder = payment.order_id;
+    if (!providerOrder) return;
+
+    const tx = await this.prisma.transaction.findFirst({
+      where: { providerOrder },
+    });
+    if (!tx) return;
+
+    await this.prisma.transaction.update({
+      where: { id: tx.id },
       data: {
-        orderId: tx.orderId,
-        provider: 'razorpay',
-        providerOrder: tx.providerOrder,
-        providerPayment: tx.providerPayment,
-        amount: amount ?? 0,
-        currency: 'INR',
-        status: 'refund_initiated',
-        rawData: refund as any,
+        providerPayment: payment.id,
+        status: 'SUCCESS',
+        method: payment.method,
+        rawData: JSON.parse(JSON.stringify(payment)),
+      },
+    });
+
+    if (tx.orderId) {
+      await this.prisma.order.update({
+        where: { id: tx.orderId },
+        data: { status: OrderStatus.PAID },
+      });
+    }
+
+    this.logger.log(`Payment success for order ${tx.orderId}`);
+  }
+
+  private async handlePaymentFailed(payment: any) {
+    const providerOrder = payment.order_id;
+    if (!providerOrder) return;
+
+    const tx = await this.prisma.transaction.findFirst({
+      where: { providerOrder },
+    });
+    if (!tx) return;
+
+    await this.prisma.transaction.update({
+      where: { id: tx.id },
+      data: {
+        providerPayment: payment.id,
+        status: 'FAILED',
+        rawData: JSON.parse(JSON.stringify(payment)),
+      },
+    });
+
+    this.logger.warn(`Payment FAILED for order ${tx.orderId}`);
+  }
+
+  // --------------------------------------------------------
+  // REFUND
+  // --------------------------------------------------------
+  async refundTransaction(transactionId: string, amount?: number) {
+    const tx = await this.prisma.transaction.findUnique({
+      where: { id: transactionId },
+    });
+
+    if (!tx) throw new BadRequestException('Transaction not found');
+
+    if (process.env.LOADTEST_MODE === 'true') {
+      return { mock: true, refunded: true };
+    }
+
+    const refundAmount = amount ? Math.round(amount * 100) : undefined;
+
+    const refund = await this.razorpay.refundPayment(
+      tx.providerPayment!,
+      refundAmount,
+    );
+
+    await this.prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        status: 'REFUNDED',
+        rawData: JSON.parse(JSON.stringify(refund)),
       },
     });
 
@@ -150,7 +193,6 @@ export class PaymentsService {
   async listTransactions() {
     return this.prisma.transaction.findMany({
       orderBy: { createdAt: 'desc' },
-      take: 200,
     });
   }
 }

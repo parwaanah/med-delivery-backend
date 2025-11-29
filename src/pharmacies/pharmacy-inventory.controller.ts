@@ -1,27 +1,74 @@
 // src/pharmacies/pharmacy-inventory.controller.ts
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+  Get,
+  Patch,
+  Delete,
+  NotFoundException,
+} from '@nestjs/common';
+
 import { PharmacyInventoryService } from './pharmacy-inventory.service';
+
+import { CreateInventoryDto } from './dto/create-inventory.dto';
+import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
-@Controller('pharmacies/inventory')
-@Roles('ADMIN', 'PHARMACY')
-export class PharmacyInventoryController {
+@Controller('pharmacies')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class PharmaciesInventoryController {
   constructor(private readonly svc: PharmacyInventoryService) {}
 
-  @Get(':pharmacyId/:medicineId/price')
-  async getPrice(
-    @Param('pharmacyId') pharmacyId: string,
-    @Param('medicineId') medicineId: string,
-    @Query('demand') _demand?: string,
-  ) {
-    // Phase 3 predictive model calculates surge internally, demand factor not required
-    return this.svc.calculatePrice(Number(pharmacyId), Number(medicineId));
+  @Post(':id/inventory/add')
+  @Roles('pharmacy', 'admin')
+  async addInventory(@Req() req: any, @Param('id') id: string, @Body() dto: CreateInventoryDto) {
+    const pharmacyId = Number(id);
+
+    if ((req.user?.role ?? '').toUpperCase() === 'PHARMACY' && Number(req.user?.id) !== pharmacyId) {
+      throw new NotFoundException('Not authorized to add inventory for this pharmacy');
+    }
+
+    return this.svc.add(pharmacyId, dto);
   }
 
-  @Get(':pharmacyId')
-  async getInventory(@Param('pharmacyId') pharmacyId: string) {
-    return this.svc.listInventory(Number(pharmacyId));
+  @Patch(':id/inventory/:invId')
+  @Roles('pharmacy', 'admin')
+  updateInventory(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('invId') invId: string,
+    @Body() dto: UpdateInventoryDto,
+  ) {
+    const pharmacyId = Number(id);
+
+    if ((req.user?.role ?? '').toUpperCase() === 'PHARMACY' && Number(req.user?.id) !== pharmacyId) {
+      throw new NotFoundException('Not authorized');
+    }
+
+    return this.svc.update(Number(invId), dto);
+  }
+
+  @Delete(':id/inventory/:invId')
+  @Roles('pharmacy', 'admin')
+  removeInventory(@Req() req: any, @Param('id') id: string, @Param('invId') invId: string) {
+    const pharmacyId = Number(id);
+
+    if ((req.user?.role ?? '').toUpperCase() === 'PHARMACY' && Number(req.user?.id) !== pharmacyId) {
+      throw new NotFoundException('Not authorized');
+    }
+
+    return this.svc.remove(Number(invId));
+  }
+
+  @Get(':id/inventory')
+  @Roles('pharmacy', 'admin')
+  listInventory(@Param('id') id: string) {
+    return this.svc.listInventory(Number(id));
   }
 }

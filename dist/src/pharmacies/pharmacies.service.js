@@ -12,20 +12,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PharmaciesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../utils/prisma.service");
+const geo_surge_service_1 = require("../geosurge/geo-surge.service");
 let PharmaciesService = class PharmaciesService {
-    constructor(prisma) {
+    constructor(prisma, geoSurge) {
         this.prisma = prisma;
+        this.geoSurge = geoSurge;
     }
     async findAll() {
         return this.prisma.user.findMany({
             where: { role: 'PHARMACY' },
-            select: { id: true, name: true, email: true, createdAt: true },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                latitude: true,
+                longitude: true,
+                createdAt: true,
+            },
         });
     }
     async findOne(id) {
         const pharmacy = await this.prisma.user.findUnique({
             where: { id },
-            select: { id: true, name: true, email: true, createdAt: true },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                latitude: true,
+                longitude: true,
+                createdAt: true,
+            },
         });
         if (!pharmacy)
             throw new common_1.NotFoundException('Pharmacy not found');
@@ -43,6 +59,8 @@ let PharmaciesService = class PharmaciesService {
                 email: dto.email,
                 password: dto.password,
                 role: 'PHARMACY',
+                latitude: null,
+                longitude: null,
             },
             select: { id: true, name: true, email: true, role: true },
         });
@@ -53,7 +71,10 @@ let PharmaciesService = class PharmaciesService {
             throw new common_1.NotFoundException('Pharmacy not found');
         return this.prisma.user.update({
             where: { id },
-            data: { name: dto.name ?? pharmacy.name, email: dto.email ?? pharmacy.email },
+            data: {
+                name: dto.name ?? pharmacy.name,
+                email: dto.email ?? pharmacy.email,
+            },
             select: { id: true, name: true, email: true, role: true },
         });
     }
@@ -64,9 +85,35 @@ let PharmaciesService = class PharmaciesService {
         await this.prisma.user.delete({ where: { id } });
         return { message: 'Pharmacy deleted successfully' };
     }
+    async updateLocation(id, lat, lon) {
+        const pharmacy = await this.prisma.user.findUnique({
+            where: { id },
+            select: { id: true },
+        });
+        if (!pharmacy)
+            throw new common_1.NotFoundException('Pharmacy not found');
+        const updated = await this.prisma.user.update({
+            where: { id },
+            data: {
+                latitude: lat,
+                longitude: lon,
+            },
+            select: {
+                id: true,
+                latitude: true,
+                longitude: true,
+            },
+        });
+        await this.geoSurge.addPoint(`pharmacy:${id}`, lon, lat, {
+            lat: lat.toString(),
+            lon: lon.toString(),
+        });
+        return { ok: true, ...updated };
+    }
 };
 exports.PharmaciesService = PharmaciesService;
 exports.PharmaciesService = PharmaciesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        geo_surge_service_1.GeoSurgeService])
 ], PharmaciesService);

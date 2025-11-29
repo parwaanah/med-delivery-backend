@@ -1,29 +1,12 @@
-// src/orders/dto/create-order.dto.ts
 import {
   IsArray,
   IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
-  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export class OrderItemDto {
-  @IsOptional()
-  @IsNumber()
-  medicineId?: number;
-
-  @IsString()
-  name!: string;
-
-  @IsNumber()
-  @Min(1)
-  quantity!: number;
-
-  @IsNumber()
-  price!: number;
-}
+import { OrderItemDto } from './order-item.dto';
 
 export class CreateOrderDto {
   @IsArray()
@@ -31,17 +14,29 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   items!: OrderItemDto[];
 
+  @IsString()
+  address!: string;
+
+  // optional: prefixed pharmacy (direct order)
   @IsOptional()
   @IsNumber()
   pharmacyId?: number;
 
-  // Geo pickup coordinates (optional)
+  // optional prescriptionId if customer already uploaded
   @IsOptional()
   @IsNumber()
+  prescriptionId?: number;
+
+  // location fallbacks
+  @IsOptional()
   pickupLat?: number;
 
   @IsOptional()
-  @IsNumber()
   pickupLon?: number;
+
+  @IsOptional()
+  customerLat?: number;
+
+  @IsOptional()
+  customerLng?: number;
 }
-export default CreateOrderDto;

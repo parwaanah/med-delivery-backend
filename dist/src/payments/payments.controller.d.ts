@@ -10,7 +10,13 @@ export declare class PaymentsController {
     private prisma;
     constructor(paymentsService: PaymentsService, rzpService: RazorpayService, prisma: PrismaService);
     createIntent(body: CreateIntentDto): Promise<{
-        rzpOrder: any;
+        mock: boolean;
+        razorpayOrder: {
+            id: string;
+            amount: number;
+            currency: string;
+            status: string;
+        };
         transaction: {
             status: string;
             createdAt: Date;
@@ -18,15 +24,34 @@ export declare class PaymentsController {
             method: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             currency: string;
-            orderId: number | null;
             provider: string;
             providerOrder: string | null;
             providerPayment: string | null;
             rawData: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: number | null;
         };
+    } | {
+        razorpayOrder: any;
+        transaction: {
+            status: string;
+            createdAt: Date;
+            id: string;
+            method: string | null;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            currency: string;
+            provider: string;
+            providerOrder: string | null;
+            providerPayment: string | null;
+            rawData: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: number | null;
+        };
+        mock?: undefined;
     }>;
     webhook(req: Request, res: Response, signature: string): Promise<Response<any, Record<string, any>>>;
-    refund(dto: RefundDto): Promise<import("razorpay/dist/types/refunds").Refunds.RazorpayRefund>;
+    refund(dto: RefundDto): Promise<import("razorpay/dist/types/refunds").Refunds.RazorpayRefund | {
+        mock: boolean;
+        refunded: boolean;
+    }>;
     adminList(): Promise<{
         status: string;
         createdAt: Date;
@@ -34,11 +59,11 @@ export declare class PaymentsController {
         method: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         currency: string;
-        orderId: number | null;
         provider: string;
         providerOrder: string | null;
         providerPayment: string | null;
         rawData: import("@prisma/client/runtime/library").JsonValue | null;
+        orderId: number | null;
     }[]>;
     byOrder(orderId: string): Promise<{
         status: string;
@@ -47,10 +72,10 @@ export declare class PaymentsController {
         method: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         currency: string;
-        orderId: number | null;
         provider: string;
         providerOrder: string | null;
         providerPayment: string | null;
         rawData: import("@prisma/client/runtime/library").JsonValue | null;
+        orderId: number | null;
     }[]>;
 }

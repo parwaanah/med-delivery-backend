@@ -1,643 +1,884 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>💊 Admin Dashboard v6.5 — Multi Delete System</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>💊 Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 :root{
-  --bg:#0a0e27;
-  --panel:rgba(20,25,45,0.6);
-  --accent:#00d9ff;
-  --accent-glow:rgba(0,217,255,0.3);
-  --ok:#00ff88;
-  --warn:#ffb020;
-  --bad:#ff4d4f;
-  --muted:#8b95a5;
-  --text:#e8f0f7;
-  --border:rgba(255,255,255,0.08);
+  --primary: #FC8019;
+  --primary-dark: #E67412;
+  --primary-light: #FFF4ED;
+  --secondary: #60B246;
+  --bg: #F9FAFB;
+  --card: #FFFFFF;
+  --text: #02060C;
+  --text-light: #686B78;
+  --border: #E9EBED;
+  --shadow: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --danger: #EF4444;
+  --success: #60B246;
+  --warning: #F59E0B;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-  font-family:'Inter',system-ui;
-  background:var(--bg);
-  background-image:
-    radial-gradient(at 20% 10%, rgba(0,217,255,0.1) 0px, transparent 50%),
-    radial-gradient(at 80% 90%, rgba(0,255,136,0.08) 0px, transparent 50%);
-  color:var(--text);
-  min-height:100vh;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-header{
-  background:rgba(15,20,35,0.8);
-  backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  padding:16px 32px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  position:sticky;
-  top:0;
-  z-index:100;
-  box-shadow:0 4px 30px rgba(0,0,0,0.3);
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
 }
 
-header h1{
-  font-size:22px;
-  font-weight:700;
-  background:linear-gradient(135deg, var(--accent) 0%, #00ff88 100%);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
+.header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.auth-controls{display:flex;align-items:center;gap:12px;}
-
-#adminStatus{
-  color:var(--muted);
-  font-size:14px;
-  font-weight:500;
-  padding:6px 12px;
-  background:rgba(255,255,255,0.05);
-  border-radius:8px;
-  border:1px solid var(--border);
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-header button{
-  background:linear-gradient(135deg, var(--accent) 0%, #0099ff 100%);
-  border:none;
-  color:#001118;
-  border-radius:10px;
-  padding:8px 16px;
-  cursor:pointer;
-  font-weight:600;
-  font-size:14px;
-  transition:all 0.3s ease;
-  box-shadow:0 4px 15px var(--accent-glow);
+.brand {
+  font-weight: 700;
+  font-size: 22px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-header button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 6px 25px var(--accent-glow);
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
-.tabs{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:8px;
-  background:rgba(10,14,30,0.6);
-  backdrop-filter:blur(10px);
-  padding:16px;
-  border-bottom:1px solid var(--border);
+.btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(252,128,25,0.2);
+  font-family: 'Inter', sans-serif;
 }
 
-.tabs button{
-  background:rgba(255,255,255,0.03);
-  border:1px solid var(--border);
-  padding:10px 20px;
-  border-radius:12px;
-  color:var(--muted);
-  cursor:pointer;
-  font-weight:600;
-  font-size:14px;
-  transition:all 0.3s ease;
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(252,128,25,0.3);
 }
 
-.tabs button:hover{
-  color:var(--accent);
-  background:rgba(0,217,255,0.1);
-  border-color:var(--accent);
-  transform:translateY(-2px);
+.btn:active {
+  transform: translateY(0);
 }
 
-.tabs button.active{
-  background:linear-gradient(135deg, var(--accent) 0%, #0099ff 100%);
-  color:#001118;
-  border:none;
-  box-shadow:0 4px 20px var(--accent-glow);
+.small {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
-section{
-  display:none;
-  padding:32px;
-  max-width:1400px;
-  margin:0 auto;
+.small:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
 }
 
-section.active{display:block;}
-
-.card{
-  background:var(--panel);
-  backdrop-filter:blur(20px);
-  border-radius:20px;
-  padding:24px;
-  margin-bottom:24px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.4);
-  border:1px solid var(--border);
-  transition:all 0.3s ease;
+.container {
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 0 24px;
 }
 
-.card:hover{
-  box-shadow:0 12px 40px rgba(0,217,255,0.2);
-  border-color:rgba(0,217,255,0.3);
-  transform:translateY(-2px);
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
 }
 
-.card h3{
-  font-size:20px;
-  font-weight:700;
-  margin-bottom:20px;
-  color:var(--text);
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  color:var(--text);
+.col {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
-th,td{
-  padding:14px 12px;
-  text-align:left;
-  border-bottom:1px solid var(--border);
+.col:hover {
+  box-shadow: var(--shadow-md);
 }
 
-th{
-  color:var(--muted);
-  font-size:12px;
-  font-weight:700;
-  text-transform:uppercase;
-  letter-spacing:0.5px;
-  background:rgba(0,217,255,0.05);
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: 12px;
 }
 
-tbody tr{transition:all 0.2s ease;}
-tbody tr:hover{background:rgba(0,217,255,0.08);}
-
-.btn{
-  padding:6px 14px;
-  border-radius:8px;
-  border:none;
-  cursor:pointer;
-  font-weight:600;
-  font-size:13px;
-  transition:all 0.3s ease;
-  margin:0 4px;
+.tab {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-light);
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
 }
 
-.btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+.tab:hover {
+  color: var(--text);
+  background: rgba(252,128,25,0.08);
 }
 
-.approve{background:linear-gradient(135deg, var(--ok) 0%, #00cc6a 100%);color:#001118;}
-.reject{background:linear-gradient(135deg, var(--bad) 0%, #cc0000 100%);color:#fff;}
-.reset{background:linear-gradient(135deg, var(--accent) 0%, #0099ff 100%);color:#001118;}
-.delete{background:linear-gradient(135deg, #ff6b6b 0%, #d61e1e 100%);color:#fff;}
-
-.status{
-  font-weight:700;
-  padding:6px 12px;
-  border-radius:20px;
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:0.5px;
-  display:inline-block;
+.tab.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(252,128,25,0.2);
 }
 
-.status.PENDING{background:rgba(255,176,32,0.2);color:var(--warn);border:1px solid rgba(255,176,32,0.4);}
-.status.APPROVED{background:rgba(0,255,136,0.2);color:var(--ok);border:1px solid rgba(0,255,136,0.4);}
-.status.REJECTED{background:rgba(255,77,79,0.2);color:var(--bad);border:1px solid rgba(255,77,79,0.4);}
-
-#notice{
-  margin:20px 32px;
-  padding:16px 20px;
-  background:linear-gradient(135deg, rgba(0,217,255,0.15) 0%, rgba(0,153,255,0.15) 100%);
-  color:var(--accent);
-  border-radius:12px;
-  display:none;
-  font-weight:600;
-  border:1px solid rgba(0,217,255,0.3);
-  backdrop-filter:blur(10px);
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 16px;
 }
 
-#popup{
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.8);
-  backdrop-filter:blur(10px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
+.table th,
+.table td {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
-#popup div{
-  background:var(--panel);
-  backdrop-filter:blur(20px);
-  padding:32px 40px;
-  border-radius:20px;
-  max-width:420px;
-  text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);
-  border:1px solid var(--border);
+.table thead th {
+  background: var(--bg);
+  color: var(--text-light);
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-#popup button{
-  margin-top:20px;
-  background:linear-gradient(135deg, var(--accent) 0%, #0099ff 100%);
-  color:#001118;
-  border:none;
-  padding:10px 24px;
-  border-radius:10px;
-  font-weight:700;
-  cursor:pointer;
-  font-size:14px;
+.table thead th:first-child {
+  border-radius: 8px 0 0 0;
 }
 
-.loading{color:var(--muted);font-style:italic;padding:20px;text-align:center;}
-
-select{
-  background:rgba(0,217,255,0.1);
-  color:var(--accent);
-  border:1px solid rgba(0,217,255,0.3);
-  border-radius:10px;
-  padding:8px 14px;
-  font-weight:600;
-  margin-bottom:10px;
-  cursor:pointer;
-  font-family:'Inter',system-ui;
+.table thead th:last-child {
+  border-radius: 0 8px 0 0;
 }
 
-#bulkActionBar{
-  position:sticky;
-  bottom:20px;
-  display:flex;
-  justify-content:flex-end;
-  z-index:999;
-  margin-top:20px;
+.table tbody tr {
+  transition: all 0.2s ease;
 }
 
-#deleteSelectedBtn{
-  background:linear-gradient(135deg, #ff4d4f 0%, #d61e1e 100%);
-  color:#fff;
-  border:none;
-  padding:12px 24px;
-  border-radius:12px;
-  font-weight:700;
-  font-size:14px;
-  cursor:pointer;
-  box-shadow:0 4px 20px rgba(255,77,79,0.4);
-  transition:all 0.3s ease;
+.table tbody tr:hover {
+  background: var(--bg);
 }
 
-#deleteSelectedBtn:hover:not(:disabled){
-  transform:translateY(-2px);
-  box-shadow:0 6px 30px rgba(255,77,79,0.6);
+.table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-#deleteSelectedBtn:disabled{opacity:0.3;cursor:not-allowed;}
-
-input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:var(--accent);}
-
-input[type="text"],input[type="email"]{
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,0.05);
-  color:var(--text);
-  font-family:'Inter',system-ui;
+.controls-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
-pre{
-  background:rgba(0,0,0,0.3);
-  padding:16px;
-  border-radius:10px;
-  overflow-x:auto;
-  font-size:13px;
-  line-height:1.6;
-  border:1px solid var(--border);
+.filter {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
-#overviewData{font-size:16px;line-height:1.8;color:var(--text);}
+.filter:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(252,128,25,0.1);
+}
+
+.bulkBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.deleteBtn {
+  background: var(--danger);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: #DC2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+}
+
+.deleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  width: 440px;
+  max-width: 96%;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal h3 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.input {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(252,128,25,0.1);
+}
+
+.note {
+  font-size: 13px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px var(--card) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+
+.footer-hint {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 16px;
+  text-align: center;
+}
+
+#statusLabel {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.resetBtn {
+  background: rgba(96, 178, 70, 0.1);
+  border: 1px solid var(--success);
+  color: var(--success);
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+.resetBtn:hover {
+  background: rgba(96, 178, 70, 0.2);
+}
+
+.delBtn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+.delBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+#auditPre {
+  max-height: 320px;
+  overflow: auto;
+  background: var(--bg);
+  padding: 16px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+}
+
+#auditPre::-webkit-scrollbar {
+  width: 8px;
+}
+
+#auditPre::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-radius: 4px;
+}
+
+#auditPre::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+#auditPre::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.overview-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.overview-subtitle {
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.server-info {
+  text-align: right;
+}
+
+.server-label {
+  color: var(--text-light);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.server-value {
+  font-weight: 600;
+  color: var(--success);
+  font-size: 14px;
+}
+
+.status-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.section-title {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.section-subtitle {
+  font-weight: 500;
+  color: var(--text-light);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tip-text {
+  margin-left: auto;
+  color: var(--text-light);
+  font-size: 12px;
+}
 </style>
 </head>
 <body>
-<header>
-  <h1>💊 Admin Control Center v6.5</h1>
-  <div class="auth-controls">
-    <span id="adminStatus">Not logged in</span>
-    <button id="loginBtn">Login</button>
-    <button id="logoutBtn" style="display:none">Logout</button>
+<header class="header">
+  <div class="header-content">
+    <div class="brand">💊 Admin Dashboard</div>
+    <div class="controls">
+      <div id="statusLabel" class="small">Not logged in</div>
+      <button id="openLogin" class="btn">Login</button>
+    </div>
   </div>
 </header>
 
-<div id="notice"></div>
-<div id="popup"><div><div id="popupMsg">Done</div><br><button id="popupOkBtn">OK</button></div></div>
+<main class="container">
+  <div class="grid">
+    <div class="col">
+      <div class="overview-header">
+        <div>
+          <div class="overview-title">System Overview</div>
+          <div class="overview-subtitle" id="overviewLine">Initializing...</div>
+        </div>
+        <div class="server-info">
+          <div class="server-label">Server Status</div>
+          <div class="server-value"><span class="status-badge"></span>Local</div>
+        </div>
+      </div>
 
-<div class="tabs">
-  <button data-tab="overview" class="active">Overview</button>
-  <button data-tab="orders">Orders</button>
-  <button data-tab="approvals">Approvals</button>
-  <button data-tab="users">Users</button>
-  <button data-tab="system">System</button>
-  <button data-tab="audit">Audit</button>
-  <button data-tab="recovery">Recovery</button>
+      <div>
+        <div class="tabs">
+          <div class="tab active" data-tab="usersTab">Users</div>
+          <div class="tab" data-tab="ordersTab">Orders</div>
+          <div class="tab" data-tab="auditTab">Audit</div>
+        </div>
+
+        <div id="usersTab" data-section>
+          <div class="controls-row">
+            <select id="roleFilter" class="filter">
+              <option value="ALL">All roles</option>
+              <option value="ADMIN">Admin</option>
+              <option value="CUSTOMER">Customer</option>
+              <option value="PHARMACY">Pharmacy</option>
+              <option value="RIDER">Rider</option>
+            </select>
+            <input id="searchBox" class="filter" placeholder="Search users..." />
+            <button id="refreshBtn" class="small">Refresh</button>
+            <div class="tip-text">Tip: Select users then delete</div>
+          </div>
+
+          <table class="table" id="usersTable">
+            <thead><tr><th><input id="selectAll" type="checkbox"></th><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody><tr><td colspan="7" style="text-align:center;color:var(--text-light)">Loading data...</td></tr></tbody>
+          </table>
+
+          <div class="bulkBar">
+            <div id="selectedCount" style="color:var(--text-light);font-weight:500">0 selected</div>
+            <div>
+              <button id="deleteSelected" class="deleteBtn" disabled>Delete Selected</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="ordersTab" data-section hidden>
+          <div class="section-subtitle" style="padding:12px 0">Orders database access</div>
+          <table class="table" id="ordersTable">
+            <thead><tr><th>ID</th><th>Customer</th><th>Pharmacy</th><th>Rider</th><th>Status</th><th>Total</th></tr></thead>
+            <tbody><tr><td colspan="6" style="text-align:center;color:var(--text-light)">Loading orders...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="auditTab" data-section hidden>
+          <div class="section-subtitle" style="padding:12px 0">System audit logs</div>
+          <pre id="auditPre">Accessing logs...</pre>
+        </div>
+      </div>
+    </div>
+
+    <aside class="col">
+      <div class="section-title">Admin Tools</div>
+      <div style="margin-top:20px">
+        <button id="openLogin2" class="small" style="width:100%">Authentication Portal</button>
+      </div>
+
+      <div style="margin-top:24px">
+        <div class="section-subtitle">Quick Actions</div>
+        <div class="quick-actions">
+          <button id="reloadAll" class="small" style="flex:1">Reload</button>
+          <button id="clearSelection" class="small" style="flex:1">Clear</button>
+        </div>
+      </div>
+
+      <div class="footer-hint">System status: Operational</div>
+    </aside>
+  </div>
+</main>
+
+<!-- Login modal -->
+<div id="modal" class="modal-backdrop" role="dialog" aria-hidden="true">
+  <div class="modal" role="document" aria-labelledby="loginTitle">
+    <h3 id="loginTitle">Admin Login</h3>
+
+    <form id="loginForm" autocomplete="off" onsubmit="return false;">
+      <input type="text" name="fakeusernameremembered" style="display:none">
+      <input type="password" name="fakepasswordremembered" style="display:none">
+
+      <div class="form-row">
+        <label class="note">Email</label>
+        <input id="emailField" name="e_uid_<?=Math?.random?>" autocomplete="off" class="input" type="email" placeholder="you@company.com" />
+      </div>
+
+      <div class="form-row">
+        <label class="note">Password</label>
+        <input id="passField" name="p_uid_<?=Math?.random?>" autocomplete="new-password" class="input" type="password" placeholder="••••••••" />
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
+        <div style="display:flex;gap:10px">
+          <label style="font-size:13px;color:var(--text-light);cursor:pointer;display:flex;align-items:center;gap:6px">
+            <input id="rememberChk" type="checkbox"> Remember me
+          </label>
+        </div>
+        <div style="display:flex;gap:12px">
+          <button id="cancelLogin" class="small" type="button">Cancel</button>
+          <button id="doLogin" class="btn" type="button">Login</button>
+        </div>
+      </div>
+
+      <div class="note" id="loginNote" style="margin-top:16px;text-align:center;font-size:13px"></div>
+    </form>
+  </div>
 </div>
 
-<section id="overview" class="active"><div class="card"><h3>Overview</h3><div id="overviewData" class="loading">Loading...</div></div></section>
-<section id="orders"><div class="card"><h3>Orders</h3><table id="ordersTbl"><thead><tr><th>ID</th><th>Customer</th><th>Pharmacy</th><th>Rider</th><th>Status</th><th>Total (₹)</th></tr></thead><tbody><tr><td colspan="6" class="loading">Loading...</td></tr></tbody></table></div></section>
-<section id="approvals"><div class="card"><h3>Pending Approvals</h3><table id="pendingTbl"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td colspan="6" class="loading">Loading...</td></tr></tbody></table></div></section>
-
-<section id="users">
-  <div class="card">
-    <h3>All Users</h3>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-      <label style="font-weight:600;color:var(--muted);">Filter by Role:</label>
-      <select id="roleFilter">
-        <option value="ALL" selected>All</option>
-        <option value="ADMIN">Admin</option>
-        <option value="CUSTOMER">Customer</option>
-        <option value="PHARMACY">Pharmacy</option>
-        <option value="RIDER">Rider</option>
-      </select>
-    </div>
-    <div style="max-height:420px;overflow-y:auto;">
-      <table id="userTbl">
-        <thead><tr><th><input type="checkbox" id="selectAll"></th><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
-      </table>
-    </div>
-    <div id="bulkActionBar">
-      <button id="deleteSelectedBtn" disabled>🗑️ Delete Selected</button>
-    </div>
-  </div>
-</section>
-
-<section id="system"><div class="card"><h3>System Health</h3><pre id="sysHealth" class="loading">Loading...</pre></div></section>
-<section id="audit"><div class="card"><h3>Audit Logs</h3><pre id="auditLog" class="loading">Loading...</pre></div></section>
-<section id="recovery"><div class="card"><h3>Password Recovery</h3><input id="recoveryEmail" type="email" placeholder="Enter user email" style="width:60%;margin-right:10px;" /><button id="recoveryBtn" class="btn reset">Send Reset</button></div></section>
-
 <script>
-console.log("✅ Admin Dashboard v6.5 Loaded");
+const API = location.origin;
+let token = localStorage.getItem('adminAccessToken') || null;
+let adminEmail = localStorage.getItem('adminEmail') || null;
+const statusEl = document.getElementById('statusLabel');
 
-const API = "http://localhost:3001";
-const $ = id => document.getElementById(id);
-const popup = msg => { $('popupMsg').innerText = msg; $('popup').style.display = 'flex'; };
-$('popupOkBtn').onclick = () => $('popup').style.display = 'none';
-const showNotice = (msg,t=4000)=>{const n=$('notice');n.innerText=msg;n.style.display='block';if(t)setTimeout(()=>n.style.display='none',t);};
+function setAuth(t, email){
+  token = t; adminEmail = email || null;
+  if(t){
+    localStorage.setItem('adminAccessToken', t);
+    if(email) localStorage.setItem('adminEmail', email);
+    statusEl.innerText = '◉ ONLINE — ' + (email||'ADMIN');
+  } else {
+    localStorage.removeItem('adminAccessToken');
+    localStorage.removeItem('adminEmail');
+    statusEl.innerText = '◉ OFFLINE';
+  }
+}
 
-document.querySelectorAll('.tabs button').forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-    b.classList.add('active');
-    $(b.dataset.tab).classList.add('active');
-  };
+function el(q){ return document.querySelector(q) }
+function els(q){ return Array.from(document.querySelectorAll(q)) }
+function headers(){ const h={'Content-Type':'application/json'}; if(token) h['Authorization'] = 'Bearer '+token; return h; }
+async function api(path, opts={}){
+  try{
+    const res = await fetch(API+path, {...opts, headers: {...headers(), ...(opts.headers||{})}});
+    const text = await res.text();
+    let body = null;
+    try { body = JSON.parse(text) } catch { body = text }
+    return { ok: res.ok, status: res.status, body };
+  }catch(e){ console.error('api err', e); return { ok:false, error:e } }
+}
+
+els('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    els('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const target = t.dataset.tab;
+    els('[data-section]').forEach(s=> s.hidden = (s.id !== target));
+  });
 });
 
-let token=localStorage.getItem('adminAccessToken');
-let email=localStorage.getItem('adminEmail');
-let allUsersCache=[];
-let selectedUsers=new Set();
+const modal = document.getElementById('modal');
+function openModal(){ modal.style.display='flex'; modal.setAttribute('aria-hidden','false'); document.getElementById('emailField').focus(); }
+function closeModal(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); document.getElementById('loginNote').innerText=''; document.getElementById('loginForm').reset(); }
 
-function headers(){const h={'Content-Type':'application/json'};if(token)h['Authorization']='Bearer '+token;return h;}
+el('#openLogin').addEventListener('click', openModal);
+el('#openLogin2').addEventListener('click', openModal);
+el('#cancelLogin').addEventListener('click', closeModal);
 
-async function apiFetch(path,opt={}){
-  try{
-    const res=await fetch(API+path,{
-      method:opt.method||'GET',
-      headers:{...headers(),...(opt.headers||{})},
-      body:opt.body?JSON.stringify(opt.body):undefined
-    });
-    const text=await res.text();
-    try{
-      return{ok:res.ok,status:res.status,body:JSON.parse(text)};
-    }catch{
-      return{ok:res.ok,status:res.status,body:text};
-    }
-  }catch(e){
-    console.error('Fetch fail',path,e);
-    return{ok:false,error:e};
+el('#doLogin').addEventListener('click', async ()=>{
+  const email = document.getElementById('emailField').value?.trim();
+  const password = document.getElementById('passField').value || '';
+  if(!email || !password){ document.getElementById('loginNote').innerText = '▸ CREDENTIALS REQUIRED'; return; }
+  document.getElementById('loginNote').innerText = '▸ AUTHENTICATING...';
+  const r = await api('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+  if(r.ok && (r.body.accessToken || r.body.access_token)){
+    const at = r.body.accessToken || r.body.access_token;
+    setAuth(at, email);
+    document.getElementById('loginNote').innerText = '▸ ACCESS GRANTED';
+    closeModal();
+    await loadAll();
+  } else {
+    console.warn(r);
+    document.getElementById('loginNote').innerText = '▸ ACCESS DENIED: ' + (r.body?.message || r.status || 'ERROR');
   }
-}
+});
 
-function updateAuthUI(){
-  if(token){
-    $('adminStatus').innerText='Logged in — '+(email||'Admin');
-    $('loginBtn').style.display='none';
-    $('logoutBtn').style.display='inline-block';
-  }else{
-    $('adminStatus').innerText='Not logged in';
-    $('loginBtn').style.display='inline-block';
-    $('logoutBtn').style.display='none';
-  }
-}
-updateAuthUI();
+statusEl.addEventListener('dblclick', ()=>{
+  if(confirm('Logout?')) setAuth(null, null);
+});
 
-$('loginBtn').onclick=async()=>{
-  const e=prompt('Admin Email',email||'superadmin_live@example.com');
-  const p=prompt('Password','superadmin123');
-  if(!e||!p)return showNotice('Login cancelled');
-  const r=await apiFetch('/auth/login',{method:'POST',body:{email:e,password:p}});
-  if(r.ok&&(r.body.access_token||r.body.accessToken)){
-    token=r.body.access_token||r.body.accessToken;
-    email=e;
-    localStorage.setItem('adminAccessToken',token);
-    localStorage.setItem('adminEmail',email);
-    updateAuthUI();
-    showNotice('✅ Logged in');
-    loadAll();
-  }else{
-    popup('❌ Login failed ('+(r.body?.message||r.status)+')');
-  }
-};
-
-$('logoutBtn').onclick=()=>{
-  token=null;
-  email=null;
-  localStorage.clear();
-  updateAuthUI();
-  showNotice('Logged out');
-};
-
-async function loadOverview(){
-  const e=$('overviewData');
-  const r=await apiFetch('/admin/metrics');
-  e.innerText=r.ok?`Orders: ${r.body?.orders?.total??0} | Pharmacies: ${r.body?.pharmacies?.count??0} | Riders: ${r.body?.riders?.count??0} | Users: ${r.body?.users?.count??0}`:'❌ Failed';
-}
-
-async function loadOrders(){
-  const tb=$('ordersTbl').querySelector('tbody');
-  tb.innerHTML='<tr><td colspan=6>Loading...</td></tr>';
-  const r=await apiFetch('/admin/orders');
-  tb.innerHTML='';
-  if(!r.ok)return tb.innerHTML=`<tr><td colspan=6>❌ ${r.status}</td></tr>`;
-  const list=r.body.orders||r.body||[];
-  if(!list.length)return tb.innerHTML='<tr><td colspan=6>No orders</td></tr>';
-  list.forEach(o=>tb.innerHTML+=`<tr><td>${o.id}</td><td>${o.customer?.email??'-'}</td><td>${o.pharmacy?.email??'-'}</td><td>${o.rider?.email??'-'}</td><td>${o.status??'-'}</td><td>${o.totalPrice??'-'}</td></tr>`);
-}
-
-async function loadPending(){
-  const tb=$('pendingTbl').querySelector('tbody');
-  tb.innerHTML='<tr><td colspan=6>Loading...</td></tr>';
-  const r=await apiFetch('/admin/users/pending');
-  tb.innerHTML='';
-  if(!r.ok)return tb.innerHTML=`<tr><td colspan=6>❌ ${r.status}</td></tr>`;
-  const list=r.body.users||r.body||[];
-  if(!list.length)return tb.innerHTML='<tr><td colspan=6>No pending users</td></tr>';
-  list.forEach(u=>tb.innerHTML+=`<tr><td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td>${u.role}</td><td><span class="status PENDING">PENDING</span></td><td><button class="btn approve" data-id="${u.id}">Approve</button><button class="btn reject" data-id="${u.id}">Reject</button></td></tr>`);
-}
+let usersCache = [];
+let selected = new Set();
 
 async function loadUsers(){
-  const tb=$('userTbl').querySelector('tbody');
-  tb.innerHTML='<tr><td colspan=7>Loading...</td></tr>';
-  const r=await apiFetch('/admin/users');
-  tb.innerHTML='';
-  if(!r.ok)return tb.innerHTML=`<tr><td colspan=7>❌ ${r.status}</td></tr>`;
-  allUsersCache=r.body.users||r.body||[];
+  const tb = el('#usersTable tbody');
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--neon-purple)">▸ Loading...</td></tr>';
+  const r = await api('/admin/users');
+  if(!r.ok){ tb.innerHTML = `<tr><td colspan="7" style="text-align:center">▸ ERROR (${r.status})</td></tr>`; return; }
+  usersCache = r.body.users || r.body || [];
   renderUsers();
 }
 
 function renderUsers(){
-  const tb=$('userTbl').querySelector('tbody');
-  tb.innerHTML='';
-  const filter=$('roleFilter').value;
-  const filtered=filter==='ALL'?allUsersCache:allUsersCache.filter(u=>u.role?.toUpperCase()===filter);
-  if(!filtered.length)return tb.innerHTML='<tr><td colspan=7>No users found</td></tr>';
-  filtered.forEach(u=>{
-    let status=(u.status||'').toUpperCase().trim();
-    if(['AVAILABLE','ACTIVE'].includes(status))status='APPROVED';
-    if(!['APPROVED','PENDING','REJECTED'].includes(status))status='PENDING';
-    const checked=selectedUsers.has(u.id)?'checked':'';
-    tb.innerHTML+=`<tr><td><input type="checkbox" class="selectUser" data-id="${u.id}" ${checked}></td><td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td>${u.role}</td><td><span class="status ${status}">${status}</span></td><td><button class="btn reset" data-email="${u.email}">Reset</button><button class="btn delete" data-id="${u.id}">Delete</button></td></tr>`;
+  const tb = el('#usersTable tbody');
+  tb.innerHTML = '';
+  const q = el('#searchBox').value?.toLowerCase() || '';
+  const role = el('#roleFilter').value;
+  const filtered = usersCache.filter(u=>{
+    if(role !== 'ALL' && u.role?.toUpperCase() !== role) return false;
+    if(!q) return true;
+    return (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
   });
-  updateBulkBar();
+  if(!filtered.length){ tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--neon-purple)">▸ NO DATA</td></tr>'; return; }
+  for(const u of filtered){
+    const status = (u.status||'PENDING').toUpperCase();
+    const checked = selected.has(u.id) ? 'checked' : '';
+    tb.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><input class="sel" data-id="${u.id}" type="checkbox" ${checked}></td>
+        <td>${u.id}</td>
+        <td>${u.name || '-'}</td>
+        <td>${u.email || '-'}</td>
+        <td>${u.role || '-'}</td>
+        <td>${status}</td>
+        <td>
+          <button class="small resetBtn" data-email="${u.email}">↻</button>
+          <button class="small delBtn" data-id="${u.id}">✕</button>
+        </td>
+      </tr>
+    `);
+  }
+  refreshBulkUI();
 }
 
-$('roleFilter').onchange=()=>renderUsers();
+el('#roleFilter').addEventListener('change', renderUsers);
+el('#searchBox').addEventListener('input', debounce(renderUsers, 200));
+el('#refreshBtn').addEventListener('click', loadAll);
+el('#reloadAll').addEventListener('click', loadAll);
+el('#clearSelection').addEventListener('click', ()=>{ selected.clear(); renderUsers(); });
 
-$('selectAll').onchange=e=>{
-  const checked=e.target.checked;
-  const filter=$('roleFilter').value;
-  const filtered=filter==='ALL'?allUsersCache:allUsersCache.filter(u=>u.role?.toUpperCase()===filter);
-  filtered.forEach(u=>{
-    if(checked)selectedUsers.add(u.id);
-    else selectedUsers.delete(u.id);
-  });
-  renderUsers();
-};
-
-document.body.addEventListener('change',e=>{
-  if(e.target.classList.contains('selectUser')){
-    const id=parseInt(e.target.dataset.id);
-    if(e.target.checked)selectedUsers.add(id);
-    else selectedUsers.delete(id);
-    updateBulkBar();
+el('#usersTable').addEventListener('change', async (e)=>{
+  if(e.target.classList.contains('sel')){
+    const id = Number(e.target.dataset.id);
+    if(e.target.checked) selected.add(id); else selected.delete(id);
+    refreshBulkUI();
   }
 });
 
-function updateBulkBar(){
-  const btn=$('deleteSelectedBtn');
-  btn.disabled=selectedUsers.size===0;
-  $('selectAll').checked=selectedUsers.size>0 && selectedUsers.size===allUsersCache.length;
+el('#usersTable').addEventListener('click', async (e)=>{
+  if(e.target.classList.contains('delBtn')){
+    const id = Number(e.target.dataset.id); if(!confirm('Delete user #'+id+'?')) return;
+    const r = await api(`/admin/users/${id}`, { method: 'DELETE' });
+    if(r.ok){ alert('▸ DELETED'); await loadAll(); } else alert('▸ DELETE FAILED: '+(r.body?.message||r.status));
+  }
+  if(e.target.classList.contains('resetBtn')){
+    const mail = e.target.dataset.email;
+    const r = await api('/auth/request-password-reset', { method:'POST', body: JSON.stringify({ email: mail }) });
+    alert(r.ok ? '▸ RESET TRIGGERED' : '▸ RESET FAILED');
+  }
+});
+
+el('#selectAll').addEventListener('change', (e)=>{
+  const checked = e.target.checked;
+  const list = usersCache.filter(u=> {
+    const role = el('#roleFilter').value;
+    return role === 'ALL' || u.role?.toUpperCase() === role;
+  });
+  list.forEach(u => { if(checked) selected.add(u.id); else selected.delete(u.id) });
+  renderUsers();
+});
+
+el('#deleteSelected').addEventListener('click', async ()=>{
+  if(selected.size === 0) return alert('▸ NO SELECTION');
+  if(!confirm(`▸ DELETE ${selected.size} USERS? IRREVERSIBLE.`)) return;
+  let ok=0, fail=0;
+  for(const id of Array.from(selected)){
+    const r = await api(`/admin/users/${id}`, { method: 'DELETE' });
+    if(r.ok) { ok++; selected.delete(id); } else fail++;
+  }
+  alert(`▸ DELETED ${ok}${fail?', FAILED '+fail: ''}`);
+  await loadAll();
+});
+
+function refreshBulkUI(){
+  el('#selectedCount').innerText = `◆ ${selected.size} SELECTED`;
+  el('#deleteSelected').disabled = selected.size === 0;
+  el('#selectAll').checked = usersCache.length && selected.size === usersCache.length;
 }
 
-$('deleteSelectedBtn').onclick=async()=>{
-  if(selectedUsers.size===0)return popup('No users selected.');
-  if(!confirm(`Delete ${selectedUsers.size} selected users?`))return;
-  let success=0,fail=0;
-  for(const id of selectedUsers){
-    const r=await apiFetch(`/admin/users/${id}`,{method:'DELETE'});
-    if(r.ok)success++;
-    else fail++;
-  }
-  popup(`🗑️ Deleted ${success} users${fail?`, ${fail} failed`:''}`);
-  selectedUsers.clear();
-  loadUsers();
-};
-
-async function loadSystem(){
-  const e=$('sysHealth');
-  const r=await apiFetch('/health');
-  e.innerText=r.ok?JSON.stringify(r.body,null,2):'❌ Failed';
+async function loadOrders(){
+  const tb = el('#ordersTable tbody'); tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--neon-purple)">▸ Loading...</td></tr>';
+  const r = await api('/admin/orders');
+  if(!r.ok){ tb.innerHTML = `<tr><td colspan="6" style="text-align:center">▸ ERROR (${r.status})</td></tr>`; return; }
+  const list = r.body.orders || r.body || [];
+  if(!list.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--neon-purple)">▸ NO ORDERS</td></tr>'; return; }
+  tb.innerHTML = '';
+  for(const o of list) tb.insertAdjacentHTML('beforeend', `<tr><td>${o.id}</td><td>${o.customer?.email||'-'}</td><td>${o.pharmacy?.email||'-'}</td><td>${o.rider?.email||'-'}</td><td>${o.status||'-'}</td><td>${o.totalPrice||'-'}</td></tr>`);
 }
 
 async function loadAudit(){
-  const e=$('auditLog');
-  const r=await apiFetch('/admin/audit/logs');
-  e.innerText=r.ok?JSON.stringify(r.body.logs||r.body,null,2):'❌ Failed';
+  const r = await api('/admin/audit/logs');
+  el('#auditPre').innerText = r.ok ? JSON.stringify(r.body.logs||r.body, null, 2) : '▸ AUDIT ACCESS FAILED';
+}
+
+async function loadOverview(){
+  const r = await api('/admin/metrics');
+  el('#overviewLine').innerText = r.ok ? `▸ ORDERS ${r.body.orders?.total||0} ◆ PHARMACIES ${r.body.pharmacies?.count||0} ◆ RIDERS ${r.body.riders?.count||0} ◆ USERS ${r.body.users?.count||0}` : '▸ METRICS UNAVAILABLE';
 }
 
 async function loadAll(){
-  if(!token)return showNotice('⚠️ Login first');
-  await Promise.allSettled([loadOverview(),loadOrders(),loadPending(),loadUsers(),loadSystem(),loadAudit()]);
+  if(!token){
+    el('#usersTable tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--neon-purple)">▸ LOGIN REQUIRED</td></tr>';
+    el('#ordersTable tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--neon-purple)">▸ LOGIN REQUIRED</td></tr>';
+    el('#auditPre').innerText = '▸ LOGIN REQUIRED';
+    return;
+  }
+  await Promise.allSettled([loadOverview(), loadUsers(), loadOrders(), loadAudit()]);
 }
 
-document.body.addEventListener('click',async e=>{
-  const t=e.target;
-  if(t.classList.contains('approve')||t.classList.contains('reject')){
-    const id=t.dataset.id;
-    const act=t.classList.contains('approve')?'approve':'reject';
-    const r=await apiFetch(`/admin/users/${id}/${act}`,{method:'PATCH'});
-    popup(r.ok?`✅ ${act} success`:`❌ ${r.status}`);
-    loadPending();
-  }
-  if(t.classList.contains('reset')){
-    const mail=t.dataset.email;
-    const r=await apiFetch('/auth/request-password-reset',{method:'POST',body:{email:mail}});
-    popup(r.ok?'📩 Reset email sent':`❌ ${r.status}`);
-  }
-  if(t.classList.contains('delete')){
-    const id=t.dataset.id;
-    if(!confirm('Delete user #'+id+'?'))return;
-    const r=await apiFetch(`/admin/users/${id}`,{method:'DELETE'});
-    popup(r.ok?'🗑️ User deleted':`❌ ${r.status}`);
-    loadUsers();
-  }
-});
+function debounce(fn, t=150){ let to; return (...a)=>{ clearTimeout(to); to=setTimeout(()=>fn(...a), t) } }
 
-(()=>{
-  const btn=$('recoveryBtn');
-  let running=false;
-  btn.replaceWith(btn.cloneNode(true));
-  const newBtn=$('recoveryBtn');
-  newBtn.onclick=async()=>{
-    if(running)return;
-    const e=$('recoveryEmail').value?.trim();
-    if(!e||!e.includes('@'))return showNotice('⚠️ Please enter a valid email address');
-    running=true;
-    newBtn.disabled=true;
-    newBtn.innerText='Sending...';
-    try{
-      const res=await fetch(`${API}/auth/request-password-reset`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({email:e})
-      });
-      const text=await res.text();
-      if(res.ok)popup(`📩 Password reset email sent to ${e}`);
-      else popup(`❌ Reset failed (${res.status}): ${text}`);
-    }catch{
-      popup('❌ Network error during reset');
-    }finally{
-      running=false;
-      newBtn.disabled=false;
-      newBtn.innerText='Send Reset';
-      $('recoveryEmail').value='';
-    }
-  };
-})();
-
+setAuth(token, adminEmail);
 loadAll();
-setInterval(()=>{if(token)loadAll();},25000);
+
+setInterval(()=>{ if(token) loadAll(); }, 25000);
+
+document.getElementById('modal').addEventListener('transitionend', ()=>{ });
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+window.__adminDash = { setAuth, loadAll };
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  try { document.getElementById('emailField').value = ''; document.getElementById('passField').value=''; } catch(e){}
+});
 </script>
 </body>
 </html>

@@ -8,12 +8,16 @@ export declare class PharmaciesController {
         email: string;
         createdAt: Date;
         id: number;
+        latitude: number | null;
+        longitude: number | null;
     }[]>;
     findOne(id: string): Promise<{
         name: string;
         email: string;
         createdAt: Date;
         id: number;
+        latitude: number | null;
+        longitude: number | null;
     }>;
     create(dto: CreatePharmacyDto): Promise<{
         name: string;
@@ -29,5 +33,11 @@ export declare class PharmaciesController {
     }>;
     remove(id: string): Promise<{
         message: string;
+    }>;
+    updateLocation(id: string, lat: number, lon: number): Promise<{
+        id: number;
+        latitude: number | null;
+        longitude: number | null;
+        ok: boolean;
     }>;
 }

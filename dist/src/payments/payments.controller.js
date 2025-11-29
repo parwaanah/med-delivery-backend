@@ -35,13 +35,11 @@ let PaymentsController = class PaymentsController {
     async webhook(req, res, signature) {
         try {
             const raw = req.rawBody;
-            if (!raw) {
+            if (!raw)
                 return res.status(400).send('raw body missing');
-            }
             const valid = this.rzpService.verifyWebhookSignature(raw, signature);
-            if (!valid) {
+            if (!valid)
                 return res.status(400).send('invalid signature');
-            }
             const json = JSON.parse(raw.toString('utf8'));
             await this.paymentsService.handleWebhookEvent(json);
             return res.status(200).send('ok');
@@ -70,7 +68,7 @@ let PaymentsController = class PaymentsController {
 exports.PaymentsController = PaymentsController;
 __decorate([
     (0, common_1.Post)('create-intent'),
-    openapi.ApiResponse({ status: 201 }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_intent_dto_1.CreateIntentDto]),

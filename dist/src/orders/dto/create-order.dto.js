@@ -9,46 +9,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateOrderDto = exports.OrderItemDto = void 0;
+exports.CreateOrderDto = void 0;
 const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-class OrderItemDto {
-    static _OPENAPI_METADATA_FACTORY() {
-        return { medicineId: { required: false, type: () => Number }, name: { required: true, type: () => String }, quantity: { required: true, type: () => Number, minimum: 1 }, price: { required: true, type: () => Number } };
-    }
-}
-exports.OrderItemDto = OrderItemDto;
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], OrderItemDto.prototype, "medicineId", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], OrderItemDto.prototype, "name", void 0);
-__decorate([
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(1),
-    __metadata("design:type", Number)
-], OrderItemDto.prototype, "quantity", void 0);
-__decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], OrderItemDto.prototype, "price", void 0);
+const order_item_dto_1 = require("./order-item.dto");
 class CreateOrderDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { items: { required: true, type: () => [require("./create-order.dto").OrderItemDto] }, pharmacyId: { required: false, type: () => Number }, pickupLat: { required: false, type: () => Number }, pickupLon: { required: false, type: () => Number } };
+        return { items: { required: true, type: () => [require("./order-item.dto").OrderItemDto] }, address: { required: true, type: () => String }, pharmacyId: { required: false, type: () => Number }, prescriptionId: { required: false, type: () => Number }, pickupLat: { required: false, type: () => Number }, pickupLon: { required: false, type: () => Number }, customerLat: { required: false, type: () => Number }, customerLng: { required: false, type: () => Number } };
     }
 }
 exports.CreateOrderDto = CreateOrderDto;
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
-    (0, class_transformer_1.Type)(() => OrderItemDto),
+    (0, class_transformer_1.Type)(() => order_item_dto_1.OrderItemDto),
     __metadata("design:type", Array)
 ], CreateOrderDto.prototype, "items", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateOrderDto.prototype, "address", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
@@ -58,10 +39,20 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
+], CreateOrderDto.prototype, "prescriptionId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
 ], CreateOrderDto.prototype, "pickupLat", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateOrderDto.prototype, "pickupLon", void 0);
-exports.default = CreateOrderDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateOrderDto.prototype, "customerLat", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateOrderDto.prototype, "customerLng", void 0);

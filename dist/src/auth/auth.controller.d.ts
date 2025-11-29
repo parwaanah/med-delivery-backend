@@ -2,9 +2,8 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
 export declare class AuthController {
-    private authService;
-    private readonly logger;
-    constructor(authService: AuthService);
+    private auth;
+    constructor(auth: AuthService);
     register(dto: RegisterDto): Promise<{
         accessToken: string;
         user: {
@@ -33,12 +32,8 @@ export declare class AuthController {
     logout(sessionId: number): Promise<{
         message: string;
     }>;
-    requestPasswordReset(body: {
-        email?: string;
-    }): Promise<{
+    reset(email: string): Promise<{
         message: string;
-        email: string;
         resetLink: string;
-        timestamp: string;
     }>;
 }

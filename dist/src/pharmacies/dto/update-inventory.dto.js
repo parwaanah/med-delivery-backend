@@ -14,11 +14,29 @@ const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class UpdateInventoryDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { delta: { required: true, type: () => Number } };
+        return { mrp: { required: false, type: () => Number }, sellingPrice: { required: false, type: () => Number }, discount: { required: false, type: () => Number, minimum: 0 }, stock: { required: false, type: () => Number, minimum: 0 } };
     }
 }
 exports.UpdateInventoryDto = UpdateInventoryDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], UpdateInventoryDto.prototype, "delta", void 0);
+], UpdateInventoryDto.prototype, "mrp", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateInventoryDto.prototype, "sellingPrice", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], UpdateInventoryDto.prototype, "discount", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], UpdateInventoryDto.prototype, "stock", void 0);
