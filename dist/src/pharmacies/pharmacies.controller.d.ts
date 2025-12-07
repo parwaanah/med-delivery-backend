@@ -5,7 +5,7 @@ export declare class PharmaciesController {
     constructor(pharmaciesService: PharmaciesService);
     findAll(): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         createdAt: Date;
         id: number;
         latitude: number | null;
@@ -13,7 +13,7 @@ export declare class PharmaciesController {
     }[]>;
     findOne(id: string): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         createdAt: Date;
         id: number;
         latitude: number | null;
@@ -21,13 +21,13 @@ export declare class PharmaciesController {
     }>;
     create(dto: CreatePharmacyDto): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
     }>;
     update(id: string, dto: UpdatePharmacyDto): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
     }>;

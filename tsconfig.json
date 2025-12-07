@@ -15,7 +15,16 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "plugins": [
+      {
+        "transform": "@nestjs/swagger/plugin",
+        "options": {
+          "classValidatorShim": true,
+          "introspectComments": true
+        }
+      }
+    ]
   },
   "ts-node": {
     "transpileOnly": true,

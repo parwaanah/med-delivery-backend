@@ -24,7 +24,7 @@ export class AuditService {
     success = true,
   }: {
     userId?: number;
-    email?: string;
+    email?: string | null | undefined;
     ip?: string;
     userAgent?: string;
     eventType: string;

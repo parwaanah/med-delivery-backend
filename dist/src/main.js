@@ -42,18 +42,18 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const prisma_service_1 = require("./utils/prisma.service");
 const swagger_1 = require("@nestjs/swagger");
-const global_logger_service_1 = require("./common/logger/global-logger.service");
-const redis_logger_1 = require("./utils/redis-logger");
 const helmet_1 = __importDefault(require("helmet"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const bodyParser = __importStar(require("body-parser"));
+const redis_logger_1 = require("./utils/redis-logger");
 async function bootstrap() {
+    process.env.REDIS_RETRY_DELAY = '500';
+    process.env.REDIS_RETRY_ATTEMPTS = '10';
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { cors: true });
-    app.useLogger(new global_logger_service_1.GlobalLogger());
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
     const config = app.get(config_1.ConfigService);
     const port = config.get('PORT') || 3001;
-    const redisUrl = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+    const redisUrl = config.get('REDIS_URL') || 'redis://redis:6379';
     console.log('🧠 Using Redis URL:', redisUrl);
     app.use((0, helmet_1.default)({
         contentSecurityPolicy: false,
@@ -101,7 +101,6 @@ async function bootstrap() {
     console.log(`🚀 Server: http://localhost:${port}`);
     console.log(`📘 Swagger: http://localhost:${port}/docs`);
     console.log(`🌐 Admin Dashboard: http://localhost:${port}/public/admin-dashboard.html`);
-    console.log(`🌡️ Health: http://localhost:${port}/health`);
     const shutdown = async (sig) => {
         console.log(`\n🧹 ${sig} received. Closing Redis + Prisma...`);
         await (0, redis_logger_1.closeRedisConnection)().catch(() => { });

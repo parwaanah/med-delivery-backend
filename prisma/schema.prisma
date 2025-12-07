@@ -1,6 +1,6 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -11,8 +11,13 @@ datasource db {
 model User {
   id                    Int                 @id @default(autoincrement())
   name                  String
-  email                 String              @unique
-  password              String
+  email                 String?             @unique
+  phone                 String?             @unique
+  password              String?
+  googleId              String?             @unique
+  otpCode               String?
+  otpExpiresAt          DateTime?
+
   role                  UserRole            @default(CUSTOMER)
   status                String              @default("PENDING")
   approvedBy            Int?
@@ -21,6 +26,7 @@ model User {
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   deletedAt             DateTime?
+
   auditLogs             AuditLog[]
   receivedMessages      ChatMessage[]       @relation("UserReceivedMessages")
   sentMessages          ChatMessage[]       @relation("UserSentMessages")
@@ -39,15 +45,21 @@ model User {
 }
 
 model Medicine {
-  id         Int                 @id @default(autoincrement())
-  name       String
-  sku        String?             @unique
-  createdAt  DateTime            @default(now())
-  category   MedicineCategory    @default(NON_RX)
-  rxType     PrescriptionType    @default(NONE)
-  orderItems OrderItem[]
-  inventory  PharmacyInventory[]
+  id           Int                 @id @default(autoincrement())
+  name         String
+  sku          String?             @unique
+  salt         String?
+  manufacturer String?
+  price        Float?              @default(0)
+  imageUrl     String?
+  createdAt    DateTime            @default(now())
+  category     MedicineCategory    @default(NON_RX)
+  rxType       PrescriptionType    @default(NONE)
+  orderItems   OrderItem[]
+  inventory    PharmacyInventory[]
 }
+
+
 
 model PharmacyInventory {
   id           Int      @id @default(autoincrement())
@@ -287,4 +299,12 @@ enum PaymentMode {
   PAY_FIRST
   PAY_AFTER_ACCEPT
   PAY_AFTER_VERIFICATION
+}
+
+model OtpRequest {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

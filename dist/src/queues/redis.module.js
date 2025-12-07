@@ -23,7 +23,7 @@ exports.RedisModule = RedisModule = __decorate([
             {
                 provide: 'REDIS',
                 useFactory: (config) => {
-                    const url = config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+                    const url = config.get('REDIS_URL') || 'redis://redis:6379';
                     return new ioredis_1.default(url, { maxRetriesPerRequest: null });
                 },
                 inject: [config_1.ConfigService],

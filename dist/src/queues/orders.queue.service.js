@@ -22,7 +22,7 @@ let OrdersQueueService = OrdersQueueService_1 = class OrdersQueueService {
     constructor(config) {
         this.config = config;
         this.logger = new common_1.Logger(OrdersQueueService_1.name);
-        const redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        const redisUrl = this.config.get('REDIS_URL') || 'redis://redis:6379';
         const queueName = this.config.get('ORDER_ASSIGN_QUEUE_NAME') || 'order_assign';
         const conn = new ioredis_1.default(redisUrl, { enableReadyCheck: true, maxRetriesPerRequest: null });
         this.queue = new bullmq_1.Queue(queueName, { connection: conn });

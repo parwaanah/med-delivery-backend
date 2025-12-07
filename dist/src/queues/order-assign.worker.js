@@ -33,7 +33,8 @@ let OrderAssignWorker = OrderAssignWorker_1 = class OrderAssignWorker {
         this.logger = new common_1.Logger(OrderAssignWorker_1.name);
     }
     onModuleInit() {
-        const redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        const redisUrl = this.config.get('REDIS_URL') ||
+            `redis://redis:${this.config.get('REDIS_PORT') ?? 6379}`;
         const queueName = this.config.get('ORDER_ASSIGN_QUEUE_NAME') || 'order_assign';
         this.redisClient = new ioredis_1.default(redisUrl, {
             enableReadyCheck: true,
@@ -62,7 +63,8 @@ let OrderAssignWorker = OrderAssignWorker_1 = class OrderAssignWorker {
                         this.logger.log(`Order ${orderId} already has rider ${order.riderId}`);
                         return;
                     }
-                    const autoAssign = String(this.config.get('AUTO_ASSIGN_RIDER') ?? 'false').toLowerCase() === 'true';
+                    const autoAssign = String(this.config.get('AUTO_ASSIGN_RIDER') ?? 'false').toLowerCase() ===
+                        'true';
                     const candidates = await this.esc.findCandidatesForOrder(Number(orderId), Number(this.config.get('RIDER_SEARCH_KM') || 5), 20);
                     if (autoAssign && candidates?.length) {
                         for (const c of candidates) {
@@ -124,7 +126,7 @@ let OrderAssignWorker = OrderAssignWorker_1 = class OrderAssignWorker {
                         await this.notify.create(a.id, 'ORDER_ESCALATION', `No rider accepted order #${orderId}`, { orderId });
                         this.ws.notifyUser(a.id, 'order_escalation', { orderId });
                     }
-                    this.logger.warn(`Escalation sent for order ${orderId} to ${admins.length} admins`);
+                    this.logger.warn(`Escalation sent for order ${orderId}`);
                 }
             }
             catch (err) {

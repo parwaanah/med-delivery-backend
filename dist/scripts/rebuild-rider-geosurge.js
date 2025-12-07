@@ -7,7 +7,7 @@ require("dotenv/config");
 const client_1 = require("@prisma/client");
 const ioredis_1 = __importDefault(require("ioredis"));
 const prisma = new client_1.PrismaClient();
-const redis = new ioredis_1.default(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+const redis = new ioredis_1.default(process.env.REDIS_URL || 'redis://redis:6379');
 const GEO_KEY = 'geosurge:riders';
 async function rebuildRiderGeo() {
     console.log('🚀 Starting Rider GeoSurge rebuild...');

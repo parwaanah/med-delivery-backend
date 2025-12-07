@@ -7,7 +7,7 @@ export declare class AdminUsersController {
         total: number;
         users: {
             name: string;
-            email: string;
+            email: string | null;
             role: import(".prisma/client").$Enums.UserRole;
             status: string;
             id: number;
@@ -17,7 +17,7 @@ export declare class AdminUsersController {
         total: number;
         users: {
             name: string;
-            email: string;
+            email: string | null;
             role: import(".prisma/client").$Enums.UserRole;
             status: string;
             id: number;
@@ -25,12 +25,16 @@ export declare class AdminUsersController {
     }>;
     approveUser(id: number): Promise<{
         name: string;
-        email: string;
-        password: string;
+        email: string | null;
+        password: string | null;
         role: import(".prisma/client").$Enums.UserRole;
+        phone: string | null;
         status: string;
         createdAt: Date;
         id: number;
+        googleId: string | null;
+        otpCode: string | null;
+        otpExpiresAt: Date | null;
         approvedBy: number | null;
         latitude: number | null;
         longitude: number | null;
@@ -39,12 +43,16 @@ export declare class AdminUsersController {
     }>;
     rejectUser(id: number): Promise<{
         name: string;
-        email: string;
-        password: string;
+        email: string | null;
+        password: string | null;
         role: import(".prisma/client").$Enums.UserRole;
+        phone: string | null;
         status: string;
         createdAt: Date;
         id: number;
+        googleId: string | null;
+        otpCode: string | null;
+        otpExpiresAt: Date | null;
         approvedBy: number | null;
         latitude: number | null;
         longitude: number | null;

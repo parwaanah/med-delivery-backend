@@ -7,7 +7,7 @@ export declare class PharmaciesService {
     constructor(prisma: PrismaService, geoSurge: GeoSurgeService);
     findAll(): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         createdAt: Date;
         id: number;
         latitude: number | null;
@@ -15,7 +15,7 @@ export declare class PharmaciesService {
     }[]>;
     findOne(id: number): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         createdAt: Date;
         id: number;
         latitude: number | null;
@@ -23,13 +23,13 @@ export declare class PharmaciesService {
     }>;
     create(dto: CreatePharmacyDto): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
     }>;
     update(id: number, dto: UpdatePharmacyDto): Promise<{
         name: string;
-        email: string;
+        email: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
     }>;

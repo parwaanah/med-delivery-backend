@@ -12,3 +12,12 @@ export declare class LoginDto {
 export declare class RefreshTokenDto {
     refreshToken: string;
 }
+export declare class SendOtpDto {
+    phone: string;
+    role?: UserRole;
+}
+export declare class VerifyOtpDto {
+    phone: string;
+    otp: string;
+    role?: UserRole;
+}

@@ -11,7 +11,7 @@ const common_1 = require("@nestjs/common");
 const ioredis_1 = require("ioredis");
 let JwtBlacklistService = class JwtBlacklistService {
     constructor() {
-        this.redis = new ioredis_1.Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+        this.redis = new ioredis_1.Redis(process.env.REDIS_URL || 'redis://redis:6379');
         this.prefix = 'jwt_blacklist:';
     }
     async revoke(token, exp) {

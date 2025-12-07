@@ -30,7 +30,7 @@ let OrdersProcessor = OrdersProcessor_1 = class OrdersProcessor {
         this.logger = new common_1.Logger(OrdersProcessor_1.name);
     }
     onModuleInit() {
-        const redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        const redisUrl = this.config.get('REDIS_URL') || 'redis://redis:6379';
         this.redisClient = new ioredis_1.default(redisUrl, {
             enableReadyCheck: true,
             maxRetriesPerRequest: null,

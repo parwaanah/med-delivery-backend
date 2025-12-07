@@ -20,7 +20,7 @@ const ioredis_1 = __importDefault(require("ioredis"));
 let QueueLiveGateway = class QueueLiveGateway {
     constructor() {
         this.queues = {};
-        const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+        const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
         this.redis = new ioredis_1.default(redisUrl, {
             maxRetriesPerRequest: null,
             enableReadyCheck: false,

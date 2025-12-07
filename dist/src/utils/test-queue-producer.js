@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const bullmq_1 = require("bullmq");
 const ioredis_1 = __importDefault(require("ioredis"));
-const redis = new ioredis_1.default('redis://127.0.0.1:6379', {
+const redis = new ioredis_1.default('redis://redis:6379', {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
 });

@@ -6,7 +6,7 @@ import Redis from 'ioredis';
 const prisma = new PrismaClient();
 
 async function main() {
-  const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+  const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
   const redis = new Redis(redisUrl);
 
   console.log('🔄 Connecting to Redis:', redisUrl);

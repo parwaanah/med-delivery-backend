@@ -13,7 +13,7 @@ export class HealthLiveGateway implements OnGatewayInit {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    this.redisUrl = this.config.get<string>('REDIS_URL') || 'redis://127.0.0.1:6379';
+    this.redisUrl = this.config.get<string>('REDIS_URL') || 'redis://redis:6379';
   }
 
   afterInit() {

@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 
-const redis = new Redis('redis://127.0.0.1:6379', {
+const redis = new Redis('redis://redis:6379', {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
 });

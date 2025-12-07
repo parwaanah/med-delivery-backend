@@ -35,6 +35,16 @@ const chat_live_gateway_1 = require("./ws/chat-live.gateway");
 const chat_module_1 = require("./chat/chat.module");
 const cache_module_1 = require("./cache/cache.module");
 const metrics_module_1 = require("./metrics/metrics.module");
+const medicines_module_1 = require("./medicines/medicines.module");
+const bullmq_1 = require("@nestjs/bullmq");
+function forcedRedisUrl(config) {
+    const url = 'redis://redis:6379';
+    process.env.REDIS_URL = url;
+    process.env.REDIS_HOST = 'redis';
+    process.env.REDIS_PORT = '6379';
+    console.log('🔥 GLOBAL REDIS OVERRIDE →', url);
+    return url;
+}
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(request_logger_middleware_1.RequestLoggerMiddleware).forRoutes('*');
@@ -52,6 +62,14 @@ exports.AppModule = AppModule = __decorate([
                     index: false,
                     fallthrough: false,
                 },
+            }),
+            bullmq_1.BullModule.forRootAsync({
+                inject: [config_1.ConfigService],
+                useFactory: (config) => ({
+                    connection: {
+                        url: forcedRedisUrl(config),
+                    },
+                }),
             }),
             utils_module_1.UtilsModule,
             cache_module_1.CacheModule,
@@ -71,9 +89,23 @@ exports.AppModule = AppModule = __decorate([
             geo_surge_module_1.GeoSurgeModule,
             chat_module_1.ChatModule,
             notifications_module_1.NotificationsModule,
+            medicines_module_1.MedicinesModule,
             reports_module_1.ReportsModule,
             schedule_1.ScheduleModule.forRoot(),
         ],
-        providers: [notification_service_1.NotificationService, global_logger_service_1.GlobalLogger, chat_live_gateway_1.ChatLiveGateway],
+        providers: [
+            notification_service_1.NotificationService,
+            global_logger_service_1.GlobalLogger,
+            chat_live_gateway_1.ChatLiveGateway,
+            {
+                provide: 'REDIS_FORCE_OVERRIDE',
+                inject: [config_1.ConfigService],
+                useFactory: (config) => {
+                    const url = forcedRedisUrl(config);
+                    console.log('🔥 Redis override provider active →', url);
+                    return true;
+                },
+            },
+        ],
     })
 ], AppModule);

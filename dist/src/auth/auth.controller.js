@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
+const passport_1 = require("@nestjs/passport");
 const auth_service_1 = require("./auth.service");
 const auth_dto_1 = require("./dto/auth.dto");
 let AuthController = class AuthController {
@@ -25,7 +26,9 @@ let AuthController = class AuthController {
         return this.auth.register(dto);
     }
     login(req, dto) {
-        return this.auth.login(dto, req.ip, req.headers['user-agent']);
+        const ip = req.ip || '';
+        const ua = String(req.headers['user-agent'] || '');
+        return this.auth.login(dto, ip, ua);
     }
     refresh(dto) {
         return this.auth.refreshToken(dto.refreshToken);
@@ -33,10 +36,17 @@ let AuthController = class AuthController {
     logout(sessionId) {
         return this.auth.logout(sessionId);
     }
-    reset(email) {
-        if (!email)
-            throw new common_1.BadRequestException('Email required');
-        return this.auth.requestPasswordReset(email);
+    sendOtp(dto) {
+        return this.auth.sendOtp(dto);
+    }
+    verifyOtp(req, dto) {
+        const ip = req.ip || '';
+        const ua = String(req.headers['user-agent'] || '');
+        return this.auth.verifyOtp(dto, ip, ua);
+    }
+    googleAuth() { }
+    googleCallback(req) {
+        return this.auth.googleLogin(req.user);
     }
 };
 exports.AuthController = AuthController;
@@ -74,13 +84,39 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logout", null);
 __decorate([
-    (0, common_1.Post)('request-password-reset'),
+    (0, common_1.Post)('send-otp'),
     openapi.ApiResponse({ status: 201 }),
-    __param(0, (0, common_1.Body)('email')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [auth_dto_1.SendOtpDto]),
     __metadata("design:returntype", void 0)
-], AuthController.prototype, "reset", null);
+], AuthController.prototype, "sendOtp", null);
+__decorate([
+    (0, common_1.Post)('verify-otp'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, auth_dto_1.VerifyOtpDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyOtp", null);
+__decorate([
+    (0, common_1.Get)('google'),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
+    openapi.ApiResponse({ status: 200 }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "googleAuth", null);
+__decorate([
+    (0, common_1.Get)('google/callback'),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "googleCallback", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

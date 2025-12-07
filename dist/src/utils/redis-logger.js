@@ -11,7 +11,7 @@ let client = null;
 async function checkRedisConnection(redisUrl) {
     if (client)
         return client;
-    const url = redisUrl || process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+    const url = redisUrl || process.env.REDIS_URL || 'redis://redis:6379';
     client = new ioredis_1.default(url, {
         maxRetriesPerRequest: null,
         enableReadyCheck: true,

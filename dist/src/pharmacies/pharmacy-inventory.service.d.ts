@@ -11,8 +11,12 @@ export declare class PharmacyInventoryService {
             name: string;
             createdAt: Date;
             id: number;
+            price: number | null;
             category: import(".prisma/client").$Enums.MedicineCategory;
             sku: string | null;
+            salt: string | null;
+            manufacturer: string | null;
+            imageUrl: string | null;
             rxType: import(".prisma/client").$Enums.PrescriptionType;
         };
     } & {

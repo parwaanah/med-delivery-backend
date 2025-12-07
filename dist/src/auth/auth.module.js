@@ -10,13 +10,14 @@ exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const passport_1 = require("@nestjs/passport");
-const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
+const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./jwt.strategy");
+const google_strategy_1 = require("./google.strategy");
 const prisma_service_1 = require("../utils/prisma.service");
 const audit_service_1 = require("../utils/audit.service");
-const audit_live_gateway_1 = require("../ws/audit-live.gateway");
 const notifications_module_1 = require("../notifications/notifications.module");
+const audit_live_gateway_1 = require("../ws/audit-live.gateway");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -34,6 +35,7 @@ exports.AuthModule = AuthModule = __decorate([
         providers: [
             auth_service_1.AuthService,
             jwt_strategy_1.JwtStrategy,
+            google_strategy_1.GoogleStrategy,
             prisma_service_1.PrismaService,
             audit_service_1.AuditService,
             audit_live_gateway_1.AuditLiveGateway,

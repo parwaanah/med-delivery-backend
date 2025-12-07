@@ -22,6 +22,99 @@ let CartService = class CartService {
         this.payments = payments;
         this.orders = orders;
     }
+    async addToCart(userId, medicineId, quantity) {
+        if (!medicineId || quantity < 1) {
+            throw new common_1.BadRequestException('Invalid cart item.');
+        }
+        let cart = await this.prisma.cart.findFirst({
+            where: { userId: String(userId) },
+        });
+        if (!cart) {
+            cart = await this.prisma.cart.create({
+                data: { userId: String(userId) },
+            });
+        }
+        const productId = String(medicineId);
+        const existing = await this.prisma.cartItem.findFirst({
+            where: { cartId: cart.id, productId },
+        });
+        if (existing) {
+            return this.prisma.cartItem.update({
+                where: { id: existing.id },
+                data: { quantity: existing.quantity + quantity },
+            });
+        }
+        return this.prisma.cartItem.create({
+            data: {
+                cartId: cart.id,
+                productId,
+                quantity,
+                price: 0,
+            },
+        });
+    }
+    async getCart(userId) {
+        const cart = await this.prisma.cart.findFirst({
+            where: { userId: String(userId) },
+            include: { items: true },
+        });
+        if (!cart)
+            return { items: [] };
+        const enriched = await Promise.all(cart.items.map(async (item) => {
+            const med = await this.prisma.medicine.findUnique({
+                where: { id: Number(item.productId) },
+            });
+            const inv = await this.prisma.pharmacyInventory.findFirst({
+                where: { medicineId: med?.id },
+                include: { pharmacy: { select: { id: true, name: true } } },
+                orderBy: { sellingPrice: 'asc' },
+            });
+            return {
+                ...item,
+                medicine: med ?? null,
+                price: item.price ? Number(item.price) : inv ? Number(inv.sellingPrice) : 0,
+                stock: inv?.stock ?? 0,
+                pharmacy: inv?.pharmacy?.name ?? null,
+                pharmacyId: inv?.pharmacy?.id ?? null,
+            };
+        }));
+        return { ...cart, items: enriched };
+    }
+    async removeItem(userId, cartItemId) {
+        const cart = await this.prisma.cart.findFirst({
+            where: { userId: String(userId) },
+        });
+        if (!cart)
+            throw new common_1.BadRequestException('Cart not found');
+        const item = await this.prisma.cartItem.findUnique({
+            where: { id: String(cartItemId) },
+        });
+        if (!item || item.cartId !== cart.id) {
+            throw new common_1.BadRequestException('Invalid cart item');
+        }
+        return this.prisma.cartItem.delete({
+            where: { id: String(cartItemId) },
+        });
+    }
+    async updateQuantity(userId, cartItemId, quantity) {
+        if (quantity < 1)
+            throw new common_1.BadRequestException('Quantity must be at least 1');
+        const cart = await this.prisma.cart.findFirst({
+            where: { userId: String(userId) },
+        });
+        if (!cart)
+            throw new common_1.BadRequestException('Cart not found');
+        const item = await this.prisma.cartItem.findUnique({
+            where: { id: String(cartItemId) },
+        });
+        if (!item || item.cartId !== cart.id) {
+            throw new common_1.BadRequestException('Invalid cart item');
+        }
+        return this.prisma.cartItem.update({
+            where: { id: String(cartItemId) },
+            data: { quantity },
+        });
+    }
     async calculateTotal(userId, items) {
         if (!items?.length)
             throw new common_1.BadRequestException('No items provided.');
@@ -45,8 +138,7 @@ let CartService = class CartService {
             pickupLon: opts?.pickupLon,
         };
         const result = await this.orders.createOrder(userId, createDto);
-        const resultAny = result;
-        const order = resultAny.order ?? resultAny;
+        const order = result.order ?? result;
         const paymentIntent = await this.payments.createPaymentForOrder(order.id);
         return {
             orderId: order.id,

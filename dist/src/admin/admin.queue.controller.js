@@ -23,7 +23,7 @@ let AdminQueueController = class AdminQueueController {
     constructor(config) {
         this.config = config;
         this.queues = {};
-        const redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        const redisUrl = this.config.get('REDIS_URL') || 'redis://redis:6379';
         this.redis = new ioredis_1.default(redisUrl, { maxRetriesPerRequest: null, enableReadyCheck: false });
         this.queues = {
             notifications: new bullmq_1.Queue('notifications', { connection: this.redis }),

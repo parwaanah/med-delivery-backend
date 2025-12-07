@@ -3,7 +3,7 @@ import { Redis } from 'ioredis';
 
 @Injectable()
 export class JwtBlacklistService {
-  private redis = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+  private redis = new Redis(process.env.REDIS_URL || 'redis://redis:6379');
   private prefix = 'jwt_blacklist:';
 
   async revoke(token: string, exp: number) {

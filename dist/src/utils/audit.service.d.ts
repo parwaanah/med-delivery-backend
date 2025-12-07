@@ -9,7 +9,7 @@ export declare class AuditService {
     constructor(prisma: PrismaService, live: AuditLiveGateway, notify: NotificationService);
     log({ userId, email, ip, userAgent, eventType, role, success, }: {
         userId?: number;
-        email?: string;
+        email?: string | null | undefined;
         ip?: string;
         userAgent?: string;
         eventType: string;

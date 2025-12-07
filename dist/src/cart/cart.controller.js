@@ -24,6 +24,22 @@ let CartController = class CartController {
     constructor(cartService) {
         this.cartService = cartService;
     }
+    async addToCart(req, body) {
+        const userId = req.user.id;
+        return this.cartService.addToCart(userId, body.medicineId, body.quantity ?? 1);
+    }
+    async getCart(req) {
+        const userId = req.user.id;
+        return this.cartService.getCart(userId);
+    }
+    async removeItem(req, body) {
+        const userId = req.user.id;
+        return this.cartService.removeItem(userId, body.cartItemId);
+    }
+    async updateQuantity(req, body) {
+        const userId = req.user.id;
+        return this.cartService.updateQuantity(userId, body.cartItemId, body.quantity);
+    }
     async calculateTotal(req, body) {
         const userId = req.user.id;
         return this.cartService.calculateTotal(userId, body.items);
@@ -34,6 +50,41 @@ let CartController = class CartController {
     }
 };
 exports.CartController = CartController;
+__decorate([
+    (0, common_1.Post)('add'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "addToCart", null);
+__decorate([
+    (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "getCart", null);
+__decorate([
+    (0, common_1.Post)('remove'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "removeItem", null);
+__decorate([
+    (0, common_1.Post)('update'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "updateQuantity", null);
 __decorate([
     (0, common_1.Post)('total'),
     openapi.ApiResponse({ status: 201 }),

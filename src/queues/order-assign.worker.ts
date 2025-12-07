@@ -24,7 +24,11 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    const redisUrl = this.config.get<string>('REDIS_URL') || 'redis://127.0.0.1:6379';
+    // ALWAYS use Docker Redis host → redis://redis:6379
+    const redisUrl =
+      this.config.get<string>('REDIS_URL') ||
+      `redis://redis:${this.config.get<number>('REDIS_PORT') ?? 6379}`;
+
     const queueName = this.config.get<string>('ORDER_ASSIGN_QUEUE_NAME') || 'order_assign';
 
     this.redisClient = new Redis(redisUrl, {
@@ -36,7 +40,9 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
       queueName,
       async (job: Job) => {
         try {
-          this.logger.log(`Processing job ${job.id} (${job.name}) data=${JSON.stringify(job.data)}`);
+          this.logger.log(
+            `Processing job ${job.id} (${job.name}) data=${JSON.stringify(job.data)}`
+          );
 
           if (job.name === 'rider_escalation') {
             const { orderId } = job.data;
@@ -52,7 +58,6 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
               return;
             }
 
-            // safe includes
             if (!['PENDING', 'ACCEPTED'].includes(String(order.status))) {
               this.logger.log(`Order ${orderId} status=${order.status} — skipping`);
               return;
@@ -64,7 +69,8 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
             }
 
             const autoAssign =
-              String(this.config.get('AUTO_ASSIGN_RIDER') ?? 'false').toLowerCase() === 'true';
+              String(this.config.get('AUTO_ASSIGN_RIDER') ?? 'false').toLowerCase() ===
+              'true';
 
             const candidates = await this.esc.findCandidatesForOrder(
               Number(orderId),
@@ -131,7 +137,7 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
                     });
 
                     this.logger.log(
-                      `Auto-assigned rider ${result.riderId} -> order ${result.orderId}`,
+                      `Auto-assigned rider ${result.riderId} -> order ${result.orderId}`
                     );
                     return;
                   }
@@ -145,7 +151,6 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
               }
             }
 
-            // escalate to admins
             const admins = await this.prisma.user.findMany({
               where: { role: UserRole.ADMIN },
               select: { id: true },
@@ -161,13 +166,11 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
               this.ws.notifyUser(a.id, 'order_escalation', { orderId });
             }
 
-            this.logger.warn(
-              `Escalation sent for order ${orderId} to ${admins.length} admins`,
-            );
+            this.logger.warn(`Escalation sent for order ${orderId}`);
           }
         } catch (err) {
           this.logger.error(
-            `Job ${job.id} (${job.name}) failed: ${(err as any)?.message ?? err}`,
+            `Job ${job.id} (${job.name}) failed: ${(err as any)?.message ?? err}`
           );
           throw err;
         }
@@ -176,10 +179,10 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
     );
 
     this.worker.on('completed', (job) =>
-      this.logger.log(`Escalation job completed ${job.id} (${job.name})`),
+      this.logger.log(`Escalation job completed ${job.id} (${job.name})`)
     );
     this.worker.on('failed', (job, err) =>
-      this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`),
+      this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`)
     );
 
     this.logger.log(`✅ OrderAssignWorker started (queue=${queueName})`);

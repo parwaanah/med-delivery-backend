@@ -10,7 +10,7 @@ export class AdminQueueController {
   private queues: Record<string, Queue> = {};
 
   constructor(private readonly config: ConfigService) {
-    const redisUrl = this.config.get<string>('REDIS_URL') || 'redis://127.0.0.1:6379';
+    const redisUrl = this.config.get<string>('REDIS_URL') || 'redis://redis:6379';
     this.redis = new Redis(redisUrl, { maxRetriesPerRequest: null, enableReadyCheck: false });
     this.queues = {
       notifications: new Queue('notifications', { connection: this.redis }),

@@ -27,10 +27,7 @@ export class AuthService {
   ) {}
 
   /**
-   * REGISTER — business rules:
-   * - CUSTOMER => auto APPROVED
-   * - ADMIN, PHARMACY, RIDER => PENDING
-   * - Seed script will create one approved superadmin (no hardcode here)
+   * REGISTER
    */
   async register(data: RegisterDto) {
     if (!data.name || !data.email || !data.password)
@@ -43,7 +40,6 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(data.password, 10);
     const role = (data.role as UserRole) || UserRole.CUSTOMER;
-
     const status = role === UserRole.CUSTOMER ? 'APPROVED' : 'PENDING';
 
     const user = await this.prisma.user.create({
@@ -57,18 +53,18 @@ export class AuthService {
     });
 
     await this.audit.log({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      eventType: 'REGISTER_SUCCESS',
-      success: true,
-    });
+  userId: user.id,
+  email: user.email || undefined,
+  role: user.role,
+  eventType: 'REGISTER_SUCCESS',
+  success: true,
+});
 
     return this.generateToken(user);
   }
 
   /**
-   * LOGIN — approval check kept, but bypassed when LOADTEST_MODE=true
+   * LOGIN — email + password
    */
   async login(data: LoginDto, ip?: string, ua?: string) {
     const user = await this.prisma.user.findUnique({
@@ -77,20 +73,13 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    // If loadtest mode is ON, bypass approval checks for Admin/Pharmacy/Rider
-    if (this.LOADTEST) {
-      this.logger.log(
-        `LOADTEST_MODE active - skipping approval check for user ${user.email} (role=${user.role}, status=${user.status})`,
-      );
-    } else {
-      // normal behaviour: allow customers; other roles must be APPROVED
+    if (!this.LOADTEST) {
       if (user.status !== 'APPROVED' && user.role !== UserRole.CUSTOMER) {
         throw new UnauthorizedException('Account pending admin approval');
       }
     }
 
     if (!user.password) {
-      // defend against accounts without local password
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -107,7 +96,10 @@ export class AuthService {
     });
 
     const rawRefresh = crypto.randomBytes(32).toString('hex');
-    const hashedRefresh = crypto.createHash('sha256').update(rawRefresh).digest('hex');
+    const hashedRefresh = crypto
+      .createHash('sha256')
+      .update(rawRefresh)
+      .digest('hex');
 
     await this.prisma.refreshToken.create({
       data: {
@@ -119,11 +111,12 @@ export class AuthService {
     });
 
     await this.audit.log({
-      userId: user.id,
-      email: user.email,
-      eventType: 'LOGIN_SUCCESS',
-      success: true,
-    });
+  userId: user.id,
+  email: user.email || undefined,
+  eventType: 'LOGIN_SUCCESS',
+  role: user.role,
+  success: true,
+});
 
     const accessToken = this.jwtService.sign({
       sub: user.id,
@@ -203,7 +196,7 @@ export class AuthService {
   }
 
   /**
-   * Password reset (mock)
+   * Password reset
    */
   async requestPasswordReset(email: string) {
     if (!email) throw new BadRequestException('Email required');
@@ -244,7 +237,7 @@ export class AuthService {
   }
 
   /**
-   * Internal token generator for register responses
+   * Internal token generator
    */
   private generateToken(user: any) {
     const accessToken = this.jwtService.sign({
@@ -262,5 +255,148 @@ export class AuthService {
       },
     };
   }
+
+  // ===========================
+  // OTP LOGIN (DUMMY SMS)
+  // ===========================
+  async sendOtp(data: { phone: string; role?: UserRole }) {
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    await this.prisma.user.upsert({
+      where: { phone: data.phone },
+      create: {
+        phone: data.phone,
+        name: 'New User',
+        role: data.role || UserRole.CUSTOMER,
+        status: 'APPROVED',
+        otpCode: otp,
+        otpExpiresAt: addHours(new Date(), 1),
+      },
+      update: {
+        otpCode: otp,
+        otpExpiresAt: addHours(new Date(), 1),
+      },
+    });
+
+    this.logger.log(`DUMMY SMS OTP for ${data.phone}: ${otp}`);
+
+    return { message: 'OTP sent successfully (dummy mode)' };
+  }
+
+  async verifyOtp(
+    data: { phone: string; otp: string; role?: UserRole },
+    ip: string,
+    ua: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { phone: data.phone },
+    });
+
+    if (!user || user.otpCode !== data.otp) {
+      throw new UnauthorizedException('Invalid OTP');
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { otpCode: null },
+    });
+
+    const session = await this.prisma.session.create({
+      data: {
+        userId: user.id,
+        ip,
+        userAgent: ua,
+        expiresAt: addHours(new Date(), 12),
+      },
+    });
+
+    const rawRefresh = crypto.randomBytes(32).toString('hex');
+    const hashedRefresh = crypto
+      .createHash('sha256')
+      .update(rawRefresh)
+      .digest('hex');
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        sessionId: session.id,
+        tokenHash: hashedRefresh,
+        expiresAt: addHours(new Date(), 48),
+      },
+    });
+
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      role: user.role,
+    });
+
+    return {
+      accessToken,
+      refreshToken: rawRefresh,
+      sessionId: session.id,
+      user: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+      },
+    };
+  }
+
+  // ===========================
+  // GOOGLE LOGIN
+  // ===========================
+  async googleLogin(googleUser: { email: string; googleId: string; name: string }) {
+    let user = await this.prisma.user.findUnique({
+      where: { email: googleUser.email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          googleId: googleUser.googleId,
+          email: googleUser.email,
+          name: googleUser.name,
+          role: UserRole.CUSTOMER,
+          status: 'APPROVED',
+        },
+      });
+    }
+
+    const session = await this.prisma.session.create({
+      data: {
+        userId: user.id,
+        ip: null,
+        userAgent: 'google-oauth',
+        expiresAt: addHours(new Date(), 12),
+      },
+    });
+
+    const rawRefresh = crypto.randomBytes(32).toString('hex');
+    const hashedRefresh = crypto
+      .createHash('sha256')
+      .update(rawRefresh)
+      .digest('hex');
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        sessionId: session.id,
+        tokenHash: hashedRefresh,
+        expiresAt: addHours(new Date(), 48),
+      },
+    });
+
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      role: user.role,
+    });
+
+    return {
+      accessToken,
+      refreshToken: rawRefresh,
+      sessionId: session.id,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    };
+  }
 }
-export default AuthService;

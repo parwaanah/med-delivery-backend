@@ -11,7 +11,7 @@ export class QueueLiveGateway implements OnGatewayInit {
   private queues: Record<string, Queue> = {};
 
   constructor() {
-    const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+    const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
     this.redis = new IORedis(redisUrl, {
       maxRetriesPerRequest: null, // REQUIRED for BullMQ
       enableReadyCheck: false,

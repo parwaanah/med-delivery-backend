@@ -10,7 +10,7 @@ export class OrdersQueueService {
   private readonly logger = new Logger(OrdersQueueService.name);
 
   constructor(private config: ConfigService) {
-    const redisUrl = this.config.get<string>('REDIS_URL') || 'redis://127.0.0.1:6379';
+    const redisUrl = this.config.get<string>('REDIS_URL') || 'redis://redis:6379';
     const queueName = this.config.get<string>('ORDER_ASSIGN_QUEUE_NAME') || 'order_assign';
     const conn = new IORedis(redisUrl, { enableReadyCheck: true, maxRetriesPerRequest: null });
     this.queue = new Queue(queueName, { connection: conn });

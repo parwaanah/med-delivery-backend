@@ -1,40 +1,47 @@
 // path: src/main.ts
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from './utils/prisma.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { GlobalLogger } from './common/logger/global-logger.service';
-import { checkRedisConnection, closeRedisConnection } from './utils/redis-logger';
 
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
 
+// Redis connection logs
+import { checkRedisConnection, closeRedisConnection } from './utils/redis-logger';
+
 async function bootstrap() {
+  // -----------------------------------------------------------
+  // ⏳ FIX 1 — REDIS RETRY (prevents ECONNREFUSED spam)
+  // -----------------------------------------------------------
+  process.env.REDIS_RETRY_DELAY = '500';
+  process.env.REDIS_RETRY_ATTEMPTS = '10';
+
   const app = await NestFactory.create(AppModule, { cors: true });
 
   // Logging + Validation
-  app.useLogger(new GlobalLogger());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') || 3001;
-  const redisUrl = config.get<string>('REDIS_URL') || 'redis://127.0.0.1:6379';
+  const redisUrl = config.get<string>('REDIS_URL') || 'redis://redis:6379';
 
   console.log('🧠 Using Redis URL:', redisUrl);
 
-  // SECURITY HEADERS
+  // SECURITY
   app.use(
     helmet({
       contentSecurityPolicy: false,
     }),
   );
 
-  // =====================================================================
-  // 🔥 LOADTEST MODE — DISABLE RATE LIMIT (DISABLE_RATELIMIT=1 in .env)
-  // =====================================================================
+  // -----------------------------------------------------------
+  // ⛔ LOADTEST MODE? (DISABLE_RATELIMIT=1)
+  // -----------------------------------------------------------
   if (process.env.DISABLE_RATELIMIT === '1') {
     console.log('⚡ LOADTEST MODE ENABLED — RateLimit DISABLED');
   } else {
@@ -59,7 +66,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Razorpay webhook requires RAW body
+  // Razorpay Webhook (RAW)
   app.use(
     '/payments/webhook',
     bodyParser.raw({
@@ -68,12 +75,12 @@ async function bootstrap() {
     }),
   );
 
-  // JSON for all others
+  // JSON parser for rest
   app.use(bodyParser.json());
 
-  // ------------------------------------------------------------
+  // -----------------------------------------------------------
   // Swagger
-  // ------------------------------------------------------------
+  // -----------------------------------------------------------
   const swaggerCfg = new DocumentBuilder()
     .setTitle('Medicine Delivery API')
     .setDescription('API documentation')
@@ -84,11 +91,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerCfg);
   SwaggerModule.setup('docs', app, document);
 
-  // Prisma shutdown hooks
+  // Prisma graceful shutdown
   const prisma = app.get(PrismaService);
   if (prisma?.enableShutdownHooks) await prisma.enableShutdownHooks(app);
 
-  // Redis
+  // -----------------------------------------------------------
+  // Redis health check (with retry)
+  // -----------------------------------------------------------
   await checkRedisConnection(redisUrl).catch((err) =>
     console.warn('⚠️ Redis check failed:', err?.message || err),
   );
@@ -96,7 +105,7 @@ async function bootstrap() {
   console.log('💓 System Health OK — Redis + Prisma connected');
   console.log('🔐 Security: Helmet active');
 
-  // Start server
+  // Start
   await app.listen(port);
 
   console.log(`🚀 Server: http://localhost:${port}`);
@@ -104,7 +113,6 @@ async function bootstrap() {
   console.log(
     `🌐 Admin Dashboard: http://localhost:${port}/public/admin-dashboard.html`,
   );
-  console.log(`🌡️ Health: http://localhost:${port}/health`);
 
   // Graceful shutdown
   const shutdown = async (sig: string) => {

@@ -21,7 +21,7 @@ let HealthController = class HealthController {
         this.config = config;
     }
     async getHealth() {
-        const redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        const redisUrl = this.config.get('REDIS_URL') || 'redis://redis:6379';
         const results = {
             uptime: process.uptime(),
             timestamp: new Date().toISOString(),

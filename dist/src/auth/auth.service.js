@@ -82,7 +82,7 @@ let AuthService = AuthService_1 = class AuthService {
         });
         await this.audit.log({
             userId: user.id,
-            email: user.email,
+            email: user.email || undefined,
             role: user.role,
             eventType: 'REGISTER_SUCCESS',
             success: true,
@@ -95,10 +95,7 @@ let AuthService = AuthService_1 = class AuthService {
         });
         if (!user)
             throw new common_1.UnauthorizedException('Invalid credentials');
-        if (this.LOADTEST) {
-            this.logger.log(`LOADTEST_MODE active - skipping approval check for user ${user.email} (role=${user.role}, status=${user.status})`);
-        }
-        else {
+        if (!this.LOADTEST) {
             if (user.status !== 'APPROVED' && user.role !== client_1.UserRole.CUSTOMER) {
                 throw new common_1.UnauthorizedException('Account pending admin approval');
             }
@@ -118,7 +115,10 @@ let AuthService = AuthService_1 = class AuthService {
             },
         });
         const rawRefresh = crypto.randomBytes(32).toString('hex');
-        const hashedRefresh = crypto.createHash('sha256').update(rawRefresh).digest('hex');
+        const hashedRefresh = crypto
+            .createHash('sha256')
+            .update(rawRefresh)
+            .digest('hex');
         await this.prisma.refreshToken.create({
             data: {
                 userId: user.id,
@@ -129,8 +129,9 @@ let AuthService = AuthService_1 = class AuthService {
         });
         await this.audit.log({
             userId: user.id,
-            email: user.email,
+            email: user.email || undefined,
             eventType: 'LOGIN_SUCCESS',
+            role: user.role,
             success: true,
         });
         const accessToken = this.jwtService.sign({
@@ -237,6 +238,121 @@ let AuthService = AuthService_1 = class AuthService {
             },
         };
     }
+    async sendOtp(data) {
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        await this.prisma.user.upsert({
+            where: { phone: data.phone },
+            create: {
+                phone: data.phone,
+                name: 'New User',
+                role: data.role || client_1.UserRole.CUSTOMER,
+                status: 'APPROVED',
+                otpCode: otp,
+                otpExpiresAt: (0, date_fns_1.addHours)(new Date(), 1),
+            },
+            update: {
+                otpCode: otp,
+                otpExpiresAt: (0, date_fns_1.addHours)(new Date(), 1),
+            },
+        });
+        this.logger.log(`DUMMY SMS OTP for ${data.phone}: ${otp}`);
+        return { message: 'OTP sent successfully (dummy mode)' };
+    }
+    async verifyOtp(data, ip, ua) {
+        const user = await this.prisma.user.findUnique({
+            where: { phone: data.phone },
+        });
+        if (!user || user.otpCode !== data.otp) {
+            throw new common_1.UnauthorizedException('Invalid OTP');
+        }
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { otpCode: null },
+        });
+        const session = await this.prisma.session.create({
+            data: {
+                userId: user.id,
+                ip,
+                userAgent: ua,
+                expiresAt: (0, date_fns_1.addHours)(new Date(), 12),
+            },
+        });
+        const rawRefresh = crypto.randomBytes(32).toString('hex');
+        const hashedRefresh = crypto
+            .createHash('sha256')
+            .update(rawRefresh)
+            .digest('hex');
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: user.id,
+                sessionId: session.id,
+                tokenHash: hashedRefresh,
+                expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
+            },
+        });
+        const accessToken = this.jwtService.sign({
+            sub: user.id,
+            role: user.role,
+        });
+        return {
+            accessToken,
+            refreshToken: rawRefresh,
+            sessionId: session.id,
+            user: {
+                id: user.id,
+                name: user.name,
+                phone: user.phone,
+                role: user.role,
+            },
+        };
+    }
+    async googleLogin(googleUser) {
+        let user = await this.prisma.user.findUnique({
+            where: { email: googleUser.email },
+        });
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: {
+                    googleId: googleUser.googleId,
+                    email: googleUser.email,
+                    name: googleUser.name,
+                    role: client_1.UserRole.CUSTOMER,
+                    status: 'APPROVED',
+                },
+            });
+        }
+        const session = await this.prisma.session.create({
+            data: {
+                userId: user.id,
+                ip: null,
+                userAgent: 'google-oauth',
+                expiresAt: (0, date_fns_1.addHours)(new Date(), 12),
+            },
+        });
+        const rawRefresh = crypto.randomBytes(32).toString('hex');
+        const hashedRefresh = crypto
+            .createHash('sha256')
+            .update(rawRefresh)
+            .digest('hex');
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: user.id,
+                sessionId: session.id,
+                tokenHash: hashedRefresh,
+                expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
+            },
+        });
+        const accessToken = this.jwtService.sign({
+            sub: user.id,
+            role: user.role,
+        });
+        return {
+            accessToken,
+            refreshToken: rawRefresh,
+            sessionId: session.id,
+            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = AuthService_1 = __decorate([
@@ -245,4 +361,3 @@ exports.AuthService = AuthService = AuthService_1 = __decorate([
         jwt_1.JwtService,
         audit_service_1.AuditService])
 ], AuthService);
-exports.default = AuthService;

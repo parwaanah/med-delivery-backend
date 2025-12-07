@@ -8,7 +8,7 @@ const client_1 = require("@prisma/client");
 const ioredis_1 = __importDefault(require("ioredis"));
 const prisma = new client_1.PrismaClient();
 async function main() {
-    const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+    const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
     const redis = new ioredis_1.default(redisUrl);
     console.log('🔄 Connecting to Redis:', redisUrl);
     console.log('🧹 Clearing old GEO keys...');

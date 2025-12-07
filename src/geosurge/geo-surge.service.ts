@@ -21,7 +21,7 @@ export class GeoSurgeService {
     private readonly config: ConfigService,
     @Optional() private readonly gateway?: GeoSurgeLiveGateway,
   ) {
-    this.redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+    this.redisUrl = this.config.get('REDIS_URL') || 'redis://redis:6379';
     this.initRedis();
   }
 

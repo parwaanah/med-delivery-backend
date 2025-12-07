@@ -27,7 +27,7 @@ let GeoSurgeService = GeoSurgeService_1 = class GeoSurgeService {
         this.gateway = gateway;
         this.logger = new common_1.Logger(GeoSurgeService_1.name);
         this.GEO_KEY = 'geosurge:riders';
-        this.redisUrl = this.config.get('REDIS_URL') || 'redis://127.0.0.1:6379';
+        this.redisUrl = this.config.get('REDIS_URL') || 'redis://redis:6379';
         this.initRedis();
     }
     initRedis() {

@@ -31,7 +31,8 @@ let SurgeService = class SurgeService {
         this.historyKey = 'surge:history';
         this.demandKey = 'surge:demand';
         this.supplyKey = 'surge:supply';
-        const url = this.config.get('REDIS_URL') ?? 'redis://127.0.0.1:6379';
+        const url = this.config.get('REDIS_URL') ||
+            `redis://redis:${this.config.get('REDIS_PORT') ?? 6379}`;
         this.redis = new ioredis_1.default(url, { maxRetriesPerRequest: null, enableReadyCheck: true });
         this.logger.log(`✅ Predictive Surge Engine connected → ${url}`);
         (async () => {
@@ -43,7 +44,9 @@ let SurgeService = class SurgeService {
                         this.logger.warn(`🧹 Resetting old Redis key: ${key} (was ${type})`);
                         await this.redis.del(key);
                     }
-                    if ((key === this.demandKey || key === this.supplyKey) && type !== 'string' && type !== 'none') {
+                    if ((key === this.demandKey || key === this.supplyKey) &&
+                        type !== 'string' &&
+                        type !== 'none') {
                         this.logger.warn(`🧹 Resetting old Redis key: ${key} (was ${type})`);
                         await this.redis.del(key);
                     }
@@ -79,7 +82,7 @@ let SurgeService = class SurgeService {
             }
             catch (err) {
                 if (err?.message?.includes('WRONGTYPE')) {
-                    this.logger.warn(`⚠️ Surge history type mismatch — resetting key '${this.historyKey}'`);
+                    this.logger.warn(`⚠️ Surge history type mismatch — resetting '${this.historyKey}'`);
                     await this.redis.del(this.historyKey);
                     await this.redis.zadd(this.historyKey, Date.now(), JSON.stringify(snap));
                 }
@@ -91,8 +94,12 @@ let SurgeService = class SurgeService {
             const minScore = Date.now() - this.windowMs;
             const samples = await this.redis.zrangebyscore(this.historyKey, minScore, '+inf');
             const parsed = samples.map((s) => JSON.parse(s));
-            const avgDemand = parsed.length > 0 ? parsed.reduce((a, b) => a + b.demand, 0) / parsed.length : demand;
-            const avgSupply = parsed.length > 0 ? parsed.reduce((a, b) => a + b.supply, 0) / parsed.length : supply;
+            const avgDemand = parsed.length > 0
+                ? parsed.reduce((a, b) => a + b.demand, 0) / parsed.length
+                : demand;
+            const avgSupply = parsed.length > 0
+                ? parsed.reduce((a, b) => a + b.supply, 0) / parsed.length
+                : supply;
             const ratio = avgDemand / avgSupply;
             const smoothFactor = 0.6;
             const targetMult = this.baseMultiplier + Math.max(0, ratio - 1) * 0.75;
@@ -123,12 +130,12 @@ let SurgeService = class SurgeService {
     }
     async overrideMultiplier(multiplier, meta) {
         this.overrideValue = multiplier;
-        this.logger.warn(`🛠 Surge override → x${multiplier} by ${meta?.setBy ?? 'manual'}`);
+        this.logger.warn(`🛠 Surge override → x${multiplier}`);
         return this.broadcast(multiplier);
     }
     async clearOverride() {
         this.overrideValue = null;
-        this.logger.log('🔄 Surge override cleared; resuming predictive mode');
+        this.logger.log('🔄 Surge override cleared');
         return this.recalculate();
     }
     async getStatus() {

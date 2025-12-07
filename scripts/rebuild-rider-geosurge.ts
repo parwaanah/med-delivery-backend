@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 
 const prisma = new PrismaClient();
-const redis = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+const redis = new Redis(process.env.REDIS_URL || 'redis://redis:6379');
 
 const GEO_KEY = 'geosurge:riders';
 

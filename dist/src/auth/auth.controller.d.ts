@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
+import { LoginDto, RegisterDto, RefreshTokenDto, SendOtpDto, VerifyOtpDto } from './dto/auth.dto';
 export declare class AuthController {
     private auth;
     constructor(auth: AuthService);
@@ -20,7 +20,7 @@ export declare class AuthController {
         user: {
             id: number;
             name: string;
-            email: string;
+            email: string | null;
             role: import(".prisma/client").$Enums.UserRole;
         };
     }>;
@@ -32,8 +32,30 @@ export declare class AuthController {
     logout(sessionId: number): Promise<{
         message: string;
     }>;
-    reset(email: string): Promise<{
+    sendOtp(dto: SendOtpDto): Promise<{
         message: string;
-        resetLink: string;
+    }>;
+    verifyOtp(req: Request, dto: VerifyOtpDto): Promise<{
+        accessToken: string;
+        refreshToken: string;
+        sessionId: number;
+        user: {
+            id: number;
+            name: string;
+            phone: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
+        };
+    }>;
+    googleAuth(): void;
+    googleCallback(req: any): Promise<{
+        accessToken: string;
+        refreshToken: string;
+        sessionId: number;
+        user: {
+            id: number;
+            name: string;
+            email: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
+        };
     }>;
 }

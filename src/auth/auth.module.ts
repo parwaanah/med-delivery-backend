@@ -2,26 +2,25 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
-import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { GoogleStrategy } from './google.strategy';
 
-// Correct paths based on your project
 import { PrismaService } from '../utils/prisma.service';
 import { AuditService } from '../utils/audit.service';
-
-import { AuditLiveGateway } from '../ws/audit-live.gateway';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AuditLiveGateway } from '../ws/audit-live.gateway';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
+
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'dev-secret',
       signOptions: { expiresIn: '1h' },
     }),
 
-    // Notification module exists
     NotificationsModule,
   ],
 
@@ -30,8 +29,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
   providers: [
     AuthService,
     JwtStrategy,
-
-    // Correct providers
+    GoogleStrategy,
     PrismaService,
     AuditService,
     AuditLiveGateway,
