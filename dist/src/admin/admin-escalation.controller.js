@@ -36,61 +36,58 @@ let AdminEscalationController = class AdminEscalationController {
         });
         const items = [];
         for (const n of notes) {
-            const orderId = (n.meta && n.meta.orderId) || null;
-            let order = null;
-            if (orderId) {
-                order = await this.prisma.order.findUnique({
-                    where: { id: Number(orderId) },
-                    include: {
-                        customer: { select: { email: true } },
-                        pharmacy: {
-                            select: { email: true, latitude: true, longitude: true },
-                        },
-                        rider: { select: { email: true } },
-                        items: true,
-                    },
-                });
+            const orderId = n.meta?.orderId;
+            if (!orderId)
+                continue;
+            const order = await this.prisma.order.findUnique({
+                where: { id: Number(orderId) },
+                include: {
+                    customer: { select: { email: true } },
+                    pharmacy: { select: { email: true } },
+                    rider: { select: { email: true } },
+                    items: true,
+                },
+            });
+            if (order && !order.riderId) {
+                items.push({ notification: n, order });
             }
-            items.push({ notification: n, order });
         }
         return { total: items.length, items };
     }
     async getCandidates(id) {
         const orderId = Number(id);
-        if (isNaN(orderId))
+        if (isNaN(orderId)) {
             throw new common_1.BadRequestException('Invalid order id');
-        const candidates = await this.esc.findCandidatesForOrder(orderId, 5, 50);
-        const enriched = [];
-        for (const c of candidates) {
-            const riderIdSafe = c?.riderId === null || c?.riderId === undefined
-                ? undefined
-                : Number(c.riderId);
-            let user = null;
-            if (riderIdSafe !== undefined) {
-                user = await this.prisma.user
-                    .findUnique({
-                    where: { id: riderIdSafe },
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        status: true,
-                        latitude: true,
-                        longitude: true,
-                    },
-                })
-                    .catch(() => null);
-            }
-            enriched.push({ ...c, user });
         }
+        const candidates = await this.esc.findCandidatesForOrder(orderId, 5, 50);
+        const enriched = await Promise.all(candidates.map(async (c) => {
+            const riderId = c?.riderId === null || c?.riderId === undefined
+                ? null
+                : Number(c.riderId);
+            if (!riderId)
+                return { ...c, user: null };
+            const user = await this.prisma.user.findUnique({
+                where: { id: riderId },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    status: true,
+                    latitude: true,
+                    longitude: true,
+                },
+            });
+            return { ...c, user };
+        }));
         return { total: enriched.length, candidates: enriched };
     }
-    async assign(id, riderId) {
+    async assign(id, riderId, req) {
         const orderId = Number(id);
         const rId = Number(riderId);
-        if (isNaN(orderId) || isNaN(rId))
+        if (isNaN(orderId) || isNaN(rId)) {
             throw new common_1.BadRequestException('Invalid ids');
-        const adminId = 1;
+        }
+        const adminId = req.user.id;
         return this.orders.adminAssign(orderId, adminId, rId);
     }
 };
@@ -115,13 +112,14 @@ __decorate([
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Param)('riderId')),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], AdminEscalationController.prototype, "assign", null);
 exports.AdminEscalationController = AdminEscalationController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, 'ADMIN', 'admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Controller)('admin/orders'),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         escalation_service_1.EscalationService,

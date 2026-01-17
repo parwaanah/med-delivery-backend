@@ -15,21 +15,23 @@ const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./jwt.strategy");
 const google_strategy_1 = require("./google.strategy");
 const prisma_service_1 = require("../utils/prisma.service");
-const audit_service_1 = require("../utils/audit.service");
+const audit_module_1 = require("../utils/audit.module");
 const notifications_module_1 = require("../notifications/notifications.module");
-const audit_live_gateway_1 = require("../ws/audit-live.gateway");
+const profile_module_1 = require("./profile.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
+            passport_1.PassportModule.register({ defaultStrategy: "jwt" }),
             jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET || 'dev-secret',
-                signOptions: { expiresIn: '1h' },
+                secret: process.env.JWT_SECRET || "dev-secret",
+                signOptions: { expiresIn: "1h" },
             }),
             notifications_module_1.NotificationsModule,
+            profile_module_1.ProfileModule,
+            audit_module_1.AuditModule,
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [
@@ -37,8 +39,6 @@ exports.AuthModule = AuthModule = __decorate([
             jwt_strategy_1.JwtStrategy,
             google_strategy_1.GoogleStrategy,
             prisma_service_1.PrismaService,
-            audit_service_1.AuditService,
-            audit_live_gateway_1.AuditLiveGateway,
         ],
         exports: [auth_service_1.AuthService],
     })

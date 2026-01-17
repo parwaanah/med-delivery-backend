@@ -20,6 +20,10 @@ const razorpay_service_1 = require("./razorpay.service");
 const prisma_service_1 = require("../utils/prisma.service");
 const create_intent_dto_1 = require("./dto/create-intent.dto");
 const refund_dto_1 = require("./dto/refund.dto");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let PaymentsController = class PaymentsController {
     constructor(paymentsService, rzpService, prisma) {
         this.paymentsService = paymentsService;
@@ -44,13 +48,12 @@ let PaymentsController = class PaymentsController {
             await this.paymentsService.handleWebhookEvent(json);
             return res.status(200).send('ok');
         }
-        catch (err) {
-            console.error('payments webhook error', err);
+        catch {
             return res.status(500).send('error');
         }
     }
-    async refund(dto) {
-        return this.paymentsService.refundTransaction(dto.transactionId, dto.amount);
+    async refund(req, dto) {
+        return this.paymentsService.refundTransaction(dto.transactionId, dto.amount, req.user?.id);
     }
     async adminList() {
         return this.paymentsService.listTransactions();
@@ -86,11 +89,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "webhook", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Post)('refund'),
     openapi.ApiResponse({ status: 201, type: Object }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [refund_dto_1.RefundDto]),
+    __metadata("design:paramtypes", [Object, refund_dto_1.RefundDto]),
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "refund", null);
 __decorate([

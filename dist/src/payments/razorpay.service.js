@@ -19,21 +19,40 @@ const common_1 = require("@nestjs/common");
 let RazorpayService = RazorpayService_1 = class RazorpayService {
     constructor() {
         this.logger = new common_1.Logger(RazorpayService_1.name);
-        this.client = new razorpay_1.default({
-            key_id: process.env.RAZORPAY_KEY_ID || '',
-            key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-        });
+        const keyId = process.env.RAZORPAY_KEY_ID;
+        const keySecret = process.env.RAZORPAY_KEY_SECRET;
+        this.enabled = Boolean(keyId && keySecret);
+        if (this.enabled) {
+            this.client = new razorpay_1.default({
+                key_id: keyId,
+                key_secret: keySecret,
+            });
+            this.logger.log('Razorpay client initialized');
+        }
+        else {
+            this.logger.warn('Razorpay disabled — missing RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET');
+        }
     }
     async createOrder(amountInPaise, currency = 'INR', receipt) {
-        const opts = {
-            amount: amountInPaise,
-            currency,
-            receipt: receipt ?? `receipt_${Date.now()}`,
-            payment_capture: 1,
-        };
-        const order = await this.client.orders.create(opts);
-        this.logger.log(`Razorpay order created ${order?.id ?? '<no-id>'}`);
-        return order;
+        if (!this.enabled || !this.client) {
+            this.logger.warn('Razorpay createOrder skipped (disabled)');
+            throw new common_1.BadRequestException('Payment gateway not configured');
+        }
+        try {
+            const opts = {
+                amount: amountInPaise,
+                currency,
+                receipt: receipt ?? `receipt_${Date.now()}`,
+                payment_capture: 1,
+            };
+            const order = await this.client.orders.create(opts);
+            this.logger.log(`Razorpay order created ${order?.id}`);
+            return order;
+        }
+        catch (err) {
+            this.logger.error('Razorpay createOrder failed', err?.message || err);
+            throw new common_1.BadRequestException('Razorpay authentication failed');
+        }
     }
     verifyWebhookSignature(rawBody, signature, secret) {
         const webhookSecret = secret ?? process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -42,10 +61,17 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
             return false;
         }
         const crypto = require('crypto');
-        const expected = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
+        const expected = crypto
+            .createHmac('sha256', webhookSecret)
+            .update(rawBody)
+            .digest('hex');
         return expected === signature;
     }
     async refundPayment(paymentId, amountInPaise) {
+        if (!this.enabled || !this.client) {
+            this.logger.warn('Razorpay refund skipped (disabled)');
+            return { mock: true, refunded: true };
+        }
         const payload = amountInPaise ? { amount: amountInPaise } : {};
         return this.client.payments.refund(paymentId, payload);
     }

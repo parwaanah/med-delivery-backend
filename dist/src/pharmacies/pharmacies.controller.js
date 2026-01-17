@@ -20,6 +20,7 @@ const pharmacy_dto_1 = require("./dto/pharmacy.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let PharmaciesController = class PharmaciesController {
     constructor(pharmaciesService) {
         this.pharmaciesService = pharmaciesService;
@@ -49,7 +50,7 @@ let PharmaciesController = class PharmaciesController {
 exports.PharmaciesController = PharmaciesController;
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     openapi.ApiResponse({ status: 200 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -57,7 +58,7 @@ __decorate([
 ], PharmaciesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)('admin', 'pharmacy'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.PHARMACY),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -66,7 +67,7 @@ __decorate([
 ], PharmaciesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -75,7 +76,7 @@ __decorate([
 ], PharmaciesController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
-    (0, roles_decorator_1.Roles)('admin', 'pharmacy'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.PHARMACY),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -85,7 +86,7 @@ __decorate([
 ], PharmaciesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -94,7 +95,7 @@ __decorate([
 ], PharmaciesController.prototype, "remove", null);
 __decorate([
     (0, common_1.Patch)(':id/location'),
-    (0, roles_decorator_1.Roles)('admin', 'pharmacy'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.PHARMACY),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('lat')),

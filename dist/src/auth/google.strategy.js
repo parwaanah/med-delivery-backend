@@ -13,21 +13,25 @@ exports.GoogleStrategy = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const passport_google_oauth20_1 = require("passport-google-oauth20");
-let GoogleStrategy = class GoogleStrategy extends (0, passport_1.PassportStrategy)(passport_google_oauth20_1.Strategy, 'google') {
+let GoogleStrategy = class GoogleStrategy extends (0, passport_1.PassportStrategy)(passport_google_oauth20_1.Strategy, "google") {
     constructor() {
         super({
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: process.env.GOOGLE_REDIRECT_URI,
-            scope: ['email', 'profile'],
+            callbackURL: "http://localhost:3001/auth/google/callback",
+            scope: ["email", "profile"],
+            passReqToCallback: false,
         });
     }
     async validate(accessToken, refreshToken, profile, done) {
+        if (!profile?.emails?.length) {
+            return done(new common_1.UnauthorizedException("Google profile incomplete"), false);
+        }
         const user = {
             googleId: profile.id,
-            email: profile.emails?.[0]?.value,
-            name: profile.displayName,
-            photo: profile.photos?.[0]?.value,
+            email: profile.emails[0].value,
+            name: profile.displayName || "Google User",
+            photo: profile.photos?.[0]?.value || null,
         };
         return done(null, user);
     }

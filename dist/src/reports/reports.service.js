@@ -58,13 +58,62 @@ let ReportsService = ReportsService_1 = class ReportsService {
         this.prisma = prisma;
         this.logger = new common_1.Logger(ReportsService_1.name);
     }
+    async getSystemSummary() {
+        const [totalOrders, paidOrders, txs] = await Promise.all([
+            this.prisma.order.count(),
+            this.prisma.order.count({ where: { status: 'PAID' } }),
+            this.prisma.transaction.findMany(),
+        ]);
+        const revenuePaise = txs
+            .filter((t) => t.status === 'SUCCESS')
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+        const refundedPaise = txs
+            .filter((t) => t.status === 'REFUNDED')
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+        return {
+            totalOrders,
+            paidOrders,
+            revenue: revenuePaise / 100,
+            refundedAmount: refundedPaise / 100,
+            transactions: txs.length,
+        };
+    }
+    async getTransactions(params) {
+        const skip = (params.page - 1) * params.limit;
+        const where = {};
+        if (params.status)
+            where.status = params.status;
+        const [items, total] = await this.prisma.$transaction([
+            this.prisma.transaction.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: params.limit,
+            }),
+            this.prisma.transaction.count({ where }),
+        ]);
+        return {
+            page: params.page,
+            limit: params.limit,
+            total,
+            items: items.map((t) => ({
+                ...t,
+                amount: Number(t.amount) / 100,
+            })),
+        };
+    }
     async generateDailyReport() {
         const now = new Date();
         const dateStr = now.toISOString().slice(0, 10);
         const from = new Date(`${dateStr}T00:00:00.000Z`);
         const to = new Date(`${dateStr}T23:59:59.999Z`);
         const orders = await this.prisma.order.findMany({
-            include: { pharmacy: true, rider: true, items: true, customer: true },
+            include: {
+                pharmacy: true,
+                rider: true,
+                items: true,
+                customer: true,
+            },
             where: { createdAt: { gte: from, lt: to } },
             orderBy: { createdAt: 'asc' },
         });
@@ -72,40 +121,37 @@ let ReportsService = ReportsService_1 = class ReportsService {
         fs.mkdirSync(reportsDir, { recursive: true });
         const jsonFilename = path.join(reportsDir, `report-${dateStr}.json`);
         fs.writeFileSync(jsonFilename, JSON.stringify(orders, null, 2));
-        this.logger.log(`📄 JSON report generated: ${jsonFilename}`);
         const pdfFilename = path.join(reportsDir, `report-${dateStr}.pdf`);
         await this.createPdfReport(orders, dateStr, pdfFilename);
-        this.logger.log(`📄 PDF report generated: ${pdfFilename}`);
         const csvFilename = path.join(reportsDir, `report-${dateStr}.csv`);
         await this.createCsvReport(orders, csvFilename);
-        this.logger.log(`📄 CSV report generated: ${csvFilename}`);
-        return { json: jsonFilename, pdf: pdfFilename, csv: csvFilename };
+        this.logger.log(`📊 Daily reports generated for ${dateStr}`);
+        return {
+            json: jsonFilename,
+            pdf: pdfFilename,
+            csv: csvFilename,
+        };
     }
     async createPdfReport(orders, dateStr, pdfPath) {
         return new Promise((resolve, reject) => {
             const doc = new pdfkit_1.default({ margin: 40 });
             const stream = fs.createWriteStream(pdfPath);
             doc.pipe(stream);
-            doc.fontSize(18).text(`Daily Orders Report — ${dateStr}`, { underline: true });
+            doc.fontSize(18).text(`Daily Orders Report — ${dateStr}`, {
+                underline: true,
+            });
             doc.moveDown();
-            if (orders.length === 0) {
-                doc.fontSize(12).text('No orders for this date.');
+            if (!orders.length) {
+                doc.text('No orders for this date.');
             }
             else {
                 orders.forEach((o) => {
-                    doc.fontSize(12).text(`Order #${o.id} — ${o.status} — Total: ${o.totalPrice}`);
-                    doc.fontSize(10).text(`Customer: ${o.customer?.email ?? 'N/A'} | Pharmacy: ${o.pharmacy?.email ?? 'N/A'} | Rider: ${o.rider?.email ?? 'N/A'}`);
-                    if (o.items?.length) {
-                        o.items.forEach((it) => {
-                            doc.text(`  • ${it.name} x${it.quantity} @ ${it.price}`);
-                        });
-                    }
-                    doc.moveDown(0.5);
+                    doc.text(`Order #${o.id} — ${o.status} — Total ₹${o.totalPrice}`);
                 });
             }
             doc.end();
-            stream.on('finish', () => resolve());
-            stream.on('error', (e) => reject(e));
+            stream.on('finish', resolve);
+            stream.on('error', reject);
         });
     }
     async createCsvReport(orders, csvPath) {
@@ -113,26 +159,15 @@ let ReportsService = ReportsService_1 = class ReportsService {
             path: csvPath,
             header: [
                 { id: 'orderId', title: 'Order ID' },
-                { id: 'createdAt', title: 'Created At' },
                 { id: 'status', title: 'Status' },
-                { id: 'customer', title: 'Customer Email' },
-                { id: 'pharmacy', title: 'Pharmacy Email' },
-                { id: 'rider', title: 'Rider Email' },
                 { id: 'totalPrice', title: 'Total Price' },
-                { id: 'items', title: 'Items' },
             ],
         });
-        const records = orders.map((o) => ({
+        await csvWriter.writeRecords(orders.map((o) => ({
             orderId: o.id,
-            createdAt: o.createdAt?.toISOString?.() ?? '',
             status: o.status,
-            customer: o.customer?.email ?? '',
-            pharmacy: o.pharmacy?.email ?? '',
-            rider: o.rider?.email ?? '',
             totalPrice: o.totalPrice,
-            items: (o.items ?? []).map((it) => `${it.name} x${it.quantity}`).join(' | '),
-        }));
-        await csvWriter.writeRecords(records);
+        })));
     }
 };
 exports.ReportsService = ReportsService;

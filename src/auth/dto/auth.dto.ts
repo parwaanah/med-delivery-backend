@@ -1,6 +1,6 @@
-import { IsEmail, IsNotEmpty, IsOptional, MinLength, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { IsEmail, IsNotEmpty, IsOptional, MinLength, IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import { UserRole } from "@prisma/client";
 
 export class RegisterDto {
   @IsNotEmpty()
@@ -35,9 +35,6 @@ export class RefreshTokenDto {
 export class SendOtpDto {
   @IsString()
   phone!: string;
-
-  @IsOptional()
-  role?: UserRole;
 }
 
 export class VerifyOtpDto {
@@ -46,7 +43,4 @@ export class VerifyOtpDto {
 
   @IsString()
   otp!: string;
-
-  @IsOptional()
-  role?: UserRole;
 }

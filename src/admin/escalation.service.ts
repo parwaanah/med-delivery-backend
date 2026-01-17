@@ -1,5 +1,4 @@
 // src/admin/escalation.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { GeoSurgeService, GeoPoint } from '../geosurge/geo-surge.service';
@@ -10,19 +9,23 @@ export class EscalationService {
   private readonly logger = new Logger(EscalationService.name);
 
   private readonly defaultRiderSearchKm = 5;
-  private readonly riderSpeedKmPerHr = 30;
 
   constructor(
-    private prisma: PrismaService,
-    private geoSurge: GeoSurgeService,
-    private surge: SurgeService,
+    private readonly prisma: PrismaService,
+    private readonly geoSurge: GeoSurgeService,
+    private readonly surge: SurgeService,
   ) {}
 
   private toRad(v: number) {
     return (v * Math.PI) / 180;
   }
 
-  private haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  private haversineKm(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ) {
     const R = 6371;
     const dLat = this.toRad(lat2 - lat1);
     const dLon = this.toRad(lon2 - lon1);
@@ -35,13 +38,6 @@ export class EscalationService {
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  /**
-   * Compute rider score based on:
-   * - availability
-   * - distance
-   * - load (jobs in last 30 mins)
-   * - surge factor
-   */
   private async computeRiderScore(
     rp: GeoPoint,
     pickLat?: number,
@@ -53,67 +49,46 @@ export class EscalationService {
 
     let score = 0;
 
-    // 1. Availability (0–40)
-    try {
-      if (!isNaN(riderId)) {
-        const r = await this.prisma.user.findUnique({
-          where: { id: riderId },
-          select: { status: true },
-        });
-        score += r?.status === 'AVAILABLE' ? 40 : 10;
-      } else {
-        score += 10;
-      }
-    } catch {
-      score += 5;
+    // Availability
+    if (!isNaN(riderId)) {
+      const r = await this.prisma.user.findUnique({
+        where: { id: riderId },
+        select: { status: true },
+      });
+      score += r?.status === 'AVAILABLE' ? 40 : 10;
     }
 
-    // 2. Distance (0–30)
+    // Distance
     if (typeof rp.distKm === 'number') {
-      const d = rp.distKm;
-      score += Math.max(0, 30 - Math.min(30, d * 6));
+      score += Math.max(0, 30 - Math.min(30, rp.distKm * 6));
     } else if (pickLat && pickLon && meta?.lat && meta?.lon) {
       const km = this.haversineKm(
-        parseFloat(meta.lat),
-        parseFloat(meta.lon),
+        Number(meta.lat),
+        Number(meta.lon),
         pickLat,
         pickLon,
       );
       score += Math.max(0, 30 - Math.min(30, km * 6));
-    } else {
-      score += 5;
     }
 
-    // 3. Load (0–20)
-    try {
-      if (!isNaN(riderId)) {
-        const since = new Date(Date.now() - 30 * 60 * 1000);
-        const assigned = await this.prisma.order.count({
-          where: { riderId, createdAt: { gte: since } },
-        });
-
-        score += Math.max(0, 30 - Math.min(20, assigned * 6));
-      } else {
-        score += 10;
-      }
-    } catch {
-      score += 10;
+    // Load
+    if (!isNaN(riderId)) {
+      const since = new Date(Date.now() - 30 * 60 * 1000);
+      const assigned = await this.prisma.order.count({
+        where: { riderId, createdAt: { gte: since } },
+      });
+      score += Math.max(0, 20 - assigned * 6);
     }
 
-    // 4. Surge bonus (0–10)
+    // Surge
     try {
       const { multiplier } = await this.surge.getStatus();
-      score += Math.max(0, Math.min(10, (multiplier - 1) * 5));
-    } catch {
-      // ignore
-    }
+      score += Math.min(10, Math.max(0, (multiplier - 1) * 5));
+    } catch {}
 
-    return Math.round(Math.min(100, score));
+    return Math.min(100, Math.round(score));
   }
 
-  /**
-   * MAIN: Find top riders for escalation.
-   */
   async findCandidatesForOrder(
     orderId: number,
     radiusKm = this.defaultRiderSearchKm,
@@ -121,43 +96,44 @@ export class EscalationService {
   ) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      select: { id: true, pharmacyId: true },
+      select: { pharmacyId: true },
     });
     if (!order) return [];
 
-    // Pickup coordinates = pharmacy location
-    let pickLat: number | undefined;
-    let pickLon: number | undefined;
-
-    const pharm = await this.prisma.user.findUnique({
+    const pharmacy = await this.prisma.user.findUnique({
       where: { id: order.pharmacyId },
       select: { latitude: true, longitude: true },
     });
 
-    if (pharm?.latitude && pharm?.longitude) {
-      pickLat = pharm.latitude;
-      pickLon = pharm.longitude;
-    } else {
-      this.logger.warn(`Pharmacy ${order.pharmacyId} has no coordinates.`);
+    if (
+      pharmacy?.latitude == null ||
+      pharmacy?.longitude == null
+    ) {
+      this.logger.warn(
+        `Pharmacy ${order.pharmacyId} missing coordinates`,
+      );
       return [];
     }
 
-    // Query GeoSurge for riders near pickup
     const points = await this.geoSurge.findNearbyPoints(
-      pickLon,
-      pickLat,
+      pharmacy.longitude,
+      pharmacy.latitude,
       radiusKm,
       true,
       100,
     );
 
-    const riderPoints = points.filter((p) =>
+    const riders = points.filter((p) =>
       /^rider:\d+$/.test(p.memberId),
     );
 
     const scored = [];
-    for (const rp of riderPoints) {
-      const score = await this.computeRiderScore(rp, pickLat, pickLon);
+    for (const rp of riders) {
+      const score = await this.computeRiderScore(
+        rp,
+        pharmacy.latitude,
+        pharmacy.longitude,
+      );
       const match = rp.memberId.match(/^rider:(\d+)$/);
 
       scored.push({

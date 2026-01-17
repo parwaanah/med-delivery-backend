@@ -55,6 +55,14 @@ export class OrdersService {
   // ----------------------------------------------------------
   // Helpers
   // ----------------------------------------------------------
+  private isEscalatable(status: OrderStatus) {
+    return (
+      status === OrderStatus.PENDING ||
+      status === OrderStatus.ACCEPTED ||
+      status === OrderStatus.ASSIGNED
+    );
+  }
+
   private toRad(v: number) {
     return (v * Math.PI) / 180;
   }
@@ -141,8 +149,8 @@ export class OrdersService {
   // CREATE ORDER — FULL METHOD
   // ----------------------------------------------------------
   async createOrder(customerId: number, dto: CreateOrderDto) {
-    if (!customerId || isNaN(+customerId))
-      throw new BadRequestException('Invalid customer');
+    if (!customerId)
+  throw new BadRequestException('Invalid customer');
     if (!dto.items?.length)
       throw new BadRequestException('No items provided');
 
@@ -675,23 +683,52 @@ export class OrdersService {
 
     await this.prisma.orderOffer.updateMany({ where: { orderId, riderId }, data: { status: 'REJECTED' } });
     await this.logTimeline(orderId, 'RIDER_REJECTED', { riderId });
+    
+    // Re-queue escalation on rider rejection
+    const delay =
+      Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
+    await this.orderAssignQueue.add(
+      'rider_escalation',
+      { orderId },
+      { delay },
+    );
+    
     return { ok: true };
   }
+  
   // ----------------------------------------------------------
   // Admin assign
   // ----------------------------------------------------------
   async adminAssign(orderId: number, adminId: number, riderId: number) {
-    const updated = await this.prisma.order.update({
-      where: { id: orderId },
-      data: {
-        riderId,
-        status: OrderStatus.OUT_FOR_DELIVERY,
-      },
-    });
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
 
-    await this.prisma.user.update({
+    if (!this.isEscalatable(order.status)) {
+      throw new BadRequestException(
+        `Order cannot be assigned in status ${order.status}`,
+      );
+    }
+
+    const rider = await this.prisma.user.findUnique({
       where: { id: riderId },
-      data: { status: 'BUSY' },
+    });
+    if (!rider || rider.role !== UserRole.RIDER) {
+      throw new BadRequestException('Invalid rider');
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: riderId },
+        data: { status: 'BUSY' },
+      });
+
+      return tx.order.update({
+        where: { id: orderId },
+        data: {
+          riderId,
+          status: OrderStatus.OUT_FOR_DELIVERY,
+        },
+      });
     });
 
     await this.logTimeline(orderId, 'ASSIGNED_BY_ADMIN', {
@@ -707,6 +744,11 @@ export class OrdersService {
       adminId,
     );
 
+    this.ws.notifyUser(updated.customerId, 'order_status_update', {
+      orderId,
+      stage: OrderStatus.OUT_FOR_DELIVERY,
+    });
+
     return updated;
   }
 
@@ -716,9 +758,13 @@ export class OrdersService {
   async updateStage(
     riderId: number,
     orderId: number,
-    stage: any,
+    stage: OrderStatus,
     location?: { lat?: number; lng?: number },
   ) {
+    if (!Object.values(OrderStatus).includes(stage)) {
+      throw new BadRequestException('Invalid order stage');
+    }
+
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
     });
@@ -731,7 +777,7 @@ export class OrdersService {
       data: { status: stage },
     });
 
-    if (stage === 'DELIVERED') {
+    if (stage === OrderStatus.DELIVERED) {
       await this.prisma.user.update({
         where: { id: riderId },
         data: { status: 'AVAILABLE' },
@@ -865,5 +911,100 @@ export class OrdersService {
 
     return Math.min(100, base);
   }
-}
+  
+  // ----------------------------------------------------------
+  // ADMIN OVERRIDES (E4.3)
+  // ----------------------------------------------------------
 
+  async adminForceCancel(orderId: number, reason?: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.CANCELED, riderId: null },
+    });
+
+    await this.logTimeline(orderId, 'ADMIN_FORCE_CANCEL', { reason });
+
+    this.ws.notifyUser(order.customerId, 'order_canceled', {
+      orderId,
+      reason,
+    });
+
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order_canceled', {
+        orderId,
+        reason,
+      });
+    }
+
+    if (typeof (this.ws as any).notifyAdmins === 'function') {
+      (this.ws as any).notifyAdmins('admin_order_override', {
+        orderId,
+        action: 'CANCEL',
+      });
+    }
+    
+    return updated;
+  }
+
+  async adminForceStatus(
+    orderId: number,
+    status: OrderStatus,
+    note?: string,
+  ) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
+
+    await this.logTimeline(orderId, 'ADMIN_FORCE_STATUS', {
+      to: status,
+      note,
+    });
+
+    this.ws.notifyUser(order.customerId, 'order_status_update', {
+      orderId,
+      status,
+    });
+
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order_status_update', {
+        orderId,
+        status,
+      });
+    }
+
+    return updated;
+  }
+
+  async adminUnassignRider(orderId: number) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (!order.riderId) return order;
+
+    await this.prisma.user.update({
+      where: { id: order.riderId },
+      data: { status: 'AVAILABLE' },
+    });
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { riderId: null, status: OrderStatus.ASSIGNED },
+    });
+
+    await this.logTimeline(orderId, 'ADMIN_UNASSIGNED_RIDER');
+
+    return updated;
+  }
+
+  async adminAddNote(orderId: number, note: string) {
+    await this.logTimeline(orderId, 'ADMIN_NOTE', { note });
+    return { ok: true };
+  }
+}

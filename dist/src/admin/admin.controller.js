@@ -15,6 +15,7 @@ const common_1 = require("@nestjs/common");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
+const client_1 = require("@prisma/client");
 let AdminController = class AdminController {
     getStatus() {
         return {
@@ -33,6 +34,6 @@ __decorate([
 ], AdminController.prototype, "getStatus", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Controller)('admin')
 ], AdminController);

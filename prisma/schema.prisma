@@ -9,39 +9,47 @@ datasource db {
 }
 
 model User {
-  id                    Int                 @id @default(autoincrement())
-  name                  String
-  email                 String?             @unique
-  phone                 String?             @unique
-  password              String?
-  googleId              String?             @unique
-  otpCode               String?
-  otpExpiresAt          DateTime?
+  id              Int       @id @default(autoincrement())
+  name            String
+  email           String?   @unique
+  phone           String?   @unique
+  password        String?
+  googleId        String?   @unique
 
-  role                  UserRole            @default(CUSTOMER)
-  status                String              @default("PENDING")
-  approvedBy            Int?
-  latitude              Float?
-  longitude             Float?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  deletedAt             DateTime?
+  emailVerified   Boolean   @default(false)
+  phoneVerified   Boolean   @default(false)
+
+  otpCode         String?
+  otpExpiresAt    DateTime?
+
+  role            UserRole  @default(CUSTOMER)
+  status          String    @default("PENDING")
+  approvedBy      Int?
+
+  latitude        Float?
+  longitude       Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   auditLogs             AuditLog[]
-  receivedMessages      ChatMessage[]       @relation("UserReceivedMessages")
-  sentMessages          ChatMessage[]       @relation("UserSentMessages")
+  receivedMessages      ChatMessage[] @relation("UserReceivedMessages")
+  sentMessages          ChatMessage[] @relation("UserSentMessages")
   LoginAudit            LoginAudit[]
-  receivedNotifications Notification[]      @relation("ReceivedNotifications")
-  sentNotifications     Notification[]      @relation("SentNotifications")
-  customerOrders        Order[]             @relation("CustomerOrders")
-  pharmacyOrders        Order[]             @relation("PharmacyOrders")
-  riderOrders           Order[]             @relation("RiderOrders")
+  receivedNotifications Notification[] @relation("ReceivedNotifications")
+  sentNotifications     Notification[] @relation("SentNotifications")
+  customerOrders        Order[] @relation("CustomerOrders")
+  pharmacyOrders        Order[] @relation("PharmacyOrders")
+  riderOrders           Order[] @relation("RiderOrders")
   pharmacyInventory     PharmacyInventory[] @relation("PharmacyInventoryRelation")
   prescriptions         Prescription[]
   refreshTokens         RefreshToken[]
   sessions              Session[]
-  approver              User?               @relation("AdminApprovals", fields: [approvedBy], references: [id])
-  approvedUsers         User[]              @relation("AdminApprovals")
+  approver              User? @relation("AdminApprovals", fields: [approvedBy], references: [id])
+  approvedUsers         User[] @relation("AdminApprovals")
+
+  partnerProfile        PartnerProfile?
+  verificationDocs      VerificationDocument[]
 }
 
 model Medicine {
@@ -307,4 +315,31 @@ model OtpRequest {
   otp       String
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model PartnerProfile {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  role      UserRole
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationDocument {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  url       String
+  type      String
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

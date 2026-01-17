@@ -1,4 +1,3 @@
-// src/riders/riders.module.ts
 import { Module, forwardRef } from '@nestjs/common';
 import { RidersService } from './riders.service';
 import { RidersController } from './riders.controller';
@@ -12,16 +11,20 @@ import { WsModule } from '../ws/ws.module';
 
 @Module({
   imports: [
-    forwardRef(() => WsModule),    // WsModule <-> RidersModule circular dependency
+    forwardRef(() => WsModule),   // circular dependency handled correctly
     GeoSurgeModule,
     SurgeModule,
   ],
-  controllers: [RidersController],
+  controllers: [
+    RidersController,            // ✅ ONLY rider operational endpoints
+  ],
   providers: [
     RidersService,
     PrismaService,
     NotificationService,
   ],
-  exports: [RidersService], // <-- make RidersService available to WsModule
+  exports: [
+    RidersService,               // used by WsModule
+  ],
 })
 export class RidersModule {}

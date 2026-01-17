@@ -1,5 +1,10 @@
 // src/queues/order-assign.worker.ts
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
@@ -10,26 +15,29 @@ import { EscalationService } from '../admin/escalation.service';
 import { OrderStatus, UserRole } from '@prisma/client';
 
 @Injectable()
-export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
+export class OrderAssignWorker
+  implements OnModuleInit, OnModuleDestroy
+{
   private worker!: Worker;
   private redisClient!: Redis;
   private readonly logger = new Logger(OrderAssignWorker.name);
 
   constructor(
-    private config: ConfigService,
-    private prisma: PrismaService,
-    private notify: NotificationService,
-    private ws: WsGateway,
-    private esc: EscalationService,
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly notify: NotificationService,
+    private readonly ws: WsGateway,
+    private readonly esc: EscalationService,
   ) {}
 
   onModuleInit() {
-    // ALWAYS use Docker Redis host → redis://redis:6379
     const redisUrl =
       this.config.get<string>('REDIS_URL') ||
       `redis://redis:${this.config.get<number>('REDIS_PORT') ?? 6379}`;
 
-    const queueName = this.config.get<string>('ORDER_ASSIGN_QUEUE_NAME') || 'order_assign';
+    const queueName =
+      this.config.get<string>('ORDER_ASSIGN_QUEUE_NAME') ||
+      'order_assign';
 
     this.redisClient = new Redis(redisUrl, {
       enableReadyCheck: true,
@@ -39,158 +47,118 @@ export class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
     this.worker = new Worker(
       queueName,
       async (job: Job) => {
-        try {
-          this.logger.log(
-            `Processing job ${job.id} (${job.name}) data=${JSON.stringify(job.data)}`
-          );
+        if (job.name !== 'rider_escalation') return;
 
-          if (job.name === 'rider_escalation') {
-            const { orderId } = job.data;
-            if (!orderId) return;
+        const orderId = Number(job.data?.orderId);
+        if (!orderId) return;
 
-            const order = await this.prisma.order.findUnique({
-              where: { id: Number(orderId) },
-              select: { id: true, status: true, riderId: true, pharmacyId: true, customerId: true },
+        const order = await this.prisma.order.findUnique({
+          where: { id: orderId },
+          select: {
+            status: true,
+            riderId: true,
+            customerId: true,
+          },
+        });
+
+        if (!order) return;
+
+        // ✅ TYPESAFE ENUM CHECK — FIXED
+        if (
+          order.riderId ||
+          (
+            order.status !== OrderStatus.PENDING &&
+            order.status !== OrderStatus.ACCEPTED
+          )
+        ) {
+          return;
+        }
+
+        const candidates = await this.esc.findCandidatesForOrder(orderId);
+
+        for (const c of candidates) {
+          const riderId = Number(c.riderId);
+          if (!riderId) continue;
+
+          const assigned = await this.prisma.$transaction(async (tx) => {
+            const fresh = await tx.order.findUnique({
+              where: { id: orderId },
+              select: { riderId: true },
+            });
+            if (fresh?.riderId) return null;
+
+            await tx.order.update({
+              where: { id: orderId },
+              data: {
+                riderId,
+                status: OrderStatus.OUT_FOR_DELIVERY,
+              },
             });
 
-            if (!order) {
-              this.logger.warn(`Order ${orderId} not found — skipping`);
-              return;
-            }
+            await tx.user.update({
+              where: { id: riderId },
+              data: { status: 'BUSY' },
+            });
 
-            if (!['PENDING', 'ACCEPTED'].includes(String(order.status))) {
-              this.logger.log(`Order ${orderId} status=${order.status} — skipping`);
-              return;
-            }
+            return riderId;
+          });
 
-            if (order.riderId) {
-              this.logger.log(`Order ${orderId} already has rider ${order.riderId}`);
-              return;
-            }
-
-            const autoAssign =
-              String(this.config.get('AUTO_ASSIGN_RIDER') ?? 'false').toLowerCase() ===
-              'true';
-
-            const candidates = await this.esc.findCandidatesForOrder(
-              Number(orderId),
-              Number(this.config.get('RIDER_SEARCH_KM') || 5),
-              20,
+          if (assigned) {
+            this.notify.create(
+              assigned,
+              'ORDER_ASSIGNED',
+              `Order #${orderId} assigned`,
+              { orderId },
             );
 
-            if (autoAssign && candidates?.length) {
-              for (const c of candidates) {
-                const riderId = Number(c.riderId);
-                if (!riderId || isNaN(riderId)) continue;
-
-                try {
-                  const result = await this.prisma.$transaction(async (tx) => {
-                    const rider = await tx.user.findUnique({
-                      where: { id: riderId },
-                      select: { id: true, status: true },
-                    });
-                    if (!rider || rider.status !== 'AVAILABLE') return null;
-
-                    const ord = await tx.order.findUnique({
-                      where: { id: Number(orderId) },
-                      select: { riderId: true, customerId: true },
-                    });
-                    if (!ord || ord.riderId) return null;
-
-                    await tx.order.update({
-                      where: { id: Number(orderId) },
-                      data: { riderId, status: OrderStatus.OUT_FOR_DELIVERY },
-                    });
-
-                    await tx.user.update({
-                      where: { id: riderId },
-                      data: { status: 'BUSY' },
-                    });
-
-                    return {
-                      riderId,
-                      orderId: Number(orderId),
-                      customerId: ord.customerId,
-                    };
-                  });
-
-                  if (result) {
-                    this.notify.create(
-                      result.riderId,
-                      'ORDER_ASSIGNED',
-                      `You were assigned to order #${result.orderId}`,
-                      { orderId: result.orderId },
-                    );
-                    this.ws.notifyUser(result.riderId, 'order_assigned', {
-                      orderId: result.orderId,
-                    });
-
-                    this.notify.create(
-                      result.customerId,
-                      'ORDER_OUT_FOR_DELIVERY',
-                      `Your order #${result.orderId} is out for delivery`,
-                      { orderId: result.orderId },
-                    );
-                    this.ws.notifyUser(result.customerId, 'order_status_update', {
-                      orderId: result.orderId,
-                      stage: 'OUT_FOR_DELIVERY',
-                    });
-
-                    this.logger.log(
-                      `Auto-assigned rider ${result.riderId} -> order ${result.orderId}`
-                    );
-                    return;
-                  }
-                } catch (err) {
-                  this.logger.warn(
-                    `Auto-assign failed rider=${riderId} order=${orderId}: ${
-                      (err as any)?.message ?? err
-                    }`,
-                  );
-                }
-              }
-            }
-
-            const admins = await this.prisma.user.findMany({
-              where: { role: UserRole.ADMIN },
-              select: { id: true },
+            this.ws.notifyUser(assigned, 'order_assigned', {
+              orderId,
             });
 
-            for (const a of admins) {
-              await this.notify.create(
-                a.id,
-                'ORDER_ESCALATION',
-                `No rider accepted order #${orderId}`,
-                { orderId },
-              );
-              this.ws.notifyUser(a.id, 'order_escalation', { orderId });
-            }
+            this.ws.notifyUser(order.customerId, 'order_status_update', {
+              orderId,
+              stage: OrderStatus.OUT_FOR_DELIVERY,
+            });
 
-            this.logger.warn(`Escalation sent for order ${orderId}`);
+            this.logger.log(
+              `Auto-assigned rider ${assigned} → order ${orderId}`,
+            );
+            return;
           }
-        } catch (err) {
-          this.logger.error(
-            `Job ${job.id} (${job.name}) failed: ${(err as any)?.message ?? err}`
-          );
-          throw err;
         }
+
+        // 🔔 ESCALATE TO ADMINS
+        const admins = await this.prisma.user.findMany({
+          where: { role: UserRole.ADMIN },
+          select: { id: true },
+        });
+
+        for (const admin of admins) {
+          this.notify.create(
+            admin.id,
+            'ORDER_ESCALATION',
+            `Order #${orderId} requires manual assignment`,
+            { orderId },
+          );
+
+          this.ws.notifyUser(admin.id, 'order_escalation', {
+            orderId,
+          });
+        }
+
+        this.logger.warn(
+          `Order ${orderId} escalated to admins`,
+        );
       },
       { connection: this.redisClient },
     );
 
-    this.worker.on('completed', (job) =>
-      this.logger.log(`Escalation job completed ${job.id} (${job.name})`)
-    );
-    this.worker.on('failed', (job, err) =>
-      this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`)
-    );
-
-    this.logger.log(`✅ OrderAssignWorker started (queue=${queueName})`);
+    this.logger.log('✅ OrderAssignWorker running');
   }
 
   async onModuleDestroy() {
-    await this.worker.close().catch(() => {});
-    await this.redisClient.quit().catch(() => {});
+    await this.worker?.close().catch(() => {});
+    await this.redisClient?.quit().catch(() => {});
     this.logger.log('🛑 OrderAssignWorker stopped');
   }
 }

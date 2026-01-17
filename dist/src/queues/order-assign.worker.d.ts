@@ -5,11 +5,11 @@ import { NotificationService } from '../utils/notification.service';
 import { WsGateway } from '../ws/ws.gateway';
 import { EscalationService } from '../admin/escalation.service';
 export declare class OrderAssignWorker implements OnModuleInit, OnModuleDestroy {
-    private config;
-    private prisma;
-    private notify;
-    private ws;
-    private esc;
+    private readonly config;
+    private readonly prisma;
+    private readonly notify;
+    private readonly ws;
+    private readonly esc;
     private worker;
     private redisClient;
     private readonly logger;

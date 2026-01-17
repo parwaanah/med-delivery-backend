@@ -1,4 +1,3 @@
-// src/payments/payments.controller.ts
 import {
   Controller,
   Post,
@@ -11,6 +10,7 @@ import {
   Get,
   Param,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { RazorpayService } from './razorpay.service';
@@ -18,6 +18,11 @@ import { PrismaService } from '../utils/prisma.service';
 import { Request, Response } from 'express';
 import { CreateIntentDto } from './dto/create-intent.dto';
 import { RefundDto } from './dto/refund.dto';
+
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @Controller('payments')
 export class PaymentsController {
@@ -51,15 +56,21 @@ export class PaymentsController {
       const json = JSON.parse(raw.toString('utf8'));
       await this.paymentsService.handleWebhookEvent(json);
       return res.status(200).send('ok');
-    } catch (err) {
-      console.error('payments webhook error', err);
+    } catch {
       return res.status(500).send('error');
     }
   }
 
+  // ADMIN REFUND
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post('refund')
-  async refund(@Body() dto: RefundDto) {
-    return this.paymentsService.refundTransaction(dto.transactionId, dto.amount);
+  async refund(@Req() req: any, @Body() dto: RefundDto) {
+    return this.paymentsService.refundTransaction(
+      dto.transactionId,
+      dto.amount,
+      req.user?.id,
+    );
   }
 
   @Get('admin/list')

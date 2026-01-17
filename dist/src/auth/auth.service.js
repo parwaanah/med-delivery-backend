@@ -58,299 +58,165 @@ let AuthService = AuthService_1 = class AuthService {
         this.jwtService = jwtService;
         this.audit = audit;
         this.logger = new common_1.Logger(AuthService_1.name);
-        this.LOADTEST = process.env.LOADTEST_MODE === 'true';
     }
     async register(data) {
-        if (!data.name || !data.email || !data.password)
-            throw new common_1.BadRequestException('Name, email and password required');
+        if (!data.name || !data.email || !data.password) {
+            throw new common_1.BadRequestException("Name, email and password required");
+        }
         const exists = await this.prisma.user.findUnique({
             where: { email: data.email },
         });
         if (exists)
-            throw new common_1.BadRequestException('Email already in use');
+            throw new common_1.BadRequestException("Email already in use");
         const hashed = await bcrypt.hash(data.password, 10);
         const role = data.role || client_1.UserRole.CUSTOMER;
-        const status = role === client_1.UserRole.CUSTOMER ? 'APPROVED' : 'PENDING';
         const user = await this.prisma.user.create({
             data: {
                 name: data.name,
                 email: data.email,
                 password: hashed,
                 role,
-                status,
+                status: role === client_1.UserRole.CUSTOMER ? "APPROVED" : "PENDING",
+                emailVerified: role !== client_1.UserRole.CUSTOMER,
             },
         });
-        await this.audit.log({
-            userId: user.id,
-            email: user.email || undefined,
-            role: user.role,
-            eventType: 'REGISTER_SUCCESS',
-            success: true,
-        });
-        return this.generateToken(user);
+        return this.issueTokens(user);
     }
     async login(data, ip, ua) {
         const user = await this.prisma.user.findUnique({
             where: { email: data.email },
         });
-        if (!user)
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        if (!this.LOADTEST) {
-            if (user.status !== 'APPROVED' && user.role !== client_1.UserRole.CUSTOMER) {
-                throw new common_1.UnauthorizedException('Account pending admin approval');
-            }
+        if (!user || !user.password) {
+            throw new common_1.UnauthorizedException("Invalid credentials");
         }
-        if (!user.password) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
+        if (user.role === client_1.UserRole.CUSTOMER && !user.emailVerified) {
+            throw new common_1.UnauthorizedException("Please verify your email");
         }
         const match = await bcrypt.compare(data.password, user.password);
         if (!match)
-            throw new common_1.UnauthorizedException('Invalid credentials');
+            throw new common_1.UnauthorizedException("Invalid credentials");
         const session = await this.prisma.session.create({
             data: {
                 userId: user.id,
                 ip: ip || null,
-                userAgent: ua ? String(ua) : null,
+                userAgent: ua || null,
                 expiresAt: (0, date_fns_1.addHours)(new Date(), 12),
             },
         });
-        const rawRefresh = crypto.randomBytes(32).toString('hex');
-        const hashedRefresh = crypto
-            .createHash('sha256')
+        return this.issueTokens(user, session.id, ip, ua);
+    }
+    async verifyEmail(token) {
+        if (!token)
+            throw new common_1.BadRequestException("Missing token");
+        const user = await this.prisma.user.findFirst({
+            where: { otpCode: token },
+        });
+        if (!user)
+            throw new common_1.BadRequestException("Invalid verification token");
+        if (user.otpExpiresAt && (0, date_fns_1.isBefore)(user.otpExpiresAt, new Date())) {
+            throw new common_1.BadRequestException("Verification token expired");
+        }
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                emailVerified: true,
+                otpCode: null,
+                otpExpiresAt: null,
+            },
+        });
+        return { message: "Email verified successfully" };
+    }
+    async verifyOtp(data) {
+        const user = await this.prisma.user.findUnique({
+            where: { phone: data.phone },
+        });
+        if (!user || user.otpCode !== data.otp) {
+            throw new common_1.UnauthorizedException("Invalid OTP");
+        }
+        if (user.otpExpiresAt && (0, date_fns_1.isBefore)(user.otpExpiresAt, new Date())) {
+            throw new common_1.UnauthorizedException("OTP expired");
+        }
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                otpCode: null,
+                otpExpiresAt: null,
+                phoneVerified: true,
+            },
+        });
+        return this.issueTokens(user);
+    }
+    async refresh(refreshToken) {
+        if (!refreshToken) {
+            throw new common_1.UnauthorizedException("Missing refresh token");
+        }
+        const hash = crypto
+            .createHash("sha256")
+            .update(refreshToken)
+            .digest("hex");
+        const stored = await this.prisma.refreshToken.findFirst({
+            where: { tokenHash: hash, revoked: false },
+            include: { user: true },
+        });
+        if (!stored || stored.expiresAt < new Date()) {
+            throw new common_1.UnauthorizedException("Invalid refresh token");
+        }
+        await this.prisma.refreshToken.update({
+            where: { id: stored.id },
+            data: { revoked: true },
+        });
+        return this.issueTokens(stored.user, stored.sessionId ?? undefined);
+    }
+    async logout(userId) {
+        await this.prisma.$transaction([
+            this.prisma.refreshToken.updateMany({
+                where: { userId, revoked: false },
+                data: { revoked: true },
+            }),
+            this.prisma.session.updateMany({
+                where: { userId, revoked: false },
+                data: { revoked: true },
+            }),
+        ]);
+        return { message: "Logged out successfully" };
+    }
+    async issueTokens(user, sessionId, ip, ua) {
+        const accessToken = this.jwtService.sign({
+            sub: user.id,
+            role: user.role,
+        });
+        const rawRefresh = crypto.randomBytes(32).toString("hex");
+        const hashed = crypto
+            .createHash("sha256")
             .update(rawRefresh)
-            .digest('hex');
+            .digest("hex");
         await this.prisma.refreshToken.create({
             data: {
                 userId: user.id,
-                sessionId: session.id,
-                tokenHash: hashedRefresh,
+                sessionId,
+                tokenHash: hashed,
                 expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
             },
         });
         await this.audit.log({
             userId: user.id,
-            email: user.email || undefined,
-            eventType: 'LOGIN_SUCCESS',
+            email: user.email,
             role: user.role,
+            eventType: "SESSION_ISSUED",
             success: true,
-        });
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            role: user.role,
+            ip,
+            userAgent: ua,
         });
         return {
             accessToken,
             refreshToken: rawRefresh,
-            sessionId: session.id,
-            user: { id: user.id, name: user.name, email: user.email, role: user.role },
-        };
-    }
-    async refreshToken(oldToken) {
-        if (!oldToken)
-            throw new common_1.UnauthorizedException('Missing token');
-        const oldHash = crypto.createHash('sha256').update(oldToken).digest('hex');
-        const existing = await this.prisma.refreshToken.findFirst({
-            where: { tokenHash: oldHash, revoked: false },
-            include: { session: true },
-        });
-        if (!existing || !existing.session) {
-            throw new common_1.UnauthorizedException('Invalid refresh token');
-        }
-        if (existing.expiresAt && (0, date_fns_1.isBefore)(existing.expiresAt, new Date())) {
-            await this.prisma.refreshToken.update({
-                where: { id: existing.id },
-                data: { revoked: true },
-            });
-            throw new common_1.UnauthorizedException('Refresh token expired');
-        }
-        if (existing.session.revoked) {
-            throw new common_1.UnauthorizedException('Session revoked');
-        }
-        await this.prisma.refreshToken.update({
-            where: { id: existing.id },
-            data: { revoked: true },
-        });
-        const user = await this.prisma.user.findUnique({
-            where: { id: existing.session.userId },
-        });
-        if (!user)
-            throw new common_1.UnauthorizedException('User not found');
-        const newRaw = crypto.randomBytes(32).toString('hex');
-        const newHash = crypto.createHash('sha256').update(newRaw).digest('hex');
-        await this.prisma.refreshToken.create({
-            data: {
-                userId: user.id,
-                sessionId: existing.session.id,
-                tokenHash: newHash,
-                expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
-            },
-        });
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            role: user.role,
-        });
-        return {
-            accessToken,
-            refreshToken: newRaw,
-            sessionId: existing.session.id,
-        };
-    }
-    async requestPasswordReset(email) {
-        if (!email)
-            throw new common_1.BadRequestException('Email required');
-        const user = await this.prisma.user.findUnique({ where: { email } });
-        if (!user)
-            throw new common_1.BadRequestException('No such user');
-        const token = crypto.randomBytes(20).toString('hex');
-        const link = `https://app/reset-password?token=${token}`;
-        this.logger.log(`Password reset for ${email}: ${link}`);
-        return {
-            message: `Password reset email sent to ${email}`,
-            resetLink: link,
-        };
-    }
-    async logout(sessionId) {
-        if (!sessionId) {
-            throw new common_1.BadRequestException('sessionId required');
-        }
-        await this.prisma.session.update({
-            where: { id: sessionId },
-            data: { revoked: true },
-        });
-        await this.prisma.refreshToken.updateMany({
-            where: { sessionId },
-            data: { revoked: true },
-        });
-        return { message: 'Logout successful' };
-    }
-    generateToken(user) {
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            role: user.role,
-        });
-        return {
-            accessToken,
             user: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                status: user.status,
             },
-        };
-    }
-    async sendOtp(data) {
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        await this.prisma.user.upsert({
-            where: { phone: data.phone },
-            create: {
-                phone: data.phone,
-                name: 'New User',
-                role: data.role || client_1.UserRole.CUSTOMER,
-                status: 'APPROVED',
-                otpCode: otp,
-                otpExpiresAt: (0, date_fns_1.addHours)(new Date(), 1),
-            },
-            update: {
-                otpCode: otp,
-                otpExpiresAt: (0, date_fns_1.addHours)(new Date(), 1),
-            },
-        });
-        this.logger.log(`DUMMY SMS OTP for ${data.phone}: ${otp}`);
-        return { message: 'OTP sent successfully (dummy mode)' };
-    }
-    async verifyOtp(data, ip, ua) {
-        const user = await this.prisma.user.findUnique({
-            where: { phone: data.phone },
-        });
-        if (!user || user.otpCode !== data.otp) {
-            throw new common_1.UnauthorizedException('Invalid OTP');
-        }
-        await this.prisma.user.update({
-            where: { id: user.id },
-            data: { otpCode: null },
-        });
-        const session = await this.prisma.session.create({
-            data: {
-                userId: user.id,
-                ip,
-                userAgent: ua,
-                expiresAt: (0, date_fns_1.addHours)(new Date(), 12),
-            },
-        });
-        const rawRefresh = crypto.randomBytes(32).toString('hex');
-        const hashedRefresh = crypto
-            .createHash('sha256')
-            .update(rawRefresh)
-            .digest('hex');
-        await this.prisma.refreshToken.create({
-            data: {
-                userId: user.id,
-                sessionId: session.id,
-                tokenHash: hashedRefresh,
-                expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
-            },
-        });
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            role: user.role,
-        });
-        return {
-            accessToken,
-            refreshToken: rawRefresh,
-            sessionId: session.id,
-            user: {
-                id: user.id,
-                name: user.name,
-                phone: user.phone,
-                role: user.role,
-            },
-        };
-    }
-    async googleLogin(googleUser) {
-        let user = await this.prisma.user.findUnique({
-            where: { email: googleUser.email },
-        });
-        if (!user) {
-            user = await this.prisma.user.create({
-                data: {
-                    googleId: googleUser.googleId,
-                    email: googleUser.email,
-                    name: googleUser.name,
-                    role: client_1.UserRole.CUSTOMER,
-                    status: 'APPROVED',
-                },
-            });
-        }
-        const session = await this.prisma.session.create({
-            data: {
-                userId: user.id,
-                ip: null,
-                userAgent: 'google-oauth',
-                expiresAt: (0, date_fns_1.addHours)(new Date(), 12),
-            },
-        });
-        const rawRefresh = crypto.randomBytes(32).toString('hex');
-        const hashedRefresh = crypto
-            .createHash('sha256')
-            .update(rawRefresh)
-            .digest('hex');
-        await this.prisma.refreshToken.create({
-            data: {
-                userId: user.id,
-                sessionId: session.id,
-                tokenHash: hashedRefresh,
-                expiresAt: (0, date_fns_1.addHours)(new Date(), 48),
-            },
-        });
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            role: user.role,
-        });
-        return {
-            accessToken,
-            refreshToken: rawRefresh,
-            sessionId: session.id,
-            user: { id: user.id, name: user.name, email: user.email, role: user.role },
         };
     }
 };

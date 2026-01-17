@@ -1,4 +1,3 @@
-// src/riders/riders.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { NotificationService } from '../utils/notification.service';
@@ -28,7 +27,6 @@ export class RidersService {
       data: { latitude: lat, longitude: lon },
     });
 
-    // update geosurge redis index
     try {
       await this.geo.addPoint(`rider:${riderId}`, lon, lat, {
         lat: String(lat),
@@ -40,7 +38,6 @@ export class RidersService {
       );
     }
 
-    // send WS broadcast
     this.ws.broadcast('rider_location', {
       riderId,
       lat,
@@ -56,12 +53,19 @@ export class RidersService {
       data: { status },
     });
 
-    // Surge engine: rider availability
     try {
-      await this.surge.recordRiderAvailability(riderId, status === 'AVAILABLE');
+      await this.surge.recordRiderAvailability(
+        riderId,
+        status === 'AVAILABLE',
+      );
     } catch {}
 
-    // notify admin
+    // ✅ Notify admins for live metrics refresh
+    this.ws.notifyAdmins('admin_rider_event', {
+      riderId,
+      status,
+    });
+
     this.ws.broadcast('rider_status', { riderId, status });
     return { ok: true };
   }

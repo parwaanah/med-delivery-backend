@@ -15,27 +15,21 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../utils/prisma.service");
 const razorpay_service_1 = require("./razorpay.service");
 const client_1 = require("@prisma/client");
+const audit_service_1 = require("../utils/audit.service");
 let PaymentsService = PaymentsService_1 = class PaymentsService {
-    constructor(prisma, razorpay) {
+    constructor(prisma, razorpay, audit) {
         this.prisma = prisma;
         this.razorpay = razorpay;
+        this.audit = audit;
         this.logger = new common_1.Logger(PaymentsService_1.name);
     }
     async createPaymentForOrder(orderId) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
-            select: {
-                id: true,
-                totalPrice: true,
-                status: true,
-                customerId: true,
-                paymentMode: true,
-            },
         });
         if (!order)
             throw new common_1.BadRequestException('Order not found');
         if (process.env.LOADTEST_MODE === 'true') {
-            this.logger.warn(`💡 LOADTEST MODE ACTIVE → Mock payment used for order ${orderId}`);
             const tx = await this.prisma.transaction.create({
                 data: {
                     orderId,
@@ -50,16 +44,7 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
                 where: { id: orderId },
                 data: { status: client_1.OrderStatus.PAID },
             });
-            return {
-                mock: true,
-                razorpayOrder: {
-                    id: `mock_order_${orderId}`,
-                    amount: Number(order.totalPrice) * 100,
-                    currency: 'INR',
-                    status: 'created',
-                },
-                transaction: tx,
-            };
+            return { mock: true, transaction: tx };
         }
         const amountPaise = Math.round(Number(order.totalPrice) * 100);
         const rzpOrder = await this.razorpay.createOrder(amountPaise, 'INR', `order_${orderId}`);
@@ -73,10 +58,7 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
                 status: 'CREATED',
             },
         });
-        return {
-            razorpayOrder: rzpOrder,
-            transaction: tx,
-        };
+        return { razorpayOrder: rzpOrder, transaction: tx };
     }
     async handleWebhookEvent(event) {
         const type = event?.event;
@@ -135,17 +117,36 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
         });
         this.logger.warn(`Payment FAILED for order ${tx.orderId}`);
     }
-    async refundTransaction(transactionId, amount) {
+    async refundTransaction(transactionId, amount, adminUserId) {
         const tx = await this.prisma.transaction.findUnique({
             where: { id: transactionId },
         });
         if (!tx)
             throw new common_1.BadRequestException('Transaction not found');
+        if (tx.status === 'REFUNDED')
+            throw new common_1.BadRequestException('Transaction already refunded');
         if (process.env.LOADTEST_MODE === 'true') {
+            await this.prisma.transaction.update({
+                where: { id: transactionId },
+                data: { status: 'REFUNDED' },
+            });
+            await this.audit.logAdminAction({
+                userId: adminUserId,
+                action: 'REFUND',
+                resource: 'PAYMENT',
+                meta: {
+                    transactionId,
+                    orderId: tx.orderId,
+                    amount: Number(tx.amount) / 100,
+                    mock: true,
+                },
+            });
             return { mock: true, refunded: true };
         }
-        const refundAmount = amount ? Math.round(amount * 100) : undefined;
-        const refund = await this.razorpay.refundPayment(tx.providerPayment, refundAmount);
+        const refundAmountPaise = amount
+            ? Math.round(amount * 100)
+            : undefined;
+        const refund = await this.razorpay.refundPayment(tx.providerPayment, refundAmountPaise);
         await this.prisma.transaction.update({
             where: { id: transactionId },
             data: {
@@ -153,6 +154,17 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
                 rawData: JSON.parse(JSON.stringify(refund)),
             },
         });
+        await this.audit.logAdminAction({
+            userId: adminUserId,
+            action: 'REFUND',
+            resource: 'PAYMENT',
+            meta: {
+                transactionId,
+                orderId: tx.orderId,
+                amount: Number(refundAmountPaise ?? tx.amount) / 100,
+            },
+        });
+        this.logger.log(`Refund completed for transaction ${transactionId}`);
         return refund;
     }
     async listTransactions() {
@@ -165,5 +177,6 @@ exports.PaymentsService = PaymentsService;
 exports.PaymentsService = PaymentsService = PaymentsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        razorpay_service_1.RazorpayService])
+        razorpay_service_1.RazorpayService,
+        audit_service_1.AuditService])
 ], PaymentsService);

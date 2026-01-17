@@ -3,75 +3,68 @@ import {
   Controller,
   Post,
   Get,
+  Query,
   Req,
   UseGuards,
-  Res,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
-import { AuthGuard } from '@nestjs/passport';
+} from "@nestjs/common";
+import { Request } from "express";
+import { AuthService } from "./auth.service";
+import { LoginDto, RegisterDto, VerifyOtpDto } from "./dto/auth.dto";
+import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 
-import { AuthService } from './auth.service';
-import {
-  LoginDto,
-  RegisterDto,
-  RefreshTokenDto,
-  SendOtpDto,
-  VerifyOtpDto,
-} from './dto/auth.dto';
-
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
-  constructor(private auth: AuthService) {}
+  constructor(private readonly auth: AuthService) {}
 
-  @Post('register')
+  // ================= REGISTER =================
+  @Post("register")
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }
 
-  @Post('login')
-  login(@Req() req: Request, @Body() dto: LoginDto) {
-    const ip = req.ip || '';
-    const ua = String(req.headers['user-agent'] || '');
-    return this.auth.login(dto, ip, ua);
+  // ================= LOGIN =================
+  @Post("login")
+  async login(@Req() req: Request, @Body() dto: LoginDto) {
+    const res = await this.auth.login(
+      dto,
+      req.ip,
+      String(req.headers["user-agent"] || ""),
+    );
+
+    return {
+      user: res.user,
+      access_token: res.accessToken,
+      refresh_token: res.refreshToken,
+    };
   }
 
-  @Post('refresh')
-  refresh(@Body() dto: RefreshTokenDto) {
-    return this.auth.refreshToken(dto.refreshToken);
+  // ================= REFRESH =================
+  @Post("refresh")
+  async refresh(@Body("refresh_token") token: string) {
+    const res = await this.auth.refresh(token);
+    return {
+      user: res.user,
+      access_token: res.accessToken,
+      refresh_token: res.refreshToken,
+    };
   }
 
-  @Post('logout')
-  logout(@Body('sessionId') sessionId: number) {
-    return this.auth.logout(sessionId);
+  // ================= LOGOUT =================
+  @UseGuards(JwtAuthGuard)
+  @Post("logout")
+  logout(@Req() req: any) {
+    return this.auth.logout(req.user.id);
   }
 
-  // OTP
-  @Post('send-otp')
-  sendOtp(@Body() dto: SendOtpDto) {
-    return this.auth.sendOtp(dto);
+  // ================= VERIFY EMAIL =================
+  @Get("verify-email")
+  verifyEmail(@Query("token") token: string) {
+    return this.auth.verifyEmail(token);
   }
 
-  @Post('verify-otp')
-  verifyOtp(@Req() req: Request, @Body() dto: VerifyOtpDto) {
-    const ip = req.ip || '';
-    const ua = String(req.headers['user-agent'] || '');
-    return this.auth.verifyOtp(dto, ip, ua);
-  }
-
-  // GOOGLE LOGIN
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  googleAuth() {}
-
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleCallback(@Req() req: any, @Res() res: Response) {
-    const result = await this.auth.googleLogin(req.user);
-
-    const encoded = encodeURIComponent(JSON.stringify(result));
-
-    const frontend = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-    return res.redirect(`${frontend}/auth/google/callback?data=${encoded}`);
+  // ================= VERIFY OTP =================
+  @Post("verify-otp")
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.auth.verifyOtp(dto);
   }
 }

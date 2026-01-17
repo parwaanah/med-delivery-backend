@@ -59,6 +59,10 @@ let RidersService = RidersService_1 = class RidersService {
             await this.surge.recordRiderAvailability(riderId, status === 'AVAILABLE');
         }
         catch { }
+        this.ws.notifyAdmins('admin_rider_event', {
+            riderId,
+            status,
+        });
         this.ws.broadcast('rider_status', { riderId, status });
         return { ok: true };
     }

@@ -36,31 +36,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const bcrypt = __importStar(require("bcrypt"));
 const prisma = new client_1.PrismaClient();
 async function main() {
     console.log("🌱 Starting FULL seed…");
     const file = path.join(__dirname, "medicines.json");
     if (!fs.existsSync(file)) {
-        console.error("❌ medicines.json not found. Run generate_medicines.js first.");
+        console.error("❌ medicines.json not found.");
         process.exit(1);
     }
     const medicines = JSON.parse(fs.readFileSync(file, "utf8"));
     console.log(`📦 Found ${medicines.length} medicines in JSON`);
-    const pharmacyId = 17;
-    let pharmacy = await prisma.user.findUnique({ where: { id: pharmacyId } });
+    let pharmacy = await prisma.user.findFirst({
+        where: { role: "PHARMACY" },
+    });
     if (!pharmacy) {
-        console.log("🏥 Creating default pharmacy (ID 17)...");
+        console.log("🏥 Creating seed pharmacy...");
         pharmacy = await prisma.user.create({
             data: {
-                id: pharmacyId,
                 name: "Seed Pharmacy",
                 email: "seed_pharmacy@example.com",
-                password: "123456",
+                password: await bcrypt.hash("123456", 10),
                 role: "PHARMACY",
                 status: "APPROVED",
+                emailVerified: true,
             },
         });
     }
+    const pharmacyId = pharmacy.id;
+    console.log(`🏥 Using pharmacyId = ${pharmacyId}`);
     console.log("💊 Inserting medicines…");
     const batch = 500;
     for (let i = 0; i < medicines.length; i += batch) {
@@ -68,40 +72,40 @@ async function main() {
             data: medicines.slice(i, i + batch),
             skipDuplicates: true,
         });
-        console.log(`  → Inserted ${Math.min(i + batch, medicines.length)}/${medicines.length}`);
+        console.log(`→ ${Math.min(i + batch, medicines.length)}/${medicines.length}`);
     }
-    console.log("📦 Building pharmacy inventory...");
-    const allMeds = await prisma.medicine.findMany();
+    console.log("📦 Creating inventory...");
+    const allMeds = await prisma.medicine.findMany({ select: { id: true } });
     for (const m of allMeds) {
-        const basePrice = 50 + m.id;
+        const base = 50 + m.id;
         await prisma.pharmacyInventory.upsert({
             where: {
                 pharmacyId_medicineId: {
-                    pharmacyId: pharmacyId,
+                    pharmacyId,
                     medicineId: m.id,
                 },
             },
             update: {
-                mrp: basePrice,
-                sellingPrice: basePrice - 10,
+                mrp: base,
+                sellingPrice: base - 10,
                 discount: 20,
                 stock: 50,
             },
             create: {
-                pharmacyId: pharmacyId,
+                pharmacyId,
                 medicineId: m.id,
-                mrp: basePrice,
-                sellingPrice: basePrice - 10,
+                mrp: base,
+                sellingPrice: base - 10,
                 discount: 20,
                 stock: 50,
             },
         });
     }
-    console.log("✅ Seed completed successfully!");
+    console.log("✅ Seed completed successfully");
 }
 main()
-    .catch((err) => {
-    console.error("❌ Seed failed:", err);
+    .catch((e) => {
+    console.error("❌ Seed failed:", e);
     process.exit(1);
 })
     .finally(() => prisma.$disconnect());

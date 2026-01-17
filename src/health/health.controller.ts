@@ -12,15 +12,12 @@ export class HealthController {
 
   @Get()
   async getHealth() {
-    const redisUrl =
-      this.config.get<string>('REDIS_URL') || 'redis://redis:6379';
-
     const results: Record<string, any> = {
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     };
 
-    // ✅ 1. Prisma DB check
+    /* ---------------- DATABASE ---------------- */
     try {
       await this.prisma.$queryRaw`SELECT 1;`;
       results.database = { status: 'up' };
@@ -30,9 +27,11 @@ export class HealthController {
       results.database = { status: 'down', error: msg };
     }
 
-    // ✅ 2. Redis check — lightweight ping
+    /* ---------------- REDIS ---------------- */
+    let redisUp = false;
     try {
       await redisPing();
+      redisUp = true;
       results.redis = { status: 'up' };
     } catch (err: unknown) {
       const msg =
@@ -40,7 +39,13 @@ export class HealthController {
       results.redis = { status: 'down', error: msg };
     }
 
-    // ✅ 3. Process / Memory usage
+    /* ---------------- QUEUE ---------------- */
+    // Queues are Redis-backed; if Redis is up, queue is operational
+    results.queue = {
+      status: redisUp ? 'up' : 'down',
+    };
+
+    /* ---------------- MEMORY ---------------- */
     const mem = process.memoryUsage();
     results.memory = {
       rss: mem.rss,
@@ -48,10 +53,11 @@ export class HealthController {
       heapUsed: mem.heapUsed,
     };
 
-    // ✅ 4. Final status logic
+    /* ---------------- FINAL STATUS ---------------- */
     const anyDown = Object.values(results).some(
       (v) => v && v.status === 'down',
     );
+
     if (anyDown) {
       throw new HttpException(
         { status: 'error', details: results },

@@ -11,16 +11,10 @@ export declare class PaymentsController {
     constructor(paymentsService: PaymentsService, rzpService: RazorpayService, prisma: PrismaService);
     createIntent(body: CreateIntentDto): Promise<{
         mock: boolean;
-        razorpayOrder: {
-            id: string;
-            amount: number;
-            currency: string;
-            status: string;
-        };
         transaction: {
-            status: string;
             createdAt: Date;
             id: string;
+            status: string;
             method: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             currency: string;
@@ -30,12 +24,13 @@ export declare class PaymentsController {
             rawData: import("@prisma/client/runtime/library").JsonValue | null;
             orderId: number | null;
         };
+        razorpayOrder?: undefined;
     } | {
         razorpayOrder: any;
         transaction: {
-            status: string;
             createdAt: Date;
             id: string;
+            status: string;
             method: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             currency: string;
@@ -48,14 +43,14 @@ export declare class PaymentsController {
         mock?: undefined;
     }>;
     webhook(req: Request, res: Response, signature: string): Promise<Response<any, Record<string, any>>>;
-    refund(dto: RefundDto): Promise<import("razorpay/dist/types/refunds").Refunds.RazorpayRefund | {
+    refund(req: any, dto: RefundDto): Promise<import("razorpay/dist/types/refunds").Refunds.RazorpayRefund | {
         mock: boolean;
         refunded: boolean;
     }>;
     adminList(): Promise<{
-        status: string;
         createdAt: Date;
         id: string;
+        status: string;
         method: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         currency: string;
@@ -66,9 +61,9 @@ export declare class PaymentsController {
         orderId: number | null;
     }[]>;
     byOrder(orderId: string): Promise<{
-        status: string;
         createdAt: Date;
         id: string;
+        status: string;
         method: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         currency: string;

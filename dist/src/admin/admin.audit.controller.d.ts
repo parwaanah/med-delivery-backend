@@ -1,28 +1,20 @@
 import { PrismaService } from '../utils/prisma.service';
+import { Response } from 'express';
 export declare class AdminAuditController {
     private prisma;
     constructor(prisma: PrismaService);
-    getAuditLogs(page?: string, limit?: string, userId?: string, email?: string, eventType?: string, role?: string, success?: string): Promise<{
+    getLogs(page?: string, limit?: string, action?: string, userId?: string, from?: string, to?: string): Promise<{
         page: number;
         limit: number;
         total: number;
         logs: {
-            email: string | null;
-            role: string | null;
-            id: number;
             userId: number | null;
-            ip: string | null;
-            userAgent: string | null;
-            eventType: string;
-            success: boolean;
-            timestamp: Date;
+            action: string;
+            resource: string | null;
+            meta: import("@prisma/client/runtime/library").JsonValue | null;
+            createdAt: Date;
+            id: number;
         }[];
     }>;
-    getAuditStats(): Promise<{
-        totalEvents: number;
-        successCount: number;
-        failedCount: number;
-        successRate: number;
-        lastUpdated: string;
-    }>;
+    exportCsv(from: string, to: string, res: Response): Promise<void>;
 }

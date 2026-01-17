@@ -64,7 +64,7 @@ __decorate([
 ], RefreshTokenDto.prototype, "refreshToken", void 0);
 class SendOtpDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { phone: { required: true, type: () => String }, role: { required: false, type: () => Object } };
+        return { phone: { required: true, type: () => String } };
     }
 }
 exports.SendOtpDto = SendOtpDto;
@@ -72,13 +72,9 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendOtpDto.prototype, "phone", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], SendOtpDto.prototype, "role", void 0);
 class VerifyOtpDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { phone: { required: true, type: () => String }, otp: { required: true, type: () => String }, role: { required: false, type: () => Object } };
+        return { phone: { required: true, type: () => String }, otp: { required: true, type: () => String } };
     }
 }
 exports.VerifyOtpDto = VerifyOtpDto;
@@ -90,7 +86,3 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], VerifyOtpDto.prototype, "otp", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], VerifyOtpDto.prototype, "role", void 0);

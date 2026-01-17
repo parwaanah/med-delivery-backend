@@ -19,85 +19,92 @@ const prisma_service_1 = require("../utils/prisma.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let AdminAuditController = class AdminAuditController {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getAuditLogs(page, limit, userId, email, eventType, role, success) {
-        const pageNum = Number(page) > 0 ? Number(page) : 1;
-        const limitNum = Number(limit) > 0 ? Number(limit) : 100;
-        const skip = (pageNum - 1) * limitNum;
+    async getLogs(page = '1', limit = '50', action, userId, from, to) {
+        const take = Number(limit);
+        const skip = (Number(page) - 1) * take;
         const where = {};
+        if (action)
+            where.action = action;
         if (userId)
             where.userId = Number(userId);
-        if (email)
-            where.email = { contains: email, mode: 'insensitive' };
-        if (eventType)
-            where.eventType = eventType;
-        if (role)
-            where.role = role;
-        if (success !== undefined)
-            where.success = success === 'true' || success === '1';
+        if (from || to) {
+            where.createdAt = {};
+            if (from)
+                where.createdAt.gte = new Date(from);
+            if (to)
+                where.createdAt.lte = new Date(to);
+        }
         const [logs, total] = await this.prisma.$transaction([
-            this.prisma.loginAudit.findMany({
+            this.prisma.auditLog.findMany({
                 where,
-                orderBy: { timestamp: 'desc' },
+                orderBy: { createdAt: 'desc' },
                 skip,
-                take: limitNum,
+                take,
             }),
-            this.prisma.loginAudit.count({ where }),
+            this.prisma.auditLog.count({ where }),
         ]);
         return {
-            page: pageNum,
-            limit: limitNum,
+            page: Number(page),
+            limit: take,
             total,
             logs,
         };
     }
-    async getAuditStats() {
-        const successCount = await this.prisma.loginAudit.count({
-            where: { success: true, eventType: 'LOGIN_SUCCESS' },
+    async exportCsv(from, to, res) {
+        const where = {};
+        if (from || to) {
+            where.createdAt = {};
+            if (from)
+                where.createdAt.gte = new Date(from);
+            if (to)
+                where.createdAt.lte = new Date(to);
+        }
+        const logs = await this.prisma.auditLog.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
         });
-        const failedCount = await this.prisma.loginAudit.count({
-            where: { success: false, eventType: 'LOGIN_FAILED' },
-        });
-        const totalEvents = await this.prisma.loginAudit.count();
-        return {
-            totalEvents,
-            successCount,
-            failedCount,
-            successRate: totalEvents === 0 ? 0 : Math.round((successCount / totalEvents) * 100),
-            lastUpdated: new Date().toISOString(),
-        };
+        const header = 'id,userId,action,resource,createdAt\n';
+        const rows = logs
+            .map((l) => `${l.id},${l.userId ?? ''},"${l.action}","${l.resource ?? ''}",${l.createdAt.toISOString()}`)
+            .join('\n');
+        const csv = header + rows;
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="audit_logs.csv"');
+        res.send(csv);
     }
 };
 exports.AdminAuditController = AdminAuditController;
 __decorate([
-    openapi.ApiOperation({ description: "\u2705 Fetch paginated or default (last 100) audit logs" }),
     (0, common_1.Get)('logs'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
-    __param(2, (0, common_1.Query)('userId')),
-    __param(3, (0, common_1.Query)('email')),
-    __param(4, (0, common_1.Query)('eventType')),
-    __param(5, (0, common_1.Query)('role')),
-    __param(6, (0, common_1.Query)('success')),
+    __param(2, (0, common_1.Query)('action')),
+    __param(3, (0, common_1.Query)('userId')),
+    __param(4, (0, common_1.Query)('from')),
+    __param(5, (0, common_1.Query)('to')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, String, String, String]),
+    __metadata("design:paramtypes", [Object, Object, String, String, String, String]),
     __metadata("design:returntype", Promise)
-], AdminAuditController.prototype, "getAuditLogs", null);
+], AdminAuditController.prototype, "getLogs", null);
 __decorate([
-    openapi.ApiOperation({ description: "\u2705 Simple audit statistics summary" }),
-    (0, common_1.Get)('stats'),
+    (0, common_1.Get)('export'),
     openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Query)('from')),
+    __param(1, (0, common_1.Query)('to')),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
-], AdminAuditController.prototype, "getAuditStats", null);
+], AdminAuditController.prototype, "exportCsv", null);
 exports.AdminAuditController = AdminAuditController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Controller)('admin/audit'),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], AdminAuditController);

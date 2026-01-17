@@ -20,6 +20,7 @@ const create_order_dto_1 = require("./dto/create-order.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let OrdersController = class OrdersController {
     constructor(ordersService) {
         this.ordersService = ordersService;
@@ -40,6 +41,9 @@ let OrdersController = class OrdersController {
         return this.ordersService.riderRespond(req.user.id, Number(orderId), dto.action);
     }
     updateStage(req, orderId, dto) {
+        if (!Object.values(client_1.OrderStatus).includes(dto.stage)) {
+            throw new common_1.BadRequestException('Invalid order stage');
+        }
         return this.ordersService.updateStage(req.user.id, Number(orderId), dto.stage, { lat: dto.lat, lng: dto.lng });
     }
     list(req) {

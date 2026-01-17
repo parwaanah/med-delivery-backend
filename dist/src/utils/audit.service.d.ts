@@ -1,31 +1,38 @@
 import { PrismaService } from './prisma.service';
-import { AuditLiveGateway } from '../ws/audit-live.gateway';
-import { NotificationService } from './notification.service';
+import { WsGateway } from '../ws/ws.gateway';
 export declare class AuditService {
     private readonly prisma;
-    private readonly live;
-    private readonly notify;
+    private readonly ws;
     private readonly logger;
-    constructor(prisma: PrismaService, live: AuditLiveGateway, notify: NotificationService);
-    log({ userId, email, ip, userAgent, eventType, role, success, }: {
+    constructor(prisma: PrismaService, ws: WsGateway);
+    log(params: {
         userId?: number;
-        email?: string | null | undefined;
-        ip?: string;
-        userAgent?: string;
-        eventType: string;
+        email?: string;
         role?: string;
-        success?: boolean;
-    }): Promise<{
-        email: string | null;
-        role: string | null;
-        id: number;
-        userId: number | null;
-        ip: string | null;
-        userAgent: string | null;
         eventType: string;
         success: boolean;
-        timestamp: Date;
-    } | {
-        error: boolean;
-    }>;
+        ip?: string;
+        userAgent?: string;
+        meta?: any;
+    }): Promise<{
+        userId: number | null;
+        action: string;
+        resource: string | null;
+        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        id: number;
+    } | null>;
+    logAdminAction(params: {
+        userId?: number;
+        action: string;
+        resource?: string;
+        meta?: any;
+    }): Promise<{
+        userId: number | null;
+        action: string;
+        resource: string | null;
+        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        id: number;
+    } | null>;
 }

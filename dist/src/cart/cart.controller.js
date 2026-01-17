@@ -24,29 +24,20 @@ let CartController = class CartController {
     constructor(cartService) {
         this.cartService = cartService;
     }
-    async addToCart(req, body) {
-        const userId = req.user.id;
-        return this.cartService.addToCart(userId, body.medicineId, body.quantity ?? 1);
+    add(req, body) {
+        return this.cartService.addToCart(String(req.user.id), body.medicineId, body.quantity ?? 1);
     }
-    async getCart(req) {
-        const userId = req.user.id;
-        return this.cartService.getCart(userId);
+    get(req) {
+        return this.cartService.getCart(String(req.user.id));
     }
-    async removeItem(req, body) {
-        const userId = req.user.id;
-        return this.cartService.removeItem(userId, body.cartItemId);
+    remove(req, body) {
+        return this.cartService.removeItem(String(req.user.id), body.cartItemId);
     }
-    async updateQuantity(req, body) {
-        const userId = req.user.id;
-        return this.cartService.updateQuantity(userId, body.cartItemId, body.quantity);
+    update(req, body) {
+        return this.cartService.updateQuantity(String(req.user.id), body.cartItemId, body.quantity);
     }
-    async calculateTotal(req, body) {
-        const userId = req.user.id;
-        return this.cartService.calculateTotal(userId, body.items);
-    }
-    async checkout(req, body) {
-        const userId = req.user.id;
-        return this.cartService.checkout(userId, body.items);
+    checkout(req, body) {
+        return this.cartService.checkout(String(req.user.id), body);
     }
 };
 exports.CartController = CartController;
@@ -57,16 +48,16 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], CartController.prototype, "addToCart", null);
+    __metadata("design:returntype", void 0)
+], CartController.prototype, "add", null);
 __decorate([
     (0, common_1.Get)(),
     openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], CartController.prototype, "getCart", null);
+    __metadata("design:returntype", void 0)
+], CartController.prototype, "get", null);
 __decorate([
     (0, common_1.Post)('remove'),
     openapi.ApiResponse({ status: 201 }),
@@ -74,8 +65,8 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], CartController.prototype, "removeItem", null);
+    __metadata("design:returntype", void 0)
+], CartController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)('update'),
     openapi.ApiResponse({ status: 201 }),
@@ -83,25 +74,16 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], CartController.prototype, "updateQuantity", null);
-__decorate([
-    (0, common_1.Post)('total'),
-    openapi.ApiResponse({ status: 201 }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], CartController.prototype, "calculateTotal", null);
+    __metadata("design:returntype", void 0)
+], CartController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)('checkout'),
-    openapi.ApiResponse({ status: 201 }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], CartController.prototype, "checkout", null);
 exports.CartController = CartController = __decorate([
     (0, common_1.Controller)('cart'),

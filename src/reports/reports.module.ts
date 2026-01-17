@@ -1,10 +1,9 @@
-// src/reports/reports.module.ts
 import { Module } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { UtilsModule } from '../utils/utils.module';
+import { PrismaService } from '../utils/prisma.service';
 
 @Module({
-  imports: [UtilsModule],
-  providers: [ReportsService],
+  providers: [ReportsService, PrismaService],
+  exports: [ReportsService], // ✅ REQUIRED
 })
 export class ReportsModule {}

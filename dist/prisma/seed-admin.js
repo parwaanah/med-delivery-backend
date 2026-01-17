@@ -37,9 +37,11 @@ const client_1 = require("@prisma/client");
 const bcrypt = __importStar(require("bcrypt"));
 const prisma = new client_1.PrismaClient();
 async function createUserIfNotExists(data) {
-    const existing = await prisma.user.findUnique({ where: { email: data.email } });
+    const existing = await prisma.user.findUnique({
+        where: { email: data.email },
+    });
     if (existing) {
-        console.log(`ℹ️ User already exists: ${data.email}`);
+        console.log(`ℹ️ Admin already exists: ${data.email}`);
         return existing;
     }
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -49,97 +51,26 @@ async function createUserIfNotExists(data) {
             email: data.email,
             password: passwordHash,
             role: data.role,
-            status: data.status || 'APPROVED',
+            status: "APPROVED",
+            emailVerified: true,
         },
     });
-    console.log(`✅ Created user: ${data.email} (${data.role})`);
+    console.log(`✅ Created admin: ${data.email}`);
     return user;
 }
 async function main() {
-    console.log('🌱 Starting safe, idempotent seed...');
-    const superAdmin = await createUserIfNotExists({
-        name: 'Super Admin',
-        email: 'superadmin_live@example.com',
-        password: 'superadmin123',
+    console.log("🌱 Admin seed started...");
+    await createUserIfNotExists({
+        name: "Super Admin",
+        email: "superadmin_live@example.com",
+        password: "superadmin123",
         role: client_1.UserRole.ADMIN,
-        status: 'APPROVED',
     });
-    const pharmacy1 = await createUserIfNotExists({
-        name: 'MediCare Pharmacy',
-        email: 'pharmacy1@med.com',
-        password: 'password',
-        role: client_1.UserRole.PHARMACY,
-    });
-    const pharmacy2 = await createUserIfNotExists({
-        name: 'Wellness Drugs',
-        email: 'pharmacy2@med.com',
-        password: 'password',
-        role: client_1.UserRole.PHARMACY,
-    });
-    const rider1 = await createUserIfNotExists({
-        name: 'John Rider',
-        email: 'rider1@med.com',
-        password: 'password',
-        role: client_1.UserRole.RIDER,
-    });
-    const rider2 = await createUserIfNotExists({
-        name: 'Jane Courier',
-        email: 'rider2@med.com',
-        password: 'password',
-        role: client_1.UserRole.RIDER,
-    });
-    const customer1 = await createUserIfNotExists({
-        name: 'Alice Customer',
-        email: 'customer1@med.com',
-        password: 'password',
-        role: client_1.UserRole.CUSTOMER,
-    });
-    const customer2 = await createUserIfNotExists({
-        name: 'Bob Buyer',
-        email: 'customer2@med.com',
-        password: 'password',
-        role: client_1.UserRole.CUSTOMER,
-    });
-    const existingOrders = await prisma.order.count();
-    if (existingOrders === 0) {
-        console.log('🧾 Creating sample orders...');
-        await prisma.order.createMany({
-            data: [
-                {
-                    customerId: customer1.id,
-                    pharmacyId: pharmacy1.id,
-                    riderId: rider1.id,
-                    status: 'DELIVERED',
-                    totalPrice: 1200,
-                },
-                {
-                    customerId: customer2.id,
-                    pharmacyId: pharmacy2.id,
-                    riderId: rider2.id,
-                    status: 'OUT_FOR_DELIVERY',
-                    totalPrice: 800,
-                },
-                {
-                    customerId: customer1.id,
-                    pharmacyId: pharmacy2.id,
-                    riderId: rider1.id,
-                    status: 'PENDING',
-                    totalPrice: 600,
-                },
-            ],
-        });
-        console.log('✅ Orders created.');
-    }
-    else {
-        console.log(`ℹ️ Orders already exist (${existingOrders} found).`);
-    }
-    console.log('✅ Safe seed completed successfully!');
+    console.log("✅ Admin seed completed");
 }
 main()
     .catch((e) => {
-    console.error('❌ Seed error:', e);
+    console.error("❌ Admin seed error:", e);
     process.exit(1);
 })
-    .finally(async () => {
-    await prisma.$disconnect();
-});
+    .finally(() => prisma.$disconnect());

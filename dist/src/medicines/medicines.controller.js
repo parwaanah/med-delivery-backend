@@ -20,11 +20,25 @@ let MedicinesController = class MedicinesController {
     constructor(medicinesService) {
         this.medicinesService = medicinesService;
     }
-    async search(q) {
+    async search(q, res) {
+        res.setHeader('Cache-Control', 'no-store');
         const query = (q || '').trim();
-        if (!query || query.length < 2)
-            return [];
-        return this.medicinesService.searchMedicines(query);
+        if (!query) {
+            const items = await this.medicinesService.getFeaturedMedicines();
+            return res.json({ items });
+        }
+        if (query.length < 2) {
+            return res.json({ items: [] });
+        }
+        const items = await this.medicinesService.searchMedicines(query);
+        return res.json({ items });
+    }
+    async getById(id) {
+        const medicine = await this.medicinesService.getMedicineById(Number(id));
+        if (!medicine) {
+            throw new common_1.NotFoundException('Medicine not found');
+        }
+        return medicine;
     }
 };
 exports.MedicinesController = MedicinesController;
@@ -32,10 +46,19 @@ __decorate([
     (0, common_1.Get)('search'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Query)('q')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], MedicinesController.prototype, "search", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], MedicinesController.prototype, "search", null);
+], MedicinesController.prototype, "getById", null);
 exports.MedicinesController = MedicinesController = __decorate([
     (0, common_1.Controller)('medicines'),
     __metadata("design:paramtypes", [medicines_service_1.MedicinesService])

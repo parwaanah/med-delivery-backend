@@ -36,6 +36,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const crypto = __importStar(require("crypto"));
+globalThis.crypto = crypto;
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
@@ -49,8 +51,11 @@ const redis_logger_1 = require("./utils/redis-logger");
 async function bootstrap() {
     process.env.REDIS_RETRY_DELAY = '500';
     process.env.REDIS_RETRY_ATTEMPTS = '10';
-    const app = await core_1.NestFactory.create(app_module_1.AppModule, { cors: true });
-    app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
+    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.useGlobalPipes(new common_1.ValidationPipe({
+        whitelist: true,
+        transform: true,
+    }));
     const config = app.get(config_1.ConfigService);
     const port = config.get('PORT') || 3001;
     const redisUrl = config.get('REDIS_URL') || 'redis://redis:6379';
@@ -59,7 +64,7 @@ async function bootstrap() {
         contentSecurityPolicy: false,
     }));
     if (process.env.DISABLE_RATELIMIT === '1') {
-        console.log('⚡ LOADTEST MODE ENABLED — RateLimit DISABLED');
+        console.log('⚡ LOADTEST MODE — RateLimit DISABLED');
     }
     else {
         app.use((0, express_rate_limit_1.default)({
@@ -74,9 +79,10 @@ async function bootstrap() {
         }));
     }
     app.enableCors({
-        origin: true,
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-        credentials: true,
+        origin: ['http://localhost:3000'],
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: false,
     });
     app.use('/payments/webhook', bodyParser.raw({
         type: '*/*',
@@ -92,15 +98,16 @@ async function bootstrap() {
     const document = swagger_1.SwaggerModule.createDocument(app, swaggerCfg);
     swagger_1.SwaggerModule.setup('docs', app, document);
     const prisma = app.get(prisma_service_1.PrismaService);
-    if (prisma?.enableShutdownHooks)
+    if (prisma?.enableShutdownHooks) {
         await prisma.enableShutdownHooks(app);
+    }
     await (0, redis_logger_1.checkRedisConnection)(redisUrl).catch((err) => console.warn('⚠️ Redis check failed:', err?.message || err));
     console.log('💓 System Health OK — Redis + Prisma connected');
     console.log('🔐 Security: Helmet active');
     await app.listen(port);
     console.log(`🚀 Server: http://localhost:${port}`);
     console.log(`📘 Swagger: http://localhost:${port}/docs`);
-    console.log(`🌐 Admin Dashboard: http://localhost:${port}/public/admin-dashboard.html`);
+    console.log(`🌐 Admin Static Dashboard: http://localhost:${port}/public/admin-dashboard.html`);
     const shutdown = async (sig) => {
         console.log(`\n🧹 ${sig} received. Closing Redis + Prisma...`);
         await (0, redis_logger_1.closeRedisConnection)().catch(() => { });

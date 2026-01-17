@@ -1,56 +1,111 @@
+// src/admin/admin.orders.controller.ts
 import {
   Controller,
-  Get,
   Post,
+  Patch,
   Body,
   Param,
   UseGuards,
+  BadRequestException,
+  Req,
 } from '@nestjs/common';
-import { PrismaService } from '../utils/prisma.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { UserRole, OrderStatus } from '@prisma/client';
 import { OrdersService } from '../orders/orders.service';
-import { GeoSurgeService } from '../geosurge/geo-surge.service';
+import { AuditService } from '../utils/audit.service';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 @Controller('admin/orders')
 export class AdminOrdersController {
   constructor(
-    private prisma: PrismaService,
-    private ordersService: OrdersService,
-    private geo: GeoSurgeService,
+    private readonly orders: OrdersService,
+    private readonly audit: AuditService,
   ) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Get(':id/riders')
-  async getCandidateRiders(@Param('id') id: string) {
+  @Post(':id/cancel')
+  async forceCancel(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @Req() req: any,
+  ) {
     const orderId = Number(id);
+    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
 
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: { pharmacy: true },
+    const res = await this.orders.adminForceCancel(orderId, body?.reason);
+
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'ORDER_FORCE_CANCEL',
+      resource: `order:${orderId}`,
+      meta: { reason: body?.reason },
     });
 
-    if (!order) return { total: 0, candidates: [] };
+    return res;
+  }
 
-    const lat = order.pharmacy?.latitude;
-    const lon = order.pharmacy?.longitude;
+  @Patch(':id/status')
+  async forceStatus(
+    @Param('id') id: string,
+    @Body() body: { status: OrderStatus; note?: string },
+    @Req() req: any,
+  ) {
+    const orderId = Number(id);
+    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
 
-    if (!lat || !lon) return { total: 0, candidates: [] };
+    const res = await this.orders.adminForceStatus(
+      orderId,
+      body.status,
+      body.note,
+    );
 
-    const rawPoints = await this.geo.findNearbyPoints(lon, lat, 5, true, 50);
-    const riders = rawPoints.filter((p) => /^rider:\d+$/.test(p.memberId));
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'ORDER_FORCE_STATUS',
+      resource: `order:${orderId}`,
+      meta: { to: body.status, note: body.note },
+    });
 
-    const scored = [];
-    for (const rp of riders) {
-      const score = await this.ordersService.getRiderScorePublic(rp, lat, lon);
-      scored.push({ ...rp, score });
-    }
+    return res;
+  }
 
-    scored.sort((a, b) => b.score - a.score);
+  @Post(':id/unassign')
+  async unassignRider(@Param('id') id: string, @Req() req: any) {
+    const orderId = Number(id);
+    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
 
-    return { total: scored.length, candidates: scored };
+    const res = await this.orders.adminUnassignRider(orderId);
+
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'ORDER_UNASSIGN_RIDER',
+      resource: `order:${orderId}`,
+    });
+
+    return res;
+  }
+
+  @Post(':id/note')
+  async addNote(
+    @Param('id') id: string,
+    @Body() body: { note: string },
+    @Req() req: any,
+  ) {
+    if (!body?.note?.trim())
+      throw new BadRequestException('Note required');
+
+    const orderId = Number(id);
+    const res = await this.orders.adminAddNote(orderId, body.note.trim());
+
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'ORDER_ADMIN_NOTE',
+      resource: `order:${orderId}`,
+      meta: { note: body.note },
+    });
+
+    return res;
   }
 }

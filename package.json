@@ -18,7 +18,7 @@
     "seed": "ts-node prisma/seed.ts",
     "check:types": "tsc --noEmit",
     "generate:medicines": "node prisma/generate_medicines.js",
-  "seed:medicines": "node prisma/seed.js"
+    "seed:medicines": "node prisma/seed.js"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
@@ -41,6 +41,7 @@
     "bullmq": "^5.63.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cloudinary": "^2.8.0",
     "csv-writer": "^1.6.0",
     "date-fns": "^4.1.0",
     "express-rate-limit": "^8.2.1",
@@ -58,6 +59,7 @@
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
+    "streamifier": "^0.1.1",
     "stripe": "^19.3.0",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0"

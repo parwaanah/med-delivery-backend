@@ -20,9 +20,17 @@ const update_user_dto_1 = require("./dto/update-user.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
+    }
+    getMe(req) {
+        const user = req.user;
+        if (!user?.id) {
+            throw new Error('Authenticated user missing id');
+        }
+        return this.usersService.findOne(user.id);
     }
     findAll() {
         return this.usersService.findAll();
@@ -39,16 +47,27 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
+    openapi.ApiOperation({ description: "\u2705 CURRENT AUTHENTICATED USER\nUsed by frontend for session hydration" }),
+    (0, common_1.Get)('me'),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getMe", null);
+__decorate([
+    openapi.ApiOperation({ description: "\u2705 ADMIN \u2014 LIST ALL USERS" }),
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     openapi.ApiResponse({ status: 200 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findAll", null);
 __decorate([
+    openapi.ApiOperation({ description: "\u2705 GET USER BY ID" }),
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)('admin', 'pharmacy', 'rider', 'customer'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.PHARMACY, client_1.UserRole.RIDER, client_1.UserRole.CUSTOMER),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -56,8 +75,9 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findOne", null);
 __decorate([
+    openapi.ApiOperation({ description: "\u2705 ADMIN \u2014 UPDATE USER" }),
     (0, common_1.Put)(':id'),
-    (0, roles_decorator_1.Roles)('admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -66,8 +86,9 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "update", null);
 __decorate([
+    openapi.ApiOperation({ description: "\u2705 ADMIN \u2014 DELETE USER" }),
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('admin'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

@@ -1,4 +1,4 @@
-// backend/src/cart/cart.controller.ts
+// src/cart/cart.controller.ts
 import { Controller, Post, Body, Req, Get, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { CartService } from './cart.service';
@@ -14,52 +14,51 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post('add')
-  async addToCart(
+  add(
     @Req() req: Request,
     @Body() body: { medicineId: number; quantity?: number },
   ) {
-    const userId = (req as any).user.id;
     return this.cartService.addToCart(
-      userId,
+      String((req as any).user.id),
       body.medicineId,
       body.quantity ?? 1,
     );
   }
 
   @Get()
-  async getCart(@Req() req: Request) {
-    const userId = (req as any).user.id;
-    return this.cartService.getCart(userId);
+  get(@Req() req: Request) {
+    return this.cartService.getCart(String((req as any).user.id));
   }
 
   @Post('remove')
-  async removeItem(@Req() req: Request, @Body() body: { cartItemId: number }) {
-    const userId = (req as any).user.id;
-    return this.cartService.removeItem(userId, body.cartItemId);
+  remove(@Req() req: Request, @Body() body: { cartItemId: string }) {
+    return this.cartService.removeItem(
+      String((req as any).user.id),
+      body.cartItemId,
+    );
   }
 
   @Post('update')
-  async updateQuantity(
+  update(
     @Req() req: Request,
-    @Body() body: { cartItemId: number; quantity: number },
+    @Body() body: { cartItemId: string; quantity: number },
   ) {
-    const userId = (req as any).user.id;
     return this.cartService.updateQuantity(
-      userId,
+      String((req as any).user.id),
       body.cartItemId,
       body.quantity,
     );
   }
 
-  @Post('total')
-  async calculateTotal(@Req() req: Request, @Body() body: any) {
-    const userId = (req as any).user.id;
-    return this.cartService.calculateTotal(userId, body.items);
-  }
-
+  // ✅ FIXED CHECKOUT
   @Post('checkout')
-  async checkout(@Req() req: Request, @Body() body: any) {
-    const userId = (req as any).user.id;
-    return this.cartService.checkout(userId, body.items);
+  checkout(
+    @Req() req: Request,
+    @Body() body: { notes?: string },
+  ) {
+    return this.cartService.checkout(
+      String((req as any).user.id),
+      body,
+    );
   }
 }

@@ -1,4 +1,8 @@
 // path: src/main.ts
+import * as crypto from 'crypto';
+
+// ✅ REQUIRED for @nestjs/schedule on Node 18+
+(globalThis as any).crypto = crypto;
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -16,23 +20,33 @@ import { checkRedisConnection, closeRedisConnection } from './utils/redis-logger
 
 async function bootstrap() {
   // -----------------------------------------------------------
-  // ⏳ FIX 1 — REDIS RETRY (prevents ECONNREFUSED spam)
+  // ⏳ REDIS RETRY (prevents ECONNREFUSED spam)
   // -----------------------------------------------------------
   process.env.REDIS_RETRY_DELAY = '500';
   process.env.REDIS_RETRY_ATTEMPTS = '10';
 
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
 
-  // Logging + Validation
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  // -----------------------------------------------------------
+  // GLOBAL VALIDATION
+  // -----------------------------------------------------------
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') || 3001;
-  const redisUrl = config.get<string>('REDIS_URL') || 'redis://redis:6379';
+  const redisUrl =
+    config.get<string>('REDIS_URL') || 'redis://redis:6379';
 
   console.log('🧠 Using Redis URL:', redisUrl);
 
+  // -----------------------------------------------------------
   // SECURITY
+  // -----------------------------------------------------------
   app.use(
     helmet({
       contentSecurityPolicy: false,
@@ -40,10 +54,10 @@ async function bootstrap() {
   );
 
   // -----------------------------------------------------------
-  // ⛔ LOADTEST MODE? (DISABLE_RATELIMIT=1)
+  // RATE LIMITING
   // -----------------------------------------------------------
   if (process.env.DISABLE_RATELIMIT === '1') {
-    console.log('⚡ LOADTEST MODE ENABLED — RateLimit DISABLED');
+    console.log('⚡ LOADTEST MODE — RateLimit DISABLED');
   } else {
     app.use(
       rateLimit({
@@ -59,14 +73,19 @@ async function bootstrap() {
     );
   }
 
-  // CORS
+  // -----------------------------------------------------------
+  // ✅ CORS — JWT ONLY (NO COOKIES, NO WILDCARD)
+  // -----------------------------------------------------------
   app.enableCors({
-    origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    origin: ['http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false,
   });
 
-  // Razorpay Webhook (RAW)
+  // -----------------------------------------------------------
+  // Razorpay Webhook (RAW BODY)
+  // -----------------------------------------------------------
   app.use(
     '/payments/webhook',
     bodyParser.raw({
@@ -75,7 +94,7 @@ async function bootstrap() {
     }),
   );
 
-  // JSON parser for rest
+  // JSON parser for all other routes
   app.use(bodyParser.json());
 
   // -----------------------------------------------------------
@@ -91,12 +110,16 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerCfg);
   SwaggerModule.setup('docs', app, document);
 
+  // -----------------------------------------------------------
   // Prisma graceful shutdown
+  // -----------------------------------------------------------
   const prisma = app.get(PrismaService);
-  if (prisma?.enableShutdownHooks) await prisma.enableShutdownHooks(app);
+  if (prisma?.enableShutdownHooks) {
+    await prisma.enableShutdownHooks(app);
+  }
 
   // -----------------------------------------------------------
-  // Redis health check (with retry)
+  // Redis health check
   // -----------------------------------------------------------
   await checkRedisConnection(redisUrl).catch((err) =>
     console.warn('⚠️ Redis check failed:', err?.message || err),
@@ -105,16 +128,20 @@ async function bootstrap() {
   console.log('💓 System Health OK — Redis + Prisma connected');
   console.log('🔐 Security: Helmet active');
 
-  // Start
+  // -----------------------------------------------------------
+  // START SERVER
+  // -----------------------------------------------------------
   await app.listen(port);
 
   console.log(`🚀 Server: http://localhost:${port}`);
   console.log(`📘 Swagger: http://localhost:${port}/docs`);
   console.log(
-    `🌐 Admin Dashboard: http://localhost:${port}/public/admin-dashboard.html`,
+    `🌐 Admin Static Dashboard: http://localhost:${port}/public/admin-dashboard.html`,
   );
 
-  // Graceful shutdown
+  // -----------------------------------------------------------
+  // GRACEFUL SHUTDOWN
+  // -----------------------------------------------------------
   const shutdown = async (sig: string) => {
     console.log(`\n🧹 ${sig} received. Closing Redis + Prisma...`);
     await closeRedisConnection().catch(() => {});

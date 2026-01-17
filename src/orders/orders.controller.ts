@@ -8,17 +8,18 @@ import {
   Body,
   Req,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-
 import { Request } from 'express';
 
-// ✅ Correct paths based on YOUR structure
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+
+import { OrderStatus } from '@prisma/client';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -55,7 +56,7 @@ export class OrdersController {
   }
 
   // ----------------------------------------------------------
-  // PHARMACY: ask customer for prescription
+  // PHARMACY: request prescription
   // ----------------------------------------------------------
   @Post(':id/request-prescription')
   @Roles('PHARMACY')
@@ -106,15 +107,24 @@ export class OrdersController {
   }
 
   // ----------------------------------------------------------
-  // RIDER: update stage (picked, on the way, delivered)
+  // RIDER: update order stage
   // ----------------------------------------------------------
   @Patch(':id/stage')
   @Roles('RIDER')
   updateStage(
     @Req() req: Request & { user: any },
     @Param('id') orderId: string,
-    @Body() dto: { stage: string; lat?: number; lng?: number },
+    @Body()
+    dto: {
+      stage: OrderStatus;
+      lat?: number;
+      lng?: number;
+    },
   ) {
+    if (!Object.values(OrderStatus).includes(dto.stage)) {
+      throw new BadRequestException('Invalid order stage');
+    }
+
     return this.ordersService.updateStage(
       req.user.id,
       Number(orderId),

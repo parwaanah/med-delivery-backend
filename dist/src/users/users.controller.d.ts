@@ -1,8 +1,15 @@
+import { Request } from 'express';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 export declare class UsersController {
     private usersService;
     constructor(usersService: UsersService);
+    getMe(req: Request): Promise<{
+        name: string;
+        email: string | null;
+        role: import(".prisma/client").$Enums.UserRole;
+        id: number;
+    }>;
     findAll(): Promise<{
         name: string;
         email: string | null;
@@ -21,12 +28,14 @@ export declare class UsersController {
         password: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         phone: string | null;
-        status: string;
         createdAt: Date;
         id: number;
         googleId: string | null;
+        emailVerified: boolean;
+        phoneVerified: boolean;
         otpCode: string | null;
         otpExpiresAt: Date | null;
+        status: string;
         approvedBy: number | null;
         latitude: number | null;
         longitude: number | null;

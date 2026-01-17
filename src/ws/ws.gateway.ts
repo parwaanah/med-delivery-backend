@@ -12,7 +12,9 @@ import { Logger } from '@nestjs/common';
   cors: { origin: '*' },
   namespace: '/',
 })
-export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class WsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
 
@@ -22,12 +24,15 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket) {
     const userId = Number(client.handshake.query.userId);
-    const role = (client.handshake.query.role as string)?.toUpperCase() ?? 'UNKNOWN';
+    const role =
+      (client.handshake.query.role as string)?.toUpperCase() ?? 'UNKNOWN';
 
     if (!isNaN(userId)) this.users.set(userId, client.id);
     if (role === 'ADMIN') this.admins.add(client.id);
 
-    this.logger.log(`WS connected: ${client.id} user=${userId} role=${role}`);
+    this.logger.log(
+      `WS connected: ${client.id} user=${userId} role=${role}`,
+    );
   }
 
   handleDisconnect(client: Socket) {

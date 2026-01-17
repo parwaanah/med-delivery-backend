@@ -2,84 +2,92 @@ import {
   Controller,
   Get,
   Patch,
-  Delete,
   Param,
   UseGuards,
-  NotFoundException,
-  Logger,
-  InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { WsGateway } from '../ws/ws.gateway';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, 'ADMIN', 'admin')
+@Roles(UserRole.ADMIN)
 @Controller('admin/users')
 export class AdminUsersController {
-  private readonly logger = new Logger(AdminUsersController.name);
+  constructor(
+    private prisma: PrismaService,
+    private ws: WsGateway,
+  ) {}
 
-  constructor(private prisma: PrismaService) {}
+  @Get('pending/:role')
+  async pending(@Param('role') role: string) {
+    if (!Object.values(UserRole).includes(role as UserRole)) {
+      throw new BadRequestException('Invalid role');
+    }
 
-  @Get()
-  async getAllUsers() {
     const users = await this.prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, status: true },
-      orderBy: { id: 'desc' },
+      where: { role: role as UserRole, status: 'PENDING' },
+      include: { verificationDocs: true },
+      orderBy: { createdAt: 'asc' },
     });
-    return { total: users.length, users };
+
+    return { users };
   }
 
-  @Get('pending')
-  async getPendingUsers() {
-    const pending = await this.prisma.user.findMany({
-      where: { status: 'PENDING' },
-      select: { id: true, name: true, email: true, role: true, status: true },
+  @Get(':id/documents')
+  async documents(@Param('id') id: string) {
+    const userId = Number(id);
+    if (isNaN(userId)) throw new BadRequestException('Invalid user');
+
+    return this.prisma.verificationDocument.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
     });
-    return { total: pending.length, users: pending };
   }
 
-  @Patch(':id/approve')
-  async approveUser(@Param('id') id: number) {
-    return this.prisma.user.update({
-      where: { id: Number(id) },
-      data: { status: 'APPROVED' },
+  @Patch(':id/documents/:docId/verify')
+  async verifyDoc(
+    @Param('id') id: string,
+    @Param('docId') docId: string,
+  ) {
+    const userId = Number(id);
+    const documentId = Number(docId);
+
+    await this.prisma.verificationDocument.update({
+      where: { id: documentId },
+      data: { verified: true },
     });
+
+    const remaining = await this.prisma.verificationDocument.count({
+      where: { userId, verified: false },
+    });
+
+    if (remaining === 0) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { status: 'APPROVED' },
+      });
+
+      this.ws.notifyUser(userId, 'user.approved', { status: 'APPROVED' });
+    }
+
+    return { success: true };
   }
 
   @Patch(':id/reject')
-  async rejectUser(@Param('id') id: number) {
-    return this.prisma.user.update({
-      where: { id: Number(id) },
+  async reject(@Param('id') id: string) {
+    const userId = Number(id);
+
+    await this.prisma.user.update({
+      where: { id: userId },
       data: { status: 'REJECTED' },
     });
-  }
 
-  @Delete(':id')
-  async deleteUser(@Param('id') id: number) {
-    const userId = Number(id);
-    if (isNaN(userId)) throw new NotFoundException('Invalid user ID');
+    this.ws.notifyUser(userId, 'user.rejected', { status: 'REJECTED' });
 
-    const existing = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true },
-    });
-    if (!existing) throw new NotFoundException(`User #${userId} not found`);
-
-    try {
-      await this.prisma.$transaction([
-        this.prisma.refreshToken.deleteMany({ where: { userId } }),
-        this.prisma.session.deleteMany({ where: { userId } }),
-        this.prisma.user.delete({ where: { id: userId } }),
-      ]);
-
-      this.logger.log(`Deleted user #${userId} (${existing.email})`);
-      return { message: `User #${userId} deleted successfully` };
-    } catch (err) {
-      this.logger.error(`Failed to delete user #${userId}`, err as any);
-      throw new InternalServerErrorException('Failed to delete user — see server logs');
-    }
+    return { success: true };
   }
 }

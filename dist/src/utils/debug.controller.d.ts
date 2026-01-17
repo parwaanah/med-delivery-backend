@@ -9,11 +9,11 @@ export declare class DebugController {
         meta?: any;
     }): Promise<{
         message: string;
-        type: string;
         meta: import("@prisma/client/runtime/library").JsonValue | null;
-        status: string;
         createdAt: Date;
         id: number;
+        status: string;
+        type: string;
         senderId: number | null;
         receiverId: number;
     } | undefined>;

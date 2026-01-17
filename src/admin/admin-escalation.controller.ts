@@ -1,5 +1,4 @@
 // src/admin/admin-escalation.controller.ts
-
 import {
   Controller,
   Get,
@@ -7,6 +6,7 @@ import {
   Post,
   UseGuards,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { EscalationService } from './escalation.service';
@@ -17,13 +17,13 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, 'ADMIN', 'admin')
+@Roles(UserRole.ADMIN)
 @Controller('admin/orders')
 export class AdminEscalationController {
   constructor(
-    private prisma: PrismaService,
-    private esc: EscalationService,
-    private orders: OrdersService,
+    private readonly prisma: PrismaService,
+    private readonly esc: EscalationService,
+    private readonly orders: OrdersService,
   ) {}
 
   // ==============================================
@@ -37,27 +37,26 @@ export class AdminEscalationController {
       take: 200,
     });
 
-    const items = [];
+    const items: any[] = [];
 
     for (const n of notes) {
-      const orderId = (n.meta && (n.meta as any).orderId) || null;
+      const orderId = (n.meta as any)?.orderId;
+      if (!orderId) continue;
 
-      let order = null;
-      if (orderId) {
-        order = await this.prisma.order.findUnique({
-          where: { id: Number(orderId) },
-          include: {
-            customer: { select: { email: true } },
-            pharmacy: {
-              select: { email: true, latitude: true, longitude: true },
-            },
-            rider: { select: { email: true } },
-            items: true,
-          },
-        });
+      const order = await this.prisma.order.findUnique({
+        where: { id: Number(orderId) },
+        include: {
+          customer: { select: { email: true } },
+          pharmacy: { select: { email: true } },
+          rider: { select: { email: true } },
+          items: true,
+        },
+      });
+
+      // Still escalated only if no rider
+      if (order && !order.riderId) {
+        items.push({ notification: n, order });
       }
-
-      items.push({ notification: n, order });
     }
 
     return { total: items.length, items };
@@ -69,43 +68,36 @@ export class AdminEscalationController {
   @Get(':id/riders')
   async getCandidates(@Param('id') id: string) {
     const orderId = Number(id);
-    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
-
-    const candidates = await this.esc.findCandidatesForOrder(
-      orderId,
-      5, // search km or scoring limit
-      50, // limit
-    );
-
-    const enriched = [];
-
-    for (const c of candidates) {
-      // Prisma expects number | undefined, NOT null
-      const riderIdSafe =
-        c?.riderId === null || c?.riderId === undefined
-          ? undefined
-          : Number(c.riderId);
-
-      let user = null;
-
-      if (riderIdSafe !== undefined) {
-        user = await this.prisma.user
-          .findUnique({
-            where: { id: riderIdSafe },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              status: true,
-              latitude: true,
-              longitude: true,
-            },
-          })
-          .catch(() => null);
-      }
-
-      enriched.push({ ...c, user });
+    if (isNaN(orderId)) {
+      throw new BadRequestException('Invalid order id');
     }
+
+    const candidates = await this.esc.findCandidatesForOrder(orderId, 5, 50);
+
+    const enriched = await Promise.all(
+      candidates.map(async (c) => {
+        const riderId =
+          c?.riderId === null || c?.riderId === undefined
+            ? null
+            : Number(c.riderId);
+
+        if (!riderId) return { ...c, user: null };
+
+        const user = await this.prisma.user.findUnique({
+          where: { id: riderId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            status: true,
+            latitude: true,
+            longitude: true,
+          },
+        });
+
+        return { ...c, user };
+      }),
+    );
 
     return { total: enriched.length, candidates: enriched };
   }
@@ -114,16 +106,19 @@ export class AdminEscalationController {
   // POST /admin/orders/:id/assign/:riderId
   // ==============================================
   @Post(':id/assign/:riderId')
-  async assign(@Param('id') id: string, @Param('riderId') riderId: string) {
+  async assign(
+    @Param('id') id: string,
+    @Param('riderId') riderId: string,
+    @Req() req: any,
+  ) {
     const orderId = Number(id);
     const rId = Number(riderId);
 
-    if (isNaN(orderId) || isNaN(rId))
+    if (isNaN(orderId) || isNaN(rId)) {
       throw new BadRequestException('Invalid ids');
+    }
 
-    // In the future, extract from req.user.id
-    const adminId = 1;
-
+    const adminId = req.user.id;
     return this.orders.adminAssign(orderId, adminId, rId);
   }
 }

@@ -15,56 +15,113 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminOrdersController = void 0;
 const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../utils/prisma.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 const orders_service_1 = require("../orders/orders.service");
-const geo_surge_service_1 = require("../geosurge/geo-surge.service");
+const audit_service_1 = require("../utils/audit.service");
 let AdminOrdersController = class AdminOrdersController {
-    constructor(prisma, ordersService, geo) {
-        this.prisma = prisma;
-        this.ordersService = ordersService;
-        this.geo = geo;
+    constructor(orders, audit) {
+        this.orders = orders;
+        this.audit = audit;
     }
-    async getCandidateRiders(id) {
+    async forceCancel(id, body, req) {
         const orderId = Number(id);
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-            include: { pharmacy: true },
+        if (isNaN(orderId))
+            throw new common_1.BadRequestException('Invalid order id');
+        const res = await this.orders.adminForceCancel(orderId, body?.reason);
+        await this.audit.logAdminAction({
+            userId: req.user.id,
+            action: 'ORDER_FORCE_CANCEL',
+            resource: `order:${orderId}`,
+            meta: { reason: body?.reason },
         });
-        if (!order)
-            return { total: 0, candidates: [] };
-        const lat = order.pharmacy?.latitude;
-        const lon = order.pharmacy?.longitude;
-        if (!lat || !lon)
-            return { total: 0, candidates: [] };
-        const rawPoints = await this.geo.findNearbyPoints(lon, lat, 5, true, 50);
-        const riders = rawPoints.filter((p) => /^rider:\d+$/.test(p.memberId));
-        const scored = [];
-        for (const rp of riders) {
-            const score = await this.ordersService.getRiderScorePublic(rp, lat, lon);
-            scored.push({ ...rp, score });
-        }
-        scored.sort((a, b) => b.score - a.score);
-        return { total: scored.length, candidates: scored };
+        return res;
+    }
+    async forceStatus(id, body, req) {
+        const orderId = Number(id);
+        if (isNaN(orderId))
+            throw new common_1.BadRequestException('Invalid order id');
+        const res = await this.orders.adminForceStatus(orderId, body.status, body.note);
+        await this.audit.logAdminAction({
+            userId: req.user.id,
+            action: 'ORDER_FORCE_STATUS',
+            resource: `order:${orderId}`,
+            meta: { to: body.status, note: body.note },
+        });
+        return res;
+    }
+    async unassignRider(id, req) {
+        const orderId = Number(id);
+        if (isNaN(orderId))
+            throw new common_1.BadRequestException('Invalid order id');
+        const res = await this.orders.adminUnassignRider(orderId);
+        await this.audit.logAdminAction({
+            userId: req.user.id,
+            action: 'ORDER_UNASSIGN_RIDER',
+            resource: `order:${orderId}`,
+        });
+        return res;
+    }
+    async addNote(id, body, req) {
+        if (!body?.note?.trim())
+            throw new common_1.BadRequestException('Note required');
+        const orderId = Number(id);
+        const res = await this.orders.adminAddNote(orderId, body.note.trim());
+        await this.audit.logAdminAction({
+            userId: req.user.id,
+            action: 'ORDER_ADMIN_NOTE',
+            resource: `order:${orderId}`,
+            meta: { note: body.note },
+        });
+        return res;
     }
 };
 exports.AdminOrdersController = AdminOrdersController;
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
-    (0, common_1.Get)(':id/riders'),
+    (0, common_1.Post)(':id/cancel'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "forceCancel", null);
+__decorate([
+    (0, common_1.Patch)(':id/status'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
-], AdminOrdersController.prototype, "getCandidateRiders", null);
+], AdminOrdersController.prototype, "forceStatus", null);
+__decorate([
+    (0, common_1.Post)(':id/unassign'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "unassignRider", null);
+__decorate([
+    (0, common_1.Post)(':id/note'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "addNote", null);
 exports.AdminOrdersController = AdminOrdersController = __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Controller)('admin/orders'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        orders_service_1.OrdersService,
-        geo_surge_service_1.GeoSurgeService])
+    __metadata("design:paramtypes", [orders_service_1.OrdersService,
+        audit_service_1.AuditService])
 ], AdminOrdersController);

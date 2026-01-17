@@ -21,7 +21,6 @@ let HealthController = class HealthController {
         this.config = config;
     }
     async getHealth() {
-        const redisUrl = this.config.get('REDIS_URL') || 'redis://redis:6379';
         const results = {
             uptime: process.uptime(),
             timestamp: new Date().toISOString(),
@@ -34,14 +33,19 @@ let HealthController = class HealthController {
             const msg = err instanceof Error ? err.message : JSON.stringify(err) || 'Unknown error';
             results.database = { status: 'down', error: msg };
         }
+        let redisUp = false;
         try {
             await (0, redis_logger_1.redisPing)();
+            redisUp = true;
             results.redis = { status: 'up' };
         }
         catch (err) {
             const msg = err instanceof Error ? err.message : JSON.stringify(err) || 'Unknown error';
             results.redis = { status: 'down', error: msg };
         }
+        results.queue = {
+            status: redisUp ? 'up' : 'down',
+        };
         const mem = process.memoryUsage();
         results.memory = {
             rss: mem.rss,

@@ -1,35 +1,56 @@
-import { PrismaClient, UserRole } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import { PrismaClient, UserRole } from "@prisma/client";
+import * as bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-async function seed() {
-  const users = [
-    { name: 'Test Pharmacy Auto2', email: 'pharmacy_auto2@example.com', password: 'pharma123', role: UserRole.PHARMACY },
-    { name: 'Test Rider Auto2', email: 'rider_auto2@example.com', password: 'rider123', role: UserRole.RIDER },
-    { name: 'Test Customer Auto2', email: 'customer_auto2@example.com', password: 'customer123', role: UserRole.CUSTOMER },
-  ];
+async function createUserIfNotExists(data: {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}) {
+  const existing = await prisma.user.findUnique({
+    where: { email: data.email },
+  });
 
-  for (const u of users) {
-    const existing = await prisma.user.findUnique({ where: { email: u.email } });
-    if (!existing) {
-      const hash = await bcrypt.hash(u.password, 10);
-      await prisma.user.create({
-        data: {
-          name: u.name,
-          email: u.email,
-          password: hash,
-          role: u.role,
-          status: 'APPROVED',
-        },
-      });
-      console.log(`✅ Created user: ${u.email}`);
-    } else {
-      console.log(`ℹ️ User already exists: ${u.email}`);
-    }
+  if (existing) {
+    console.log(`ℹ️ Admin already exists: ${data.email}`);
+    return existing;
   }
 
-  await prisma.$disconnect();
+  const passwordHash = await bcrypt.hash(data.password, 10);
+
+  const user = await prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      password: passwordHash,
+      role: data.role,
+      status: "APPROVED",
+      emailVerified: true, // ✅ explicit
+    },
+  });
+
+  console.log(`✅ Created admin: ${data.email}`);
+  return user;
 }
 
-seed();
+async function main() {
+  console.log("🌱 Admin seed started...");
+
+  await createUserIfNotExists({
+    name: "Super Admin",
+    email: "superadmin_live@example.com",
+    password: "superadmin123",
+    role: UserRole.ADMIN,
+  });
+
+  console.log("✅ Admin seed completed");
+}
+
+main()
+  .catch((e) => {
+    console.error("❌ Admin seed error:", e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());

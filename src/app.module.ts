@@ -2,42 +2,52 @@ import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BullModule } from '@nestjs/bullmq';
 
+/* CORE */
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PharmaciesModule } from './pharmacies/pharmacies.module';
 import { RidersModule } from './riders/riders.module';
 import { OrdersModule } from './orders/orders.module';
-import { QueueModule } from './queues/queue.module';
+import { CartModule } from './cart/cart.module';
 
-import { GlobalLogger } from './common/logger/global-logger.service';
-import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
-
-import { WsModule } from './ws/ws.module';
-import { NotificationService } from './utils/notification.service';
-import { UtilsModule } from './utils/utils.module';
+/* ADMIN + SYSTEM */
 import { AdminModule } from './admin/admin.module';
 import { HealthModule } from './health/health.module';
-import { SurgeModule } from './surge/surge.module';
-import { GeoSurgeModule } from './geosurge/geo-surge.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { ReportsModule } from './reports/reports.module';
+
+/* REALTIME + QUEUES */
+import { WsModule } from './ws/ws.module';
+import { QueueModule } from './queues/queue.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ChatModule } from './chat/chat.module';
+
+/* DOMAIN */
+import { MedicinesModule } from './medicines/medicines.module';
 import { PaymentsModule } from './payments/payments.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
-import { ReportsModule } from './reports/reports.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { NotificationsModule } from './notifications/notifications.module';
-import { ChatLiveGateway } from './ws/chat-live.gateway';
-import { ChatModule } from './chat/chat.module';
+import { SurgeModule } from './surge/surge.module';
+import { GeoSurgeModule } from './geosurge/geo-surge.module';
+
+/* UTILS */
+import { UtilsModule } from './utils/utils.module';
 import { CacheModule } from './cache/cache.module';
-import { MetricsModule } from './metrics/metrics.module';
-import { MedicinesModule } from './medicines/medicines.module';
+import { UploadsModule } from './uploads/uploads.module';
+import { ProfileModule } from './auth/profile.module';
 
-import { BullModule } from '@nestjs/bullmq';
+/* LOGGER */
+import { GlobalLogger } from './common/logger/global-logger.service';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { NotificationService } from './utils/notification.service';
+import { ChatLiveGateway } from './ws/chat-live.gateway';
 
-// 🔥 UNIVERSAL REDIS FIX
+/* 🔥 REDIS FORCE */
 function forcedRedisUrl(config: ConfigService): string {
   const url = 'redis://redis:6379';
 
-  // Global override — prevents 127.0.0.1 anywhere
   process.env.REDIS_URL = url;
   process.env.REDIS_HOST = 'redis';
   process.env.REDIS_PORT = '6379';
@@ -53,50 +63,52 @@ function forcedRedisUrl(config: ConfigService): string {
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'public'),
       serveRoot: '/public',
-      serveStaticOptions: {
-        index: false,
-        fallthrough: false,
-      },
+      serveStaticOptions: { index: false, fallthrough: false },
     }),
 
-    /**
-     * 🔥 GLOBAL BULLMQ REDIS CONFIG
-     * Ensures Queue Workers, Bull, and every background service use redis://redis:6379
-     */
+    /* 🔥 GLOBAL REDIS FOR BULLMQ */
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         connection: {
-          url: forcedRedisUrl(config), // NEVER localhost
+          url: forcedRedisUrl(config),
         },
       }),
     }),
 
-    UtilsModule,
-    CacheModule,
-    MetricsModule,
-    HealthModule,
-
+    /* CORE */
     AuthModule,
     UsersModule,
     PharmaciesModule,
     RidersModule,
-
     OrdersModule,
+    CartModule,
+
+    /* SYSTEM */
+    AdminModule,
+    HealthModule,
+    MetricsModule,
+    ReportsModule,
+
+    /* REALTIME */
+    WsModule,
+    QueueModule,
+    NotificationsModule,
+    ChatModule,
+
+    /* DOMAIN */
+    MedicinesModule,
     PaymentsModule,
     WebhooksModule,
-
-    QueueModule,
-    AdminModule,
-    WsModule,
     SurgeModule,
     GeoSurgeModule,
-    ChatModule,
-    NotificationsModule,
 
-    MedicinesModule,
+    /* UTILS */
+    UtilsModule,
+    CacheModule,
+    UploadsModule,
+    ProfileModule,
 
-    ReportsModule,
     ScheduleModule.forRoot(),
   ],
 
@@ -105,7 +117,6 @@ function forcedRedisUrl(config: ConfigService): string {
     GlobalLogger,
     ChatLiveGateway,
 
-    // 🔥 Universal force provider
     {
       provide: 'REDIS_FORCE_OVERRIDE',
       inject: [ConfigService],

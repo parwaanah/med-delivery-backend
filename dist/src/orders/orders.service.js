@@ -44,6 +44,11 @@ let OrdersService = OrdersService_1 = class OrdersService {
         if (this.isLoadtest)
             this.logger.warn('LOADTEST_MODE ACTIVE → inventory bypass + payment bypass enabled.');
     }
+    isEscalatable(status) {
+        return (status === client_1.OrderStatus.PENDING ||
+            status === client_1.OrderStatus.ACCEPTED ||
+            status === client_1.OrderStatus.ASSIGNED);
+    }
     toRad(v) {
         return (v * Math.PI) / 180;
     }
@@ -113,7 +118,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
         return p?.id ?? 1;
     }
     async createOrder(customerId, dto) {
-        if (!customerId || isNaN(+customerId))
+        if (!customerId)
             throw new common_1.BadRequestException('Invalid customer');
         if (!dto.items?.length)
             throw new common_1.BadRequestException('No items provided');
@@ -516,28 +521,51 @@ let OrdersService = OrdersService_1 = class OrdersService {
         }
         await this.prisma.orderOffer.updateMany({ where: { orderId, riderId }, data: { status: 'REJECTED' } });
         await this.logTimeline(orderId, 'RIDER_REJECTED', { riderId });
+        const delay = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
+        await this.orderAssignQueue.add('rider_escalation', { orderId }, { delay });
         return { ok: true };
     }
     async adminAssign(orderId, adminId, riderId) {
-        const updated = await this.prisma.order.update({
-            where: { id: orderId },
-            data: {
-                riderId,
-                status: client_1.OrderStatus.OUT_FOR_DELIVERY,
-            },
-        });
-        await this.prisma.user.update({
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found');
+        if (!this.isEscalatable(order.status)) {
+            throw new common_1.BadRequestException(`Order cannot be assigned in status ${order.status}`);
+        }
+        const rider = await this.prisma.user.findUnique({
             where: { id: riderId },
-            data: { status: 'BUSY' },
+        });
+        if (!rider || rider.role !== client_1.UserRole.RIDER) {
+            throw new common_1.BadRequestException('Invalid rider');
+        }
+        const updated = await this.prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: riderId },
+                data: { status: 'BUSY' },
+            });
+            return tx.order.update({
+                where: { id: orderId },
+                data: {
+                    riderId,
+                    status: client_1.OrderStatus.OUT_FOR_DELIVERY,
+                },
+            });
         });
         await this.logTimeline(orderId, 'ASSIGNED_BY_ADMIN', {
             adminId,
             riderId,
         });
         this.notify.create(updated.customerId, 'ORDER_ASSIGNED_BY_ADMIN', `Order #${orderId} assigned`, { orderId }, adminId);
+        this.ws.notifyUser(updated.customerId, 'order_status_update', {
+            orderId,
+            stage: client_1.OrderStatus.OUT_FOR_DELIVERY,
+        });
         return updated;
     }
     async updateStage(riderId, orderId, stage, location) {
+        if (!Object.values(client_1.OrderStatus).includes(stage)) {
+            throw new common_1.BadRequestException('Invalid order stage');
+        }
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
         });
@@ -549,7 +577,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
             where: { id: orderId },
             data: { status: stage },
         });
-        if (stage === 'DELIVERED') {
+        if (stage === client_1.OrderStatus.DELIVERED) {
             await this.prisma.user.update({
                 where: { id: riderId },
                 data: { status: 'AVAILABLE' },
@@ -641,6 +669,78 @@ let OrdersService = OrdersService_1 = class OrdersService {
         }
         catch { }
         return Math.min(100, base);
+    }
+    async adminForceCancel(orderId, reason) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found');
+        const updated = await this.prisma.order.update({
+            where: { id: orderId },
+            data: { status: client_1.OrderStatus.CANCELED, riderId: null },
+        });
+        await this.logTimeline(orderId, 'ADMIN_FORCE_CANCEL', { reason });
+        this.ws.notifyUser(order.customerId, 'order_canceled', {
+            orderId,
+            reason,
+        });
+        if (order.pharmacyId) {
+            this.ws.notifyUser(order.pharmacyId, 'order_canceled', {
+                orderId,
+                reason,
+            });
+        }
+        if (typeof this.ws.notifyAdmins === 'function') {
+            this.ws.notifyAdmins('admin_order_override', {
+                orderId,
+                action: 'CANCEL',
+            });
+        }
+        return updated;
+    }
+    async adminForceStatus(orderId, status, note) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found');
+        const updated = await this.prisma.order.update({
+            where: { id: orderId },
+            data: { status },
+        });
+        await this.logTimeline(orderId, 'ADMIN_FORCE_STATUS', {
+            to: status,
+            note,
+        });
+        this.ws.notifyUser(order.customerId, 'order_status_update', {
+            orderId,
+            status,
+        });
+        if (order.pharmacyId) {
+            this.ws.notifyUser(order.pharmacyId, 'order_status_update', {
+                orderId,
+                status,
+            });
+        }
+        return updated;
+    }
+    async adminUnassignRider(orderId) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order)
+            throw new common_1.NotFoundException('Order not found');
+        if (!order.riderId)
+            return order;
+        await this.prisma.user.update({
+            where: { id: order.riderId },
+            data: { status: 'AVAILABLE' },
+        });
+        const updated = await this.prisma.order.update({
+            where: { id: orderId },
+            data: { riderId: null, status: client_1.OrderStatus.ASSIGNED },
+        });
+        await this.logTimeline(orderId, 'ADMIN_UNASSIGNED_RIDER');
+        return updated;
+    }
+    async adminAddNote(orderId, note) {
+        await this.logTimeline(orderId, 'ADMIN_NOTE', { note });
+        return { ok: true };
     }
 };
 exports.OrdersService = OrdersService;

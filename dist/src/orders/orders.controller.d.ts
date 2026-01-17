@@ -1,6 +1,7 @@
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Request } from 'express';
+import { OrderStatus } from '@prisma/client';
 export declare class OrdersController {
     private readonly ordersService;
     constructor(ordersService: OrdersService);
@@ -16,9 +17,9 @@ export declare class OrdersController {
             orderId: number;
         }[];
     } & {
-        status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
         id: number;
+        status: import(".prisma/client").$Enums.OrderStatus;
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
@@ -39,9 +40,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -70,9 +71,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -85,16 +86,10 @@ export declare class OrdersController {
         };
         payment: {
             mock: boolean;
-            razorpayOrder: {
-                id: string;
-                amount: number;
-                currency: string;
-                status: string;
-            };
             transaction: {
-                status: string;
                 createdAt: Date;
                 id: string;
+                status: string;
                 method: string | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
@@ -104,12 +99,13 @@ export declare class OrdersController {
                 rawData: import("@prisma/client/runtime/library").JsonValue | null;
                 orderId: number | null;
             };
+            razorpayOrder?: undefined;
         } | {
             razorpayOrder: any;
             transaction: {
-                status: string;
                 createdAt: Date;
                 id: string;
+                status: string;
                 method: string | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
@@ -134,9 +130,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -168,9 +164,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -198,9 +194,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -218,16 +214,10 @@ export declare class OrdersController {
         }[];
         payment: {
             mock: boolean;
-            razorpayOrder: {
-                id: string;
-                amount: number;
-                currency: string;
-                status: string;
-            };
             transaction: {
-                status: string;
                 createdAt: Date;
                 id: string;
+                status: string;
                 method: string | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
@@ -237,12 +227,13 @@ export declare class OrdersController {
                 rawData: import("@prisma/client/runtime/library").JsonValue | null;
                 orderId: number | null;
             };
+            razorpayOrder?: undefined;
         } | {
             razorpayOrder: any;
             transaction: {
-                status: string;
                 createdAt: Date;
                 id: string;
+                status: string;
                 method: string | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
@@ -260,9 +251,9 @@ export declare class OrdersController {
     }, id: string, url: string): Promise<{
         createdAt: Date;
         id: number;
-        customerId: number;
         url: string;
         verified: boolean;
+        customerId: number;
     }>;
     requestPrescription(req: Request & {
         user: any;
@@ -290,9 +281,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -319,9 +310,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -334,16 +325,10 @@ export declare class OrdersController {
         };
         payment: {
             mock: boolean;
-            razorpayOrder: {
-                id: string;
-                amount: number;
-                currency: string;
-                status: string;
-            };
             transaction: {
-                status: string;
                 createdAt: Date;
                 id: string;
+                status: string;
                 method: string | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
@@ -353,12 +338,13 @@ export declare class OrdersController {
                 rawData: import("@prisma/client/runtime/library").JsonValue | null;
                 orderId: number | null;
             };
+            razorpayOrder?: undefined;
         } | {
             razorpayOrder: any;
             transaction: {
-                status: string;
                 createdAt: Date;
                 id: string;
+                status: string;
                 method: string | null;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 currency: string;
@@ -382,9 +368,9 @@ export declare class OrdersController {
                 orderId: number;
             }[];
         } & {
-            status: import(".prisma/client").$Enums.OrderStatus;
             createdAt: Date;
             id: number;
+            status: import(".prisma/client").$Enums.OrderStatus;
             updatedAt: Date;
             deletedAt: Date | null;
             pharmacyId: number;
@@ -403,9 +389,9 @@ export declare class OrdersController {
     }, orderId: string, dto: {
         action: 'ACCEPTED' | 'REJECTED';
     }): Promise<{
-        status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
         id: number;
+        status: import(".prisma/client").$Enums.OrderStatus;
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;
@@ -421,7 +407,7 @@ export declare class OrdersController {
     updateStage(req: Request & {
         user: any;
     }, orderId: string, dto: {
-        stage: string;
+        stage: OrderStatus;
         lat?: number;
         lng?: number;
     }): Promise<{
@@ -433,9 +419,9 @@ export declare class OrdersController {
         prescription: {
             createdAt: Date;
             id: number;
-            customerId: number;
             url: string;
             verified: boolean;
+            customerId: number;
         } | null;
         items: {
             name: string;
@@ -446,9 +432,9 @@ export declare class OrdersController {
             orderId: number;
         }[];
     } & {
-        status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
         id: number;
+        status: import(".prisma/client").$Enums.OrderStatus;
         updatedAt: Date;
         deletedAt: Date | null;
         pharmacyId: number;

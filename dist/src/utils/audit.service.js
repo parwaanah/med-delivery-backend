@@ -13,38 +13,59 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("./prisma.service");
-const audit_live_gateway_1 = require("../ws/audit-live.gateway");
-const notification_service_1 = require("./notification.service");
+const ws_gateway_1 = require("../ws/ws.gateway");
 let AuditService = AuditService_1 = class AuditService {
-    constructor(prisma, live, notify) {
+    constructor(prisma, ws) {
         this.prisma = prisma;
-        this.live = live;
-        this.notify = notify;
+        this.ws = ws;
         this.logger = new common_1.Logger(AuditService_1.name);
     }
-    async log({ userId, email, ip, userAgent, eventType, role, success = true, }) {
+    async log(params) {
         try {
-            const record = await this.prisma.loginAudit.create({
-                data: { userId, email, ip, userAgent, eventType, role, success },
+            return await this.prisma.auditLog.create({
+                data: {
+                    userId: params.userId,
+                    action: params.eventType,
+                    resource: 'AUTH',
+                    meta: {
+                        email: params.email,
+                        role: params.role,
+                        success: params.success,
+                        ip: params.ip,
+                        userAgent: params.userAgent,
+                        ...(params.meta || {}),
+                    },
+                },
             });
-            this.live.emitAuditEvent({
-                eventType,
-                userId,
-                email,
-                role,
-                success,
-                timestamp: record.timestamp,
+        }
+        catch (err) {
+            this.logger.error('Audit log failed', err);
+            return null;
+        }
+    }
+    async logAdminAction(params) {
+        try {
+            const record = await this.prisma.auditLog.create({
+                data: {
+                    userId: params.userId,
+                    action: params.action,
+                    resource: params.resource,
+                    meta: params.meta,
+                },
             });
-            this.notify.sendAdminToast({
-                type: success ? 'ok' : 'err',
-                title: `Audit • ${eventType}`,
-                text: email ?? 'unknown',
+            this.ws.notifyAdmins('admin_audit_event', {
+                id: record.id,
+                action: record.action,
+                resource: record.resource,
+                meta: record.meta,
+                at: record.createdAt,
+                userId: record.userId,
             });
             return record;
         }
         catch (err) {
-            this.logger.error('Audit log failed', err);
-            return { error: true };
+            this.logger.error('Admin audit failed', err);
+            return null;
         }
     }
 };
@@ -52,6 +73,5 @@ exports.AuditService = AuditService;
 exports.AuditService = AuditService = AuditService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        audit_live_gateway_1.AuditLiveGateway,
-        notification_service_1.NotificationService])
+        ws_gateway_1.WsGateway])
 ], AuditService);

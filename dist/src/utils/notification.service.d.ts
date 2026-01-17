@@ -5,11 +5,11 @@ export declare class NotificationService {
     constructor(prisma: PrismaService);
     create(receiverId: number, type: string, message: string, meta?: any, senderId?: number): Promise<{
         message: string;
-        type: string;
         meta: import("@prisma/client/runtime/library").JsonValue | null;
-        status: string;
         createdAt: Date;
         id: number;
+        status: string;
+        type: string;
         senderId: number | null;
         receiverId: number;
     } | undefined>;

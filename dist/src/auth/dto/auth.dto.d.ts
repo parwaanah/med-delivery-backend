@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { UserRole } from "@prisma/client";
 export declare class RegisterDto {
     name: string;
     email: string;
@@ -14,10 +14,8 @@ export declare class RefreshTokenDto {
 }
 export declare class SendOtpDto {
     phone: string;
-    role?: UserRole;
 }
 export declare class VerifyOtpDto {
     phone: string;
     otp: string;
-    role?: UserRole;
 }

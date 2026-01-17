@@ -12,29 +12,44 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CartService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../utils/prisma.service");
-const surge_service_1 = require("../surge/surge.service");
-const payments_service_1 = require("../payments/payments.service");
 const orders_service_1 = require("../orders/orders.service");
 let CartService = class CartService {
-    constructor(prisma, surge, payments, orders) {
+    constructor(prisma, orders) {
         this.prisma = prisma;
-        this.surge = surge;
-        this.payments = payments;
         this.orders = orders;
     }
     async addToCart(userId, medicineId, quantity) {
         if (!medicineId || quantity < 1) {
-            throw new common_1.BadRequestException('Invalid cart item.');
+            throw new common_1.BadRequestException('Invalid cart item');
         }
+        const inventory = await this.prisma.pharmacyInventory.findFirst({
+            where: { medicineId, stock: { gt: 0 } },
+            orderBy: { sellingPrice: 'asc' },
+        });
+        if (!inventory) {
+            throw new common_1.BadRequestException('Medicine out of stock');
+        }
+        const productId = String(medicineId);
         let cart = await this.prisma.cart.findFirst({
-            where: { userId: String(userId) },
+            where: { userId },
+            include: { items: true },
         });
         if (!cart) {
             cart = await this.prisma.cart.create({
-                data: { userId: String(userId) },
+                data: { userId },
+                include: { items: true },
             });
         }
-        const productId = String(medicineId);
+        if (cart.items.length > 0) {
+            const firstMedicineId = Number(cart.items[0].productId);
+            const existingInventory = await this.prisma.pharmacyInventory.findFirst({
+                where: { medicineId: firstMedicineId },
+            });
+            if (existingInventory &&
+                existingInventory.pharmacyId !== inventory.pharmacyId) {
+                throw new common_1.BadRequestException('Cart can contain medicines from only one pharmacy');
+            }
+        }
         const existing = await this.prisma.cartItem.findFirst({
             where: { cartId: cart.id, productId },
         });
@@ -49,110 +64,112 @@ let CartService = class CartService {
                 cartId: cart.id,
                 productId,
                 quantity,
-                price: 0,
+                price: inventory.sellingPrice,
             },
         });
     }
     async getCart(userId) {
         const cart = await this.prisma.cart.findFirst({
-            where: { userId: String(userId) },
+            where: { userId },
             include: { items: true },
         });
-        if (!cart)
+        if (!cart) {
             return { items: [] };
-        const enriched = await Promise.all(cart.items.map(async (item) => {
-            const med = await this.prisma.medicine.findUnique({
-                where: { id: Number(item.productId) },
+        }
+        const items = await Promise.all(cart.items.map(async (item) => {
+            const medicineId = Number(item.productId);
+            const medicine = await this.prisma.medicine.findUnique({
+                where: { id: medicineId },
             });
-            const inv = await this.prisma.pharmacyInventory.findFirst({
-                where: { medicineId: med?.id },
+            const inventory = await this.prisma.pharmacyInventory.findFirst({
+                where: { medicineId },
                 include: { pharmacy: { select: { id: true, name: true } } },
-                orderBy: { sellingPrice: 'asc' },
             });
             return {
-                ...item,
-                medicine: med ?? null,
-                price: item.price ? Number(item.price) : inv ? Number(inv.sellingPrice) : 0,
-                stock: inv?.stock ?? 0,
-                pharmacy: inv?.pharmacy?.name ?? null,
-                pharmacyId: inv?.pharmacy?.id ?? null,
+                id: item.id,
+                quantity: item.quantity,
+                price: Number(item.price),
+                medicine,
+                stock: inventory?.stock ?? 0,
+                pharmacy: inventory?.pharmacy?.name ?? null,
+                pharmacyId: inventory?.pharmacy?.id ?? null,
             };
         }));
-        return { ...cart, items: enriched };
+        return { id: cart.id, items };
     }
     async removeItem(userId, cartItemId) {
-        const cart = await this.prisma.cart.findFirst({
-            where: { userId: String(userId) },
-        });
+        const cart = await this.prisma.cart.findFirst({ where: { userId } });
         if (!cart)
             throw new common_1.BadRequestException('Cart not found');
         const item = await this.prisma.cartItem.findUnique({
-            where: { id: String(cartItemId) },
+            where: { id: cartItemId },
         });
         if (!item || item.cartId !== cart.id) {
             throw new common_1.BadRequestException('Invalid cart item');
         }
-        return this.prisma.cartItem.delete({
-            where: { id: String(cartItemId) },
-        });
+        return this.prisma.cartItem.delete({ where: { id: cartItemId } });
     }
     async updateQuantity(userId, cartItemId, quantity) {
-        if (quantity < 1)
-            throw new common_1.BadRequestException('Quantity must be at least 1');
-        const cart = await this.prisma.cart.findFirst({
-            where: { userId: String(userId) },
-        });
+        if (quantity < 1) {
+            return this.removeItem(userId, cartItemId);
+        }
+        const cart = await this.prisma.cart.findFirst({ where: { userId } });
         if (!cart)
             throw new common_1.BadRequestException('Cart not found');
         const item = await this.prisma.cartItem.findUnique({
-            where: { id: String(cartItemId) },
+            where: { id: cartItemId },
         });
         if (!item || item.cartId !== cart.id) {
             throw new common_1.BadRequestException('Invalid cart item');
         }
         return this.prisma.cartItem.update({
-            where: { id: String(cartItemId) },
+            where: { id: cartItemId },
             data: { quantity },
         });
     }
-    async calculateTotal(userId, items) {
-        if (!items?.length)
-            throw new common_1.BadRequestException('No items provided.');
-        const baseTotal = items.reduce((t, i) => t + i.price * i.quantity, 0);
-        const { multiplier: surgeMultiplier } = await this.surge.getStatus();
-        const total = Number((baseTotal * surgeMultiplier).toFixed(2));
-        return {
-            baseTotal,
-            surgeMultiplier,
-            total,
-            message: surgeMultiplier > 1 ? 'Surge pricing active' : 'Normal pricing',
+    async checkout(userId, body) {
+        const cart = await this.prisma.cart.findFirst({
+            where: { userId },
+            include: { items: true },
+        });
+        if (!cart || cart.items.length === 0) {
+            throw new common_1.BadRequestException('Cart is empty');
+        }
+        const customerId = Number(userId);
+        if (Number.isNaN(customerId)) {
+            throw new common_1.BadRequestException('Invalid customer');
+        }
+        const items = await Promise.all(cart.items.map(async (item) => {
+            const medicineId = Number(item.productId);
+            const medicine = await this.prisma.medicine.findUnique({
+                where: { id: medicineId },
+            });
+            if (!medicine) {
+                throw new common_1.BadRequestException('Invalid medicine in cart');
+            }
+            return {
+                medicineId,
+                name: medicine.name,
+                quantity: item.quantity,
+                price: Number(item.price),
+                category: medicine.category,
+            };
+        }));
+        const dto = {
+            items,
+            address: 'Cart checkout',
+            notes: body?.notes,
         };
-    }
-    async checkout(userId, dtoItems, opts) {
-        if (!dtoItems?.length)
-            throw new common_1.BadRequestException('No items provided.');
-        const createDto = {
-            items: dtoItems,
-            pharmacyId: opts?.pharmacyId,
-            pickupLat: opts?.pickupLat,
-            pickupLon: opts?.pickupLon,
-        };
-        const result = await this.orders.createOrder(userId, createDto);
-        const order = result.order ?? result;
-        const paymentIntent = await this.payments.createPaymentForOrder(order.id);
-        return {
-            orderId: order.id,
-            order,
-            paymentIntent,
-            message: 'Order created. Complete payment to proceed.',
-        };
+        const order = await this.orders.createOrder(customerId, dto);
+        await this.prisma.cartItem.deleteMany({
+            where: { cartId: cart.id },
+        });
+        return order;
     }
 };
 exports.CartService = CartService;
 exports.CartService = CartService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        surge_service_1.SurgeService,
-        payments_service_1.PaymentsService,
         orders_service_1.OrdersService])
 ], CartService);

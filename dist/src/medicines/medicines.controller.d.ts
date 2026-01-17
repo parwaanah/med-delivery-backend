@@ -1,14 +1,16 @@
 import { MedicinesService } from './medicines.service';
+import { Response } from 'express';
 export declare class MedicinesController {
     private readonly medicinesService;
     constructor(medicinesService: MedicinesService);
-    search(q: string): Promise<{
+    search(q: string, res: Response): Promise<Response<any, Record<string, any>>>;
+    getById(id: string): Promise<{
         stock: number;
         price: number;
         mrp: number;
         discount: number;
-        pharmacy: string | null;
-        pharmacyId: number | null;
+        pharmacy: string;
+        pharmacyId: number;
         name: string;
         createdAt: Date;
         id: number;
@@ -18,5 +20,5 @@ export declare class MedicinesController {
         manufacturer: string | null;
         imageUrl: string | null;
         rxType: import(".prisma/client").$Enums.PrescriptionType;
-    }[]>;
+    }>;
 }

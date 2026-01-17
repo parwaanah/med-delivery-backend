@@ -11,32 +11,35 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
+const schedule_1 = require("@nestjs/schedule");
+const bullmq_1 = require("@nestjs/bullmq");
 const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const pharmacies_module_1 = require("./pharmacies/pharmacies.module");
 const riders_module_1 = require("./riders/riders.module");
 const orders_module_1 = require("./orders/orders.module");
-const queue_module_1 = require("./queues/queue.module");
-const global_logger_service_1 = require("./common/logger/global-logger.service");
-const request_logger_middleware_1 = require("./common/middleware/request-logger.middleware");
-const ws_module_1 = require("./ws/ws.module");
-const notification_service_1 = require("./utils/notification.service");
-const utils_module_1 = require("./utils/utils.module");
+const cart_module_1 = require("./cart/cart.module");
 const admin_module_1 = require("./admin/admin.module");
 const health_module_1 = require("./health/health.module");
-const surge_module_1 = require("./surge/surge.module");
-const geo_surge_module_1 = require("./geosurge/geo-surge.module");
+const metrics_module_1 = require("./metrics/metrics.module");
+const reports_module_1 = require("./reports/reports.module");
+const ws_module_1 = require("./ws/ws.module");
+const queue_module_1 = require("./queues/queue.module");
+const notifications_module_1 = require("./notifications/notifications.module");
+const chat_module_1 = require("./chat/chat.module");
+const medicines_module_1 = require("./medicines/medicines.module");
 const payments_module_1 = require("./payments/payments.module");
 const webhooks_module_1 = require("./webhooks/webhooks.module");
-const reports_module_1 = require("./reports/reports.module");
-const schedule_1 = require("@nestjs/schedule");
-const notifications_module_1 = require("./notifications/notifications.module");
-const chat_live_gateway_1 = require("./ws/chat-live.gateway");
-const chat_module_1 = require("./chat/chat.module");
+const surge_module_1 = require("./surge/surge.module");
+const geo_surge_module_1 = require("./geosurge/geo-surge.module");
+const utils_module_1 = require("./utils/utils.module");
 const cache_module_1 = require("./cache/cache.module");
-const metrics_module_1 = require("./metrics/metrics.module");
-const medicines_module_1 = require("./medicines/medicines.module");
-const bullmq_1 = require("@nestjs/bullmq");
+const uploads_module_1 = require("./uploads/uploads.module");
+const profile_module_1 = require("./auth/profile.module");
+const global_logger_service_1 = require("./common/logger/global-logger.service");
+const request_logger_middleware_1 = require("./common/middleware/request-logger.middleware");
+const notification_service_1 = require("./utils/notification.service");
+const chat_live_gateway_1 = require("./ws/chat-live.gateway");
 function forcedRedisUrl(config) {
     const url = 'redis://redis:6379';
     process.env.REDIS_URL = url;
@@ -58,10 +61,7 @@ exports.AppModule = AppModule = __decorate([
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(process.cwd(), 'public'),
                 serveRoot: '/public',
-                serveStaticOptions: {
-                    index: false,
-                    fallthrough: false,
-                },
+                serveStaticOptions: { index: false, fallthrough: false },
             }),
             bullmq_1.BullModule.forRootAsync({
                 inject: [config_1.ConfigService],
@@ -71,26 +71,29 @@ exports.AppModule = AppModule = __decorate([
                     },
                 }),
             }),
-            utils_module_1.UtilsModule,
-            cache_module_1.CacheModule,
-            metrics_module_1.MetricsModule,
-            health_module_1.HealthModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             pharmacies_module_1.PharmaciesModule,
             riders_module_1.RidersModule,
             orders_module_1.OrdersModule,
+            cart_module_1.CartModule,
+            admin_module_1.AdminModule,
+            health_module_1.HealthModule,
+            metrics_module_1.MetricsModule,
+            reports_module_1.ReportsModule,
+            ws_module_1.WsModule,
+            queue_module_1.QueueModule,
+            notifications_module_1.NotificationsModule,
+            chat_module_1.ChatModule,
+            medicines_module_1.MedicinesModule,
             payments_module_1.PaymentsModule,
             webhooks_module_1.WebhooksModule,
-            queue_module_1.QueueModule,
-            admin_module_1.AdminModule,
-            ws_module_1.WsModule,
             surge_module_1.SurgeModule,
             geo_surge_module_1.GeoSurgeModule,
-            chat_module_1.ChatModule,
-            notifications_module_1.NotificationsModule,
-            medicines_module_1.MedicinesModule,
-            reports_module_1.ReportsModule,
+            utils_module_1.UtilsModule,
+            cache_module_1.CacheModule,
+            uploads_module_1.UploadsModule,
+            profile_module_1.ProfileModule,
             schedule_1.ScheduleModule.forRoot(),
         ],
         providers: [
