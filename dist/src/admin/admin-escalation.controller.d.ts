@@ -12,7 +12,7 @@ export declare class AdminEscalationController {
     }>;
     getCandidates(id: string): Promise<{
         total: number;
-        candidates: {
+        candidates: ({
             user: {
                 name: string;
                 email: string | null;
@@ -21,24 +21,24 @@ export declare class AdminEscalationController {
                 latitude: number | null;
                 longitude: number | null;
             } | null;
-            riderId: number | null;
+            riderId: null;
             score: number;
             distKm: number | null;
             meta: any;
-        }[];
+        } | {
+            user: {
+                name: string;
+                email: string | null;
+                id: number;
+                status: string;
+                latitude: number | null;
+                longitude: number | null;
+            } | null;
+            riderId: number;
+            score: number;
+            distKm: number | null;
+            meta: any;
+        })[];
     }>;
-    assign(id: string, riderId: string, req: any): Promise<{
-        createdAt: Date;
-        id: number;
-        status: import(".prisma/client").$Enums.OrderStatus;
-        updatedAt: Date;
-        deletedAt: Date | null;
-        pharmacyId: number;
-        prescriptionId: number | null;
-        customerId: number;
-        riderId: number | null;
-        totalPrice: number;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode;
-        requiresPrescription: boolean;
-    }>;
+    assign(id: string, riderId: string, req: any): Promise<any>;
 }

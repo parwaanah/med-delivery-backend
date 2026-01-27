@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProfileModule = void 0;
 const common_1 = require("@nestjs/common");
 const profile_controller_1 = require("./profile.controller");
+const rider_profile_controller_1 = require("./rider.profile.controller");
 const prisma_service_1 = require("../utils/prisma.service");
 const uploads_module_1 = require("../uploads/uploads.module");
 let ProfileModule = class ProfileModule {
@@ -16,8 +17,13 @@ let ProfileModule = class ProfileModule {
 exports.ProfileModule = ProfileModule;
 exports.ProfileModule = ProfileModule = __decorate([
     (0, common_1.Module)({
-        imports: [uploads_module_1.UploadsModule],
-        controllers: [profile_controller_1.ProfileController],
+        imports: [
+            uploads_module_1.UploadsModule,
+        ],
+        controllers: [
+            profile_controller_1.ProfileController,
+            rider_profile_controller_1.RiderProfileController,
+        ],
         providers: [prisma_service_1.PrismaService],
     })
 ], ProfileModule);

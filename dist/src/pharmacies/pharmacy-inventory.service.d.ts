@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../utils/prisma.service';
 import { SurgeService } from '../surge/surge.service';
 import { NotificationService } from '../utils/notification.service';
@@ -6,56 +7,44 @@ export declare class PharmacyInventoryService {
     private surge;
     private notify;
     constructor(prisma: PrismaService, surge: SurgeService, notify: NotificationService);
-    listInventory(pharmacyId: number): Promise<({
-        medicine: {
-            name: string;
-            createdAt: Date;
-            id: number;
-            price: number | null;
-            category: import(".prisma/client").$Enums.MedicineCategory;
-            sku: string | null;
-            salt: string | null;
-            manufacturer: string | null;
-            imageUrl: string | null;
-            rxType: import(".prisma/client").$Enums.PrescriptionType;
-        };
-    } & {
+    listInventory(pharmacyId: number): Promise<{
         createdAt: Date;
         id: number;
-        medicineId: number;
         pharmacyId: number;
+        medicineId: number;
         stock: number;
         discount: number;
-        mrp: import("@prisma/client/runtime/library").Decimal;
-        sellingPrice: import("@prisma/client/runtime/library").Decimal;
-    })[]>;
+        mrp: Prisma.Decimal;
+        sellingPrice: Prisma.Decimal;
+    }[]>;
     add(pharmacyId: number, dto: any): Promise<{
         createdAt: Date;
         id: number;
-        medicineId: number;
         pharmacyId: number;
+        medicineId: number;
         stock: number;
         discount: number;
-        mrp: import("@prisma/client/runtime/library").Decimal;
-        sellingPrice: import("@prisma/client/runtime/library").Decimal;
+        mrp: Prisma.Decimal;
+        sellingPrice: Prisma.Decimal;
     }>;
     update(inventoryId: number, dto: any): Promise<{
         createdAt: Date;
         id: number;
-        medicineId: number;
         pharmacyId: number;
+        medicineId: number;
         stock: number;
         discount: number;
-        mrp: import("@prisma/client/runtime/library").Decimal;
-        sellingPrice: import("@prisma/client/runtime/library").Decimal;
+        mrp: Prisma.Decimal;
+        sellingPrice: Prisma.Decimal;
     }>;
     remove(inventoryId: number): Promise<{
         ok: boolean;
         deletedId: number;
+        softDeleted: boolean;
     }>;
     getMedicinePrice(pharmacyId: number, medicineId: number): Promise<{
         price: number;
-        stock: number;
+        stock: any;
     }>;
     calculatePrice(pharmacyId: number, medicineId: number): Promise<{
         price: number;
@@ -65,11 +54,11 @@ export declare class PharmacyInventoryService {
     updateStock(pharmacyId: number, medicineId: number, delta: number): Promise<{
         createdAt: Date;
         id: number;
-        medicineId: number;
         pharmacyId: number;
+        medicineId: number;
         stock: number;
         discount: number;
-        mrp: import("@prisma/client/runtime/library").Decimal;
-        sellingPrice: import("@prisma/client/runtime/library").Decimal;
+        mrp: Prisma.Decimal;
+        sellingPrice: Prisma.Decimal;
     }>;
 }

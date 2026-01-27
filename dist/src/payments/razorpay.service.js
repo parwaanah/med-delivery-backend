@@ -16,8 +16,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RazorpayService = void 0;
 const razorpay_1 = __importDefault(require("razorpay"));
 const common_1 = require("@nestjs/common");
+const redis_service_1 = require("../utils/redis.service");
 let RazorpayService = RazorpayService_1 = class RazorpayService {
-    constructor() {
+    constructor(redis) {
+        this.redis = redis;
         this.logger = new common_1.Logger(RazorpayService_1.name);
         const keyId = process.env.RAZORPAY_KEY_ID;
         const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -39,6 +41,7 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
             throw new common_1.BadRequestException('Payment gateway not configured');
         }
         try {
+            await this.beforeCall('razorpay', 5, 30_000);
             const opts = {
                 amount: amountInPaise,
                 currency,
@@ -46,10 +49,12 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
                 payment_capture: 1,
             };
             const order = await this.client.orders.create(opts);
+            await this.onSuccess('razorpay');
             this.logger.log(`Razorpay order created ${order?.id}`);
             return order;
         }
         catch (err) {
+            await this.onFailure('razorpay');
             this.logger.error('Razorpay createOrder failed', err?.message || err);
             throw new common_1.BadRequestException('Razorpay authentication failed');
         }
@@ -72,12 +77,61 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
             this.logger.warn('Razorpay refund skipped (disabled)');
             return { mock: true, refunded: true };
         }
-        const payload = amountInPaise ? { amount: amountInPaise } : {};
-        return this.client.payments.refund(paymentId, payload);
+        try {
+            await this.beforeCall('razorpay', 5, 30_000);
+            const payload = amountInPaise ? { amount: amountInPaise } : {};
+            const res = await this.client.payments.refund(paymentId, payload);
+            await this.onSuccess('razorpay');
+            return res;
+        }
+        catch (e) {
+            await this.onFailure('razorpay');
+            throw e;
+        }
+    }
+    key(name) {
+        return `cb:${name}`;
+    }
+    async beforeCall(name, failThreshold, openMs) {
+        const raw = await this.redis.client.get(this.key(name));
+        if (!raw)
+            return;
+        try {
+            const st = JSON.parse(raw);
+            if (st?.state === 'OPEN' && typeof st?.openUntil === 'number') {
+                if (Date.now() < st.openUntil) {
+                    throw new common_1.BadRequestException('Payment gateway temporarily unavailable');
+                }
+            }
+        }
+        catch (e) {
+            if (e instanceof common_1.BadRequestException)
+                throw e;
+        }
+    }
+    async onSuccess(name) {
+        try {
+            await this.redis.client.del(this.key(name));
+        }
+        catch { }
+    }
+    async onFailure(name) {
+        const k = this.key(name);
+        const failThreshold = Number(process.env.CB_RAZORPAY_FAILS ?? 5);
+        const openMs = Number(process.env.CB_RAZORPAY_OPEN_MS ?? 30_000);
+        try {
+            const raw = await this.redis.client.get(k);
+            const cur = raw ? JSON.parse(raw) : {};
+            const fails = Number(cur?.fails ?? 0) + 1;
+            const state = fails >= failThreshold ? 'OPEN' : String(cur?.state || 'CLOSED');
+            const openUntil = state === 'OPEN' ? Date.now() + Math.max(1000, openMs) : undefined;
+            await this.redis.client.set(k, JSON.stringify({ state, fails, openUntil }), { PX: Math.max(1000, openMs) });
+        }
+        catch { }
     }
 };
 exports.RazorpayService = RazorpayService;
 exports.RazorpayService = RazorpayService = RazorpayService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [redis_service_1.RedisService])
 ], RazorpayService);

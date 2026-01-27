@@ -18,8 +18,16 @@ import { ConfigService } from '@nestjs/config';
 import { SurgeService } from '../surge/surge.service';
 import { GeoSurgeService } from '../geosurge/geo-surge.service';
 import { PaymentsService } from '../payments/payments.service';
+import { PharmacyAcceptDto } from './dto/pharmacy-accept.dto';
+import { RiderPaymentsService } from '../riders/rider-payments.service';
+import { RiderQualityService } from '../riders/rider-quality.service';
+import { OrderLifecycleService } from './order-lifecycle.service';
 
 import { OrderStatus, PaymentMode, UserRole } from '@prisma/client';
+import { ServiceAreaService } from '../service-area/service-area.service';
+
+// Backwards-compatible with older generated Prisma clients (before enum update).
+const NEEDS_CONFIRMATION_STATUS = 'NEEDS_CONFIRMATION' as unknown as OrderStatus;
 
 @Injectable()
 export class OrdersService {
@@ -36,6 +44,10 @@ export class OrdersService {
     private surge: SurgeService,
     private geoSurge: GeoSurgeService,
     private payments: PaymentsService,
+    private readonly riderPayments: RiderPaymentsService,
+    private readonly riderQuality: RiderQualityService,
+    private readonly lifecycle: OrderLifecycleService,
+    private readonly serviceArea: ServiceAreaService,
     @Inject('ORDER_ASSIGN_QUEUE') private orderAssignQueue: Queue,
   ) {
     this.defaultRiderSearchKm = Number(this.config.get('RIDER_SEARCH_KM') || 5);
@@ -93,9 +105,101 @@ export class OrdersService {
     }
   }
 
+  private async requestCustomerPayment(order: {
+    id: number;
+    customerId: number;
+    pharmacyId: number;
+    status: any;
+    paymentMode: any;
+    paymentStatus?: any;
+    requiresPrescription?: boolean;
+    prescriptionId?: number | null;
+  }) {
+    const current = String((order as any).paymentStatus || 'UNPAID').toUpperCase();
+    if (current === 'PAID' || current === 'REQUESTED') return { requested: false };
+
+    // Only request payment after pharmacy acceptance (and confirmation resolved).
+    const st = String(order.status || '').toUpperCase();
+    if (st !== String(OrderStatus.ACCEPTED)) return { requested: false };
+
+    const updated = await this.prisma.order.update({
+      where: { id: order.id },
+      data: { paymentStatus: 'REQUESTED', paymentRequestedAt: new Date() } as any,
+      select: { id: true, customerId: true, pharmacyId: true },
+    });
+
+    await this.logTimeline(order.id, 'PAYMENT_REQUESTED', {
+      orderId: order.id,
+      paymentMode: order.paymentMode,
+    });
+
+    await this.notify.createDomainEvent(
+      updated.customerId,
+      'payment.requested',
+      `Payment requested for order #${order.id}`,
+      { orderId: order.id },
+      updated.pharmacyId,
+    );
+
+    return { requested: true };
+  }
+
   // ----------------------------------------------------------
   // Payment mode resolver
   // ----------------------------------------------------------
+  private defaultPaymentMode(): PaymentMode {
+    const raw = String(
+      process.env.DEFAULT_PAYMENT_MODE || this.config.get('DEFAULT_PAYMENT_MODE') || '',
+    )
+      .trim()
+      .toUpperCase();
+
+    if (raw === String(PaymentMode.PAY_FIRST)) return PaymentMode.PAY_FIRST;
+    if (raw === String(PaymentMode.PAY_AFTER_VERIFICATION))
+      return PaymentMode.PAY_AFTER_VERIFICATION;
+    return PaymentMode.PAY_AFTER_ACCEPT;
+  }
+
+  private async resolveDeliverySnapshot(customerId: number, dto: any) {
+    const addressIdRaw = dto?.addressId != null ? Number(dto.addressId) : null;
+
+    let addr: any = null;
+    if (addressIdRaw != null && Number.isFinite(addressIdRaw)) {
+      addr = await (this.prisma as any).userAddress.findFirst({
+        where: { id: addressIdRaw, userId: customerId },
+      });
+    }
+
+    if (!addr) {
+      addr = await (this.prisma as any).userAddress.findFirst({
+        where: { userId: customerId, isDefault: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    const notes = String(dto?.deliveryNotes || '').trim();
+    if (!addr) {
+      const legacy = String(dto?.address || '').trim();
+      return {
+        deliveryAddressText: legacy || null,
+        deliveryNotes: notes || '',
+      };
+    }
+
+    return {
+      deliveryAddressText: null,
+      deliveryName: String(addr.name || '').trim() || null,
+      deliveryPhone: String(addr.phone || '').trim() || null,
+      deliveryLine1: String(addr.line1 || '').trim() || null,
+      deliveryLine2: String(addr.line2 || '').trim() || '',
+      deliveryCity: String(addr.city || '').trim() || null,
+      deliveryState: String(addr.state || '').trim() || '',
+      deliveryPin: String(addr.pin || '').trim() || null,
+      deliveryLandmark: String(addr.landmark || '').trim() || '',
+      deliveryNotes: notes || '',
+    };
+  }
+
   private resolveModeFromItems(items: OrderItemDto[]) {
     let requiresPrescription = false;
     let hasStrict = false;
@@ -127,8 +231,10 @@ export class OrdersService {
       };
     if (hasChronic && !hasNonRx)
       return { mode: PaymentMode.PAY_AFTER_ACCEPT, requiresPrescription: false };
+    // Minimal customer flow: avoid requiring a payment gateway at order creation time.
+    // We always use pay-after-accept in development; payment is requested only after pharmacy accepts.
     if (hasNonRx && !hasChronic)
-      return { mode: PaymentMode.PAY_FIRST, requiresPrescription: false };
+      return { mode: PaymentMode.PAY_AFTER_ACCEPT, requiresPrescription: false };
 
     return { mode: PaymentMode.PAY_AFTER_ACCEPT, requiresPrescription: false };
   }
@@ -161,9 +267,37 @@ export class OrdersService {
     if (!medicineIds.length)
       throw new BadRequestException('Invalid items');
 
-    const { mode, requiresPrescription } = this.resolveModeFromItems(
-      dto.items,
+    const resolved = this.resolveModeFromItems(dto.items);
+    let mode: PaymentMode = resolved.mode as PaymentMode;
+    let requiresPrescription = resolved.requiresPrescription;
+
+    // Enforce prescription requirement based on Medicine.rxType
+    const meds = await this.prisma.medicine.findMany({
+      where: { id: { in: medicineIds } },
+      select: { id: true, rxType: true },
+    });
+    const anyRx = meds.some(
+      (m) => String(m.rxType).toUpperCase() !== 'NONE',
     );
+    requiresPrescription = requiresPrescription || anyRx;
+    if (requiresPrescription) {
+      mode = PaymentMode.PAY_AFTER_VERIFICATION;
+    }
+
+    // Allow client to request a payment mode; keep a safe default for dev.
+    const requested = (dto as any).paymentMode;
+    if (!requiresPrescription && requested && Object.values(PaymentMode).includes(requested)) {
+      mode = requested;
+    } else if (!requiresPrescription && !requested) {
+      mode = this.defaultPaymentMode();
+    }
+
+    const delivery = await this.resolveDeliverySnapshot(customerId, dto as any);
+
+    const initialPaymentStatus =
+      mode === PaymentMode.PAY_FIRST ? 'REQUESTED' : 'UNPAID';
+    const initialPaymentRequestedAt =
+      mode === PaymentMode.PAY_FIRST ? new Date() : null;
 
     // Geo tracking (best-effort)
     const orderGeoId = `order:${Date.now()}:${Math.random()
@@ -174,6 +308,9 @@ export class OrdersService {
     });
     const pickupLat = user?.latitude != null ? Number(user.latitude) : null;
     const pickupLon = user?.longitude != null ? Number(user.longitude) : null;
+
+    // Enforce service area using customer location (precision: point-in-polygon zones).
+    await this.serviceArea.assertPointServiced(pickupLat, pickupLon);
 
     if (pickupLat != null && pickupLon != null) {
       try {
@@ -219,7 +356,10 @@ export class OrdersService {
             totalPrice: total,
             status: OrderStatus.PENDING,
             paymentMode: mode,
+            paymentStatus: initialPaymentStatus,
+            paymentRequestedAt: initialPaymentRequestedAt,
             requiresPrescription,
+            ...(delivery as any),
             items: { create: itemsCreate },
           },
           include: { items: true },
@@ -239,6 +379,21 @@ export class OrdersService {
           requiresPrescription,
         });
 
+        if (mode === PaymentMode.PAY_FIRST) {
+          await this.logTimeline(created.id, 'PAYMENT_REQUESTED', {
+            orderId: created.id,
+            paymentMode: mode,
+            at: initialPaymentRequestedAt,
+          });
+        }
+
+        this.notify.create(
+          customerId,
+          'ORDER_CREATED',
+          `Order #${created.id} created`,
+          { orderId: created.id, status: created.status },
+        );
+
         this.notify.create(
           pharmacyId,
           'ORDER_PLACED',
@@ -247,21 +402,9 @@ export class OrdersService {
           customerId,
         );
         this.ws.notifyUser(pharmacyId, 'order_placed', created);
+        this.ws.notifyUser(pharmacyId, 'order.created', { order: created });
 
-        // PAY_FIRST bypass
-        if (mode === PaymentMode.PAY_FIRST) {
-          try {
-            await this.geoSurge.removePoint(orderGeoId);
-          } catch {}
-          return {
-            order: created,
-            payment: {
-              mock: true,
-              status: 'PAID',
-              id: `mock_${created.id}`,
-            },
-          };
-        }
+        // PAY_FIRST is disabled in minimal dev flow (handled as PAY_AFTER_ACCEPT).
 
         const delay =
           Number(this.config.get('ESCALATION_MINUTES') || 1) *
@@ -285,10 +428,7 @@ export class OrdersService {
       const pharmacyId = Number((dto as any).pharmacyId);
 
       const inv = await this.prisma.pharmacyInventory.findMany({
-        where: {
-          pharmacyId,
-          medicineId: { in: medicineIds },
-        },
+        where: ({ pharmacyId, medicineId: { in: medicineIds }, deletedAt: null } as any),
       });
 
       if (inv.length !== medicineIds.length)
@@ -321,28 +461,23 @@ export class OrdersService {
           });
         }
 
-        const created = await tx.order.create({
+        const created = await tx.order.create(({
           data: {
             customerId,
             pharmacyId,
             totalPrice: total,
             status: OrderStatus.PENDING,
             paymentMode: mode,
+            paymentStatus: initialPaymentStatus,
+            paymentRequestedAt: initialPaymentRequestedAt,
             requiresPrescription,
+            ...(delivery as any),
             items: { create: itemsCreate },
           },
           include: { items: true },
-        });
+        } as any));
 
-        for (const it of dto.items) {
-          await tx.pharmacyInventory.updateMany({
-            where: {
-              pharmacyId,
-              medicineId: it.medicineId,
-            },
-            data: { stock: { decrement: it.quantity } },
-          });
-        }
+        // Stock is validated now, but decremented on pharmacy acceptance / fulfillment.
 
         await tx.orderOffer.create({
           data: {
@@ -360,6 +495,21 @@ export class OrdersService {
         requiresPrescription,
       });
 
+      if (mode === PaymentMode.PAY_FIRST) {
+        await this.logTimeline(order.id, 'PAYMENT_REQUESTED', {
+          orderId: order.id,
+          paymentMode: mode,
+          at: initialPaymentRequestedAt,
+        });
+      }
+
+      this.notify.create(
+        customerId,
+        'ORDER_CREATED',
+        `Order #${order.id} created`,
+        { orderId: order.id, status: order.status },
+      );
+
       this.notify.create(
         order.pharmacyId,
         'ORDER_PLACED',
@@ -368,14 +518,9 @@ export class OrdersService {
         customerId,
       );
       this.ws.notifyUser(order.pharmacyId, 'order_placed', order);
+      this.ws.notifyUser(order.pharmacyId, 'order.created', { order });
 
-      if (mode === PaymentMode.PAY_FIRST) {
-        const payment = await this.payments.createPaymentForOrder(order.id);
-        try {
-          await this.geoSurge.removePoint(orderGeoId);
-        } catch {}
-        return { order, payment };
-      }
+      // PAY_FIRST is disabled in minimal dev flow (handled as PAY_AFTER_ACCEPT).
 
       const delay =
         Number(this.config.get('ESCALATION_MINUTES') || 1) *
@@ -422,18 +567,21 @@ export class OrdersService {
       });
 
       const created = await this.prisma.$transaction(async (tx) => {
-        const ord = await tx.order.create({
+        const ord = await tx.order.create(({
           data: {
             customerId,
             pharmacyId: best,
             totalPrice: total,
             status: OrderStatus.PENDING,
             paymentMode: mode,
+            paymentStatus: initialPaymentStatus,
+            paymentRequestedAt: initialPaymentRequestedAt,
             requiresPrescription,
+            ...(delivery as any),
             items: { create: itemsCreate },
           },
           include: { items: true },
-        });
+        } as any));
 
         await tx.orderOffer.create({
           data: {
@@ -453,6 +601,21 @@ export class OrdersService {
         requiresPrescription,
       });
 
+      if (mode === PaymentMode.PAY_FIRST) {
+        await this.logTimeline(created.id, 'PAYMENT_REQUESTED', {
+          orderId: created.id,
+          paymentMode: mode,
+          at: initialPaymentRequestedAt,
+        });
+      }
+
+      this.notify.create(
+        customerId,
+        'ORDER_CREATED',
+        `Order #${created.id} created`,
+        { orderId: created.id, status: created.status },
+      );
+
       this.notify.create(
         best,
         'ORDER_AVAILABLE',
@@ -461,23 +624,9 @@ export class OrdersService {
         customerId,
       );
       this.ws.notifyUser(best, 'order_available', { orderId: created.id });
+      this.ws.notifyUser(best, 'order.created', { order: created });
 
-      // Bypass Pay-first
-      if (mode === PaymentMode.PAY_FIRST) {
-        try {
-          await this.geoSurge.removePoint(orderGeoId);
-        } catch {}
-        return {
-          order: created,
-          candidates: [best],
-          scores: [{ pharmacyId: best, score: 1 }],
-          payment: {
-            mock: true,
-            status: 'PAID',
-            id: `mock_${created.id}`,
-          },
-        };
-      }
+      // PAY_FIRST is disabled in minimal dev flow (handled as PAY_AFTER_ACCEPT).
 
       const delay =
         Number(this.config.get('ESCALATION_MINUTES') || 1) *
@@ -491,17 +640,18 @@ export class OrdersService {
     }
 
     // NORMAL MODE auto-routing
-    const grouped = await this.prisma.pharmacyInventory.groupBy({
+    const grouped: any[] = (await this.prisma.pharmacyInventory.groupBy({
       by: ['pharmacyId'],
       where: {
         medicineId: { in: medicineIds },
         stock: { gt: 0 },
+        deletedAt: null,
       },
       _count: { medicineId: true },
-    });
+    } as any)) as any;
 
     const pharmacyIds = grouped
-      .filter((g) => g._count.medicineId === medicineIds.length)
+      .filter((g) => Number(g?._count?.medicineId) === medicineIds.length)
       .map((g) => g.pharmacyId);
 
     if (!pharmacyIds.length) throw new NotFoundException('No pharmacy has all items in stock');
@@ -511,8 +661,12 @@ export class OrdersService {
     const bestPharmacyId = scores[0].pharmacyId;
 
     const inv2 = await this.prisma.pharmacyInventory.findMany({
-      where: { pharmacyId: bestPharmacyId, medicineId: { in: medicineIds } },
-    });
+      where: {
+        pharmacyId: bestPharmacyId,
+        medicineId: { in: medicineIds },
+        deletedAt: null,
+      },
+    } as any);
 
     const finalOrder = await this.prisma.$transaction(async (tx) => {
       let total = 0;
@@ -530,25 +684,23 @@ export class OrdersService {
         itemsCreate.push({ medicineId: it.medicineId, name: med?.name ?? it.name ?? 'Item', quantity: it.quantity, price });
       }
 
-      const created = await tx.order.create({
+      const created = await tx.order.create(({
         data: {
           customerId,
           pharmacyId: bestPharmacyId,
           totalPrice: total,
           status: OrderStatus.PENDING,
           paymentMode: mode,
+          paymentStatus: initialPaymentStatus,
+          paymentRequestedAt: initialPaymentRequestedAt,
           requiresPrescription,
+          ...(delivery as any),
           items: { create: itemsCreate },
         },
         include: { items: true },
-      });
+      } as any));
 
-      for (const it of dto.items) {
-        await tx.pharmacyInventory.updateMany({
-          where: { pharmacyId: bestPharmacyId, medicineId: it.medicineId },
-          data: { stock: { decrement: it.quantity } },
-        });
-      }
+      // Stock is validated now, but decremented on pharmacy acceptance / fulfillment.
 
       for (const pid of pharmacyIds) {
         await tx.orderOffer.create({
@@ -566,17 +718,32 @@ export class OrdersService {
       requiresPrescription,
     });
 
+    if (mode === PaymentMode.PAY_FIRST) {
+      await this.logTimeline(finalOrder.id, 'PAYMENT_REQUESTED', {
+        orderId: finalOrder.id,
+        paymentMode: mode,
+        at: initialPaymentRequestedAt,
+      });
+    }
+
+    this.notify.create(
+      customerId,
+      'ORDER_CREATED',
+      `Order #${finalOrder.id} created`,
+      { orderId: finalOrder.id, status: finalOrder.status },
+    );
+
     for (const pid of pharmacyIds) {
       this.notify.create(pid, 'ORDER_AVAILABLE', `Order #${finalOrder.id}`, { orderId: finalOrder.id }, customerId);
       this.ws.notifyUser(pid, 'order_available', { orderId: finalOrder.id });
     }
-
-    // PAY_FIRST: real mode
-    if (mode === PaymentMode.PAY_FIRST) {
-      const payment = await this.payments.createPaymentForOrder(finalOrder.id);
-      try { await this.geoSurge.removePoint(orderGeoId); } catch {}
-      return { order: finalOrder, candidates: pharmacyIds, scores, payment };
+    if (finalOrder.pharmacyId) {
+      this.ws.notifyUser(finalOrder.pharmacyId, 'order.created', {
+        order: finalOrder,
+      });
     }
+
+    // PAY_FIRST is disabled in minimal dev flow (handled as PAY_AFTER_ACCEPT).
 
     const delay2 = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
     await this.orderAssignQueue.add('rider_escalation', { orderId: finalOrder.id }, { delay: delay2 });
@@ -603,6 +770,10 @@ export class OrdersService {
         if (order && order.pharmacyId) {
           this.notify.create(order.pharmacyId, 'PRESCRIPTION_UPLOADED', 'Prescription added', { orderId: order.id, prescriptionId: pres.id }, customerId);
           this.ws.notifyUser(order.pharmacyId, 'prescription_uploaded', { orderId: order.id, prescriptionId: pres.id });
+          this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+            orderId: order.id,
+            prescriptionId: pres.id,
+          });
         }
       } catch (e) {
         this.logger.warn('Failed attaching prescription to order', (e as any)?.message ?? e);
@@ -626,8 +797,32 @@ export class OrdersService {
 
     this.notify.create(order.customerId, 'PRESCRIPTION_REQUIRED', message || 'Pharmacy requested a prescription for your order', { orderId }, pharmacyId);
     this.ws.notifyUser(order.customerId, 'prescription_required', { orderId, message });
+    this.ws.notifyUser(pharmacyId, 'order.updated', {
+      orderId,
+      requiresPrescription: true,
+    });
 
     return { ok: true };
+  }
+
+  private async transitionStatus(args: {
+    orderId: number;
+    actor: { id: number; role: UserRole };
+    from?: OrderStatus;
+    to: OrderStatus;
+    event: string;
+    data?: any;
+    extraUpdate?: Record<string, any>;
+  }) {
+    return this.lifecycle.transition({
+      orderId: args.orderId,
+      actor: args.actor,
+      from: args.from,
+      to: args.to,
+      event: args.event,
+      data: args.data,
+      extraUpdate: args.extraUpdate,
+    });
   }
 
   // ----------------------------------------------------------
@@ -636,29 +831,58 @@ export class OrdersService {
   async pharmacyRespond(pharmacyId: number, orderId: number, action: 'ACCEPTED' | 'REJECTED') {
     const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { items: true, prescription: true } });
     if (!order) throw new NotFoundException('Order not found');
-
-    if (action === 'REJECTED') {
-      await this.prisma.orderOffer.updateMany({ where: { orderId, pharmacyId }, data: { status: 'REJECTED' } });
-      await this.logTimeline(orderId, 'PHARMACY_REJECTED', { pharmacyId });
-      return { ok: true };
+    if (order.pharmacyId !== pharmacyId) {
+      throw new BadRequestException('Not authorized for this order');
     }
 
-    const updated = await this.prisma.order.update({ where: { id: orderId }, data: { status: OrderStatus.ACCEPTED, pharmacyId }, include: { items: true } });
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException(
+        `Order cannot be ${action.toLowerCase()} from status ${order.status}`,
+      );
+    }
 
-    await this.prisma.orderOffer.updateMany({ where: { orderId, pharmacyId: { not: pharmacyId } }, data: { status: 'REJECTED' } });
+    if (action === 'ACCEPTED' && order.requiresPrescription && !order.prescriptionId) {
+      throw new BadRequestException('Prescription required to accept this order');
+    }
 
-    await this.logTimeline(orderId, 'PHARMACY_ACCEPTED', { pharmacyId });
+    if (action === 'REJECTED') {
+      await this.prisma.orderOffer.updateMany({
+        where: { orderId, pharmacyId },
+        data: { status: 'REJECTED' },
+      });
 
-    // LOADTEST payment bypass
-    if (updated.paymentMode === PaymentMode.PAY_AFTER_ACCEPT || updated.paymentMode === PaymentMode.PAY_AFTER_VERIFICATION) {
-      if (this.isLoadtest) {
-        this.ws.notifyUser(updated.customerId, 'payment_required', { orderId, payment: { mock: true, status: 'PAID', id: `mock_${orderId}` } });
-        return { order: updated, payment: { mock: true, status: 'PAID' } };
-      }
+      return this.pharmacyReject(pharmacyId, orderId);
+    }
 
-      const payment = await this.payments.createPaymentForOrder(orderId);
-      this.ws.notifyUser(updated.customerId, 'payment_required', { orderId, payment });
-      return { order: updated, payment };
+    await this.prisma.orderOffer.updateMany({
+      where: { orderId, pharmacyId: { not: pharmacyId } },
+      data: { status: 'REJECTED' },
+    });
+
+    const acceptRes = await this.pharmacyAccept(pharmacyId, orderId, {});
+    const updated = (acceptRes as any)?.order;
+
+    if (!updated) return acceptRes as any;
+
+    // only push rider/admin flow when fully accepted (not needs confirmation / rejected)
+    if (String(updated.status) !== String(OrderStatus.ACCEPTED)) {
+      return { order: updated };
+    }
+
+    this.ws.notifyAdmins('admin_order_override', {
+      orderId,
+      status: OrderStatus.ACCEPTED,
+      pharmacyId,
+    });
+    this.ws.notifyRiders('order.available', { orderId, pharmacyId });
+
+    // Pay-after-accept/verification: request payment (customer will pay via dev endpoint for now).
+    if (
+      updated.paymentMode === PaymentMode.PAY_AFTER_ACCEPT ||
+      updated.paymentMode === PaymentMode.PAY_AFTER_VERIFICATION
+    ) {
+      await this.requestCustomerPayment(updated as any);
+      return { order: updated, paymentStatus: 'REQUESTED' };
     }
 
     const delay = Number(this.config.get('ESCALATION_MINUTES') || 1) * 60000;
@@ -670,29 +894,272 @@ export class OrdersService {
   // ----------------------------------------------------------
   // Rider respond
   // ----------------------------------------------------------
-  async riderRespond(riderId: number, orderId: number, action: 'ACCEPTED' | 'REJECTED') {
+  async riderRespond(
+    riderId: number,
+    orderId: number,
+    action: 'ACCEPTED' | 'REJECTED',
+    reason?: string,
+  ) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found');
 
     if (action === 'ACCEPTED') {
-      await this.prisma.user.update({ where: { id: riderId }, data: { status: 'BUSY' } });
-      const updated = await this.prisma.order.update({ where: { id: orderId }, data: { riderId, status: OrderStatus.OUT_FOR_DELIVERY } });
-      await this.logTimeline(orderId, 'RIDER_ACCEPTED', { riderId });
+      const now = new Date();
+
+      const offer = await this.prisma.orderOffer.findFirst(({
+        where: {
+          orderId,
+          riderId,
+          offeredTo: 'RIDER',
+          status: 'PENDING',
+          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+        },
+        orderBy: { createdAt: 'desc' },
+      } as any));
+
+      if (!offer) {
+        throw new BadRequestException('No active offer for this order');
+      }
+
+      const updated = await this.prisma.$transaction(async (tx) => {
+        const locked = await tx.order.updateMany(({
+          where: {
+            id: orderId,
+            riderId: null,
+            status: { in: [OrderStatus.ASSIGNED] },
+          },
+          data: { riderId, status: OrderStatus.ASSIGNED, riderAssignedAt: now },
+        } as any));
+        if (!locked || (locked as any).count !== 1) {
+          throw new BadRequestException('Order already assigned');
+        }
+
+        await tx.orderOffer.update({
+          where: { id: offer.id },
+          data: { status: 'ACCEPTED', respondedAt: now },
+        } as any);
+
+        await tx.orderOffer.updateMany({
+          where: { orderId, offeredTo: 'RIDER', status: 'PENDING' },
+          data: {
+            status: 'EXPIRED',
+            respondedAt: now,
+            rejectReason: 'OTHER_RIDER_ACCEPTED',
+          },
+        } as any);
+
+        await tx.user.update(({
+          where: { id: riderId },
+          data: { riderAvailability: 'BUSY' },
+        } as any));
+
+        return tx.order.findUnique({
+          where: { id: orderId },
+        });
+      });
+
+      if (!updated) {
+        throw new BadRequestException('Order already assigned');
+      }
+
+      await this.logTimeline(orderId, 'RIDER_ACCEPTED', { riderId, offerId: offer.id });
+      this.notify.create(
+        order.customerId,
+        'RIDER_ASSIGNED',
+        `Rider assigned for order #${orderId}`,
+        { orderId, riderId },
+        riderId,
+      );
+
+      // Domain event: order.assigned (durable via Notification)
+      await this.notify.createDomainEvent(
+        updated.customerId,
+        'order.assigned',
+        `Rider assigned for order #${orderId}`,
+        { orderId, riderId },
+        riderId,
+      );
+      if (updated.pharmacyId) {
+        await this.notify.createDomainEvent(
+          updated.pharmacyId,
+          'order.assigned',
+          `Rider assigned for order #${orderId}`,
+          { orderId, riderId },
+          riderId,
+        );
+      }
+      await this.notify.createDomainEvent(
+        riderId,
+        'order.assigned',
+        `You were assigned to order #${orderId}`,
+        { orderId, riderId },
+        riderId,
+      );
+      if (updated.pharmacyId) {
+        this.ws.notifyUser(updated.pharmacyId, 'order.updated', {
+          orderId,
+          status: updated.status,
+          riderId,
+        });
+      }
+
+      this.ws.notifyUser(updated.customerId, 'order_status_update', {
+        orderId,
+        stage: OrderStatus.ASSIGNED,
+        riderId,
+      });
+
+      // Admins: event bus broadcast (best-effort, replay in order timeline)
+      this.ws.notifyAdmins('order.assigned', { orderId, riderId });
+
       return updated;
     }
 
-    await this.prisma.orderOffer.updateMany({ where: { orderId, riderId }, data: { status: 'REJECTED' } });
-    await this.logTimeline(orderId, 'RIDER_REJECTED', { riderId });
+    const now = new Date();
+    const offer = await this.prisma.orderOffer.findFirst(({
+      where: {
+        orderId,
+        riderId,
+        offeredTo: 'RIDER',
+        status: 'PENDING',
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      orderBy: { createdAt: 'desc' },
+    } as any));
+    if (!offer) return { ok: true };
+
+    await this.prisma.orderOffer.update({
+      where: { id: offer.id },
+      data: {
+        status: 'REJECTED',
+        respondedAt: now,
+        rejectReason: reason ? String(reason).slice(0, 200) : 'RIDER_REJECTED',
+      },
+    } as any);
+
+    await this.logTimeline(orderId, 'RIDER_REJECTED', {
+      riderId,
+      offerId: offer.id,
+      reason: reason || null,
+    });
     
     // Re-queue escalation on rider rejection
     const delay =
       Number(this.config.get('ESCALATION_MINUTES') || 1) * 60 * 1000;
-    await this.orderAssignQueue.add(
-      'rider_escalation',
-      { orderId },
-      { delay },
-    );
+
+    const pending = await this.prisma.orderOffer.count(({
+      where: {
+        orderId,
+        offeredTo: 'RIDER',
+        status: 'PENDING',
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+    } as any));
+
+    if (pending === 0) {
+      await this.orderAssignQueue.add('rider_escalation', { orderId }, { delay });
+    }
+
+    try {
+      await this.riderQuality.onRiderRejectedOffer(riderId);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Rapid reject check failed for rider ${riderId}: ${msg}`);
+    }
     
+    return { ok: true };
+  }
+
+  // ----------------------------------------------------------
+  // Customer rate rider
+  // ----------------------------------------------------------
+  async rateRider(
+    customerId: number,
+    orderId: number,
+    dto: { rating: number; comment?: string },
+  ) {
+    return this.riderQuality.recordRating({
+      customerId,
+      orderId,
+      rating: dto.rating,
+      comment: dto.comment,
+    });
+  }
+
+  // ----------------------------------------------------------
+  // Rider report issue
+  // ----------------------------------------------------------
+  async riderReportIssue(
+    riderId: number,
+    orderId: number,
+    dto: {
+      type: 'CUSTOMER_UNREACHABLE' | 'ADDRESS_ISSUE' | 'PAYMENT_ISSUE' | 'OTHER';
+      note?: string;
+      lat?: number;
+      lng?: number;
+    },
+  ) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.riderId !== riderId) throw new BadRequestException('Not your order');
+
+    const status = order.status;
+    const allowed =
+      status === OrderStatus.REACHED_PHARMACY ||
+      status === OrderStatus.PICKED_UP ||
+      status === OrderStatus.OUT_FOR_DELIVERY;
+    if (!allowed) {
+      throw new BadRequestException(`Cannot report issue in status ${status}`);
+    }
+
+    const type = String(dto?.type || 'OTHER').toUpperCase();
+    const note = dto?.note != null ? String(dto.note).slice(0, 300) : null;
+
+    const loc =
+      dto?.lat != null && dto?.lng != null
+        ? { lat: Number(dto.lat), lng: Number(dto.lng) }
+        : null;
+
+    await this.logTimeline(orderId, 'RIDER_ISSUE', {
+      riderId,
+      type,
+      note,
+      location: loc,
+      status,
+    });
+
+    this.notify.create(
+      order.customerId,
+      'ORDER_ISSUE',
+      `Delivery issue reported for order #${orderId}`,
+      { orderId, type, note },
+      riderId,
+    );
+
+    if (order.pharmacyId) {
+      this.notify.create(
+        order.pharmacyId,
+        'ORDER_ISSUE',
+        `Rider reported an issue for order #${orderId}`,
+        { orderId, type, note },
+        riderId,
+      );
+    }
+
+    this.ws.notifyUser(order.customerId, 'order.updated', {
+      orderId,
+      status: order.status,
+      issue: { type, note },
+    });
+
+    (this.ws as any).notifyAdmins?.('order.issue', {
+      orderId,
+      riderId,
+      type,
+      note,
+      status,
+    });
+
     return { ok: true };
   }
   
@@ -716,24 +1183,24 @@ export class OrdersService {
       throw new BadRequestException('Invalid rider');
     }
 
+    const now = new Date();
     const updated = await this.prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: riderId },
-        data: { status: 'BUSY' },
+        data: ({ riderAvailability: 'BUSY' } as any),
       });
 
-      return tx.order.update({
-        where: { id: orderId },
-        data: {
-          riderId,
-          status: OrderStatus.OUT_FOR_DELIVERY,
-        },
-      });
-    });
+      const res = await this.lifecycle.forceStatus({
+        orderId,
+        actor: { id: adminId, role: UserRole.ADMIN },
+        to: OrderStatus.ASSIGNED,
+        event: 'ASSIGNED_BY_ADMIN',
+        data: { adminId, riderId },
+        extraUpdate: { riderId, riderAssignedAt: now },
+        db: tx as any,
+      } as any);
 
-    await this.logTimeline(orderId, 'ASSIGNED_BY_ADMIN', {
-      adminId,
-      riderId,
+      return res.order;
     });
 
     this.notify.create(
@@ -743,11 +1210,50 @@ export class OrdersService {
       { orderId },
       adminId,
     );
+    this.notify.create(
+      updated.customerId,
+      'RIDER_ASSIGNED',
+      `Rider assigned for order #${orderId}`,
+      { orderId, riderId },
+      adminId,
+    );
 
     this.ws.notifyUser(updated.customerId, 'order_status_update', {
       orderId,
-      stage: OrderStatus.OUT_FOR_DELIVERY,
+      stage: OrderStatus.ASSIGNED,
     });
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        status: OrderStatus.ASSIGNED,
+        riderId,
+      });
+    }
+
+    await this.notify.createDomainEvent(
+      updated.customerId,
+      'order.assigned',
+      `Rider assigned for order #${orderId}`,
+      { orderId, riderId },
+      adminId,
+    );
+    if (order.pharmacyId) {
+      await this.notify.createDomainEvent(
+        order.pharmacyId,
+        'order.assigned',
+        `Rider assigned for order #${orderId}`,
+        { orderId, riderId },
+        adminId,
+      );
+    }
+    await this.notify.createDomainEvent(
+      riderId,
+      'order.assigned',
+      `You were assigned to order #${orderId}`,
+      { orderId, riderId },
+      adminId,
+    );
+    this.ws.notifyAdmins('order.assigned', { orderId, riderId, by: 'ADMIN' });
 
     return updated;
   }
@@ -760,6 +1266,7 @@ export class OrdersService {
     orderId: number,
     stage: OrderStatus,
     location?: { lat?: number; lng?: number },
+    proof?: { proofUrl?: string; signatureUrl?: string; otp?: string },
   ) {
     if (!Object.values(OrderStatus).includes(stage)) {
       throw new BadRequestException('Invalid order stage');
@@ -772,20 +1279,130 @@ export class OrdersService {
     if (order.riderId !== riderId)
       throw new BadRequestException('Not your order');
 
-    await this.prisma.order.update({
-      where: { id: orderId },
-      data: { status: stage },
-    });
+    // State machine enforcement:
+    // ASSIGNED → REACHED_PHARMACY → PICKED_UP → OUT_FOR_DELIVERY → DELIVERED
+    const current = order.status;
 
-    if (stage === OrderStatus.DELIVERED) {
-      await this.prisma.user.update({
-        where: { id: riderId },
-        data: { status: 'AVAILABLE' },
+    // Allow location-only updates by sending the same stage.
+    const isNoopStage = stage === current;
+
+    const allowed =
+      isNoopStage ||
+      (current === OrderStatus.ASSIGNED && stage === OrderStatus.REACHED_PHARMACY) ||
+      (current === OrderStatus.PICKED_UP && stage === OrderStatus.OUT_FOR_DELIVERY) ||
+      (current === OrderStatus.OUT_FOR_DELIVERY && stage === OrderStatus.DELIVERED);
+
+    // Rider cannot mark PICKED_UP (pharmacy confirms handover) or jump states.
+    if (!allowed || stage === OrderStatus.PICKED_UP) {
+      throw new BadRequestException(
+        `Invalid stage transition ${current} → ${stage}`,
+      );
+    }
+
+    const now = new Date();
+    let stageAfter: any = stage;
+    let changed = false;
+
+    if (!isNoopStage) {
+      const extraUpdate: any = {};
+      if (stage === OrderStatus.REACHED_PHARMACY) extraUpdate.reachedPharmacyAt = now;
+      if (stage === OrderStatus.OUT_FOR_DELIVERY) extraUpdate.outForDeliveryAt = now;
+      if (stage === OrderStatus.DELIVERED) extraUpdate.deliveredAt = now;
+
+      if (stage === OrderStatus.DELIVERED) {
+        const proofUrl =
+          proof?.proofUrl != null ? String(proof.proofUrl).trim() : '';
+        const signatureUrl =
+          proof?.signatureUrl != null ? String(proof.signatureUrl).trim() : '';
+        const otp = proof?.otp != null ? String(proof.otp).trim() : '';
+
+        if (proofUrl) {
+          if (proofUrl.length > 1000) {
+            throw new BadRequestException('proofUrl too long');
+          }
+          if (!/^https?:\/\//i.test(proofUrl)) {
+            throw new BadRequestException('proofUrl must be a valid URL');
+          }
+          extraUpdate.deliveryProofUrl = proofUrl;
+        }
+
+        if (signatureUrl) {
+          if (signatureUrl.length > 1000) {
+            throw new BadRequestException('signatureUrl too long');
+          }
+          extraUpdate.deliverySignatureUrl = signatureUrl;
+        }
+
+        if (otp) {
+          if (otp.length > 20) throw new BadRequestException('otp too long');
+          extraUpdate.deliveryOtp = otp;
+        }
+      }
+
+      const event =
+        stage === OrderStatus.REACHED_PHARMACY
+          ? 'REACHED_PHARMACY'
+          : stage === OrderStatus.OUT_FOR_DELIVERY
+            ? 'OUT_FOR_DELIVERY'
+            : stage === OrderStatus.DELIVERED
+              ? 'DELIVERED'
+              : `STAGE_${String(stage)}`;
+
+      const res = await this.transitionStatus({
+        orderId,
+        actor: { id: riderId, role: UserRole.RIDER },
+        from: current as any,
+        to: stage,
+        event,
+        data: {
+          riderId,
+          proofUrl: extraUpdate.deliveryProofUrl ?? null,
+          signatureUrl: extraUpdate.deliverySignatureUrl ?? null,
+          otpProvided: extraUpdate.deliveryOtp ? true : false,
+        },
+        extraUpdate,
       });
 
-      await this.logTimeline(orderId, 'DELIVERED', {
+      changed = res.changed;
+      stageAfter = (res.order as any)?.status ?? stage;
+    }
+
+    // Domain event: rider.arrived (when rider reaches pharmacy)
+    if (changed && String(stageAfter) === String(OrderStatus.REACHED_PHARMACY)) {
+      await this.logTimeline(orderId, 'RIDER_ARRIVED', { riderId });
+
+      await this.notify.createDomainEvent(
+        order.customerId,
+        'rider.arrived',
+        `Rider arrived at pharmacy for order #${orderId}`,
+        { orderId, riderId },
         riderId,
-      });
+      );
+      if (order.pharmacyId) {
+        await this.notify.createDomainEvent(
+          order.pharmacyId,
+          'rider.arrived',
+          `Rider arrived for order #${orderId}`,
+          { orderId, riderId },
+          riderId,
+        );
+      }
+
+      this.ws.notifyAdmins('rider.arrived', { orderId, riderId });
+    }
+
+    if (stage === OrderStatus.DELIVERED && changed) {
+      await this.prisma.user.update(({
+        where: { id: riderId },
+        data: { riderAvailability: 'AVAILABLE' },
+      } as any));
+
+      try {
+        await this.riderPayments.ensureDeliveryEarningForOrder(orderId);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Rider earning create failed for order ${orderId}: ${msg}`);
+      }
 
       try {
         await this.geoSurge.removePoint(`order:${orderId}`);
@@ -812,9 +1429,16 @@ export class OrdersService {
 
     this.ws.notifyUser(order.customerId, 'order_status_update', {
       orderId,
-      stage,
+      stage: stageAfter,
       location,
     });
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        status: stageAfter,
+        location,
+      });
+    }
 
     return { ok: true };
   }
@@ -823,27 +1447,728 @@ export class OrdersService {
   // Find orders by user
   // ----------------------------------------------------------
   async findByUser(userId: number, role: string) {
-    if (role === UserRole.ADMIN)
-      return this.prisma.order.findMany({
-        include: { items: true, prescription: true },
-      });
+    const baseInclude: any = { items: true, prescription: true };
+    const withUsers: any = {
+      customer: { select: { id: true, name: true, phone: true, latitude: true, longitude: true } },
+      pharmacy: { select: { id: true, name: true, phone: true, latitude: true, longitude: true } },
+      rider: { select: { id: true, name: true, phone: true, latitude: true, longitude: true } },
+    };
 
-    if (role === UserRole.PHARMACY)
+    if (role === UserRole.ADMIN) {
+      return this.prisma.order.findMany({
+        include: { ...baseInclude, ...withUsers },
+      });
+    }
+
+    if (role === UserRole.PHARMACY) {
       return this.prisma.order.findMany({
         where: { pharmacyId: userId },
-        include: { items: true, prescription: true },
+        include: { ...baseInclude, customer: withUsers.customer, rider: withUsers.rider },
       });
+    }
 
-    if (role === UserRole.RIDER)
+    if (role === UserRole.RIDER) {
       return this.prisma.order.findMany({
         where: { riderId: userId },
-        include: { items: true, prescription: true },
+        include: { ...baseInclude, customer: withUsers.customer, pharmacy: withUsers.pharmacy },
       });
+    }
 
     return this.prisma.order.findMany({
       where: { customerId: userId },
-      include: { items: true, prescription: true },
+      include: { ...baseInclude, pharmacy: withUsers.pharmacy, rider: withUsers.rider },
     });
+  }
+
+  async getForUser(userId: number, role: string, orderId: number) {
+    const baseInclude: any = { items: true, prescription: true };
+    const withUsers: any = {
+      customer: { select: { id: true, name: true, phone: true, latitude: true, longitude: true } },
+      pharmacy: { select: { id: true, name: true, phone: true, latitude: true, longitude: true } },
+      rider: { select: { id: true, name: true, phone: true, latitude: true, longitude: true } },
+    };
+
+    if (role === UserRole.ADMIN) {
+      return this.prisma.order.findFirst({
+        where: { id: orderId },
+        include: { ...baseInclude, ...withUsers },
+      });
+    }
+
+    if (role === UserRole.PHARMACY) {
+      return this.prisma.order.findFirst({
+        where: { id: orderId, pharmacyId: userId },
+        include: { ...baseInclude, customer: withUsers.customer, rider: withUsers.rider },
+      });
+    }
+
+    if (role === UserRole.RIDER) {
+      return this.prisma.order.findFirst({
+        where: { id: orderId, riderId: userId },
+        include: { ...baseInclude, customer: withUsers.customer, pharmacy: withUsers.pharmacy },
+      });
+    }
+
+    return this.prisma.order.findFirst({
+      where: { id: orderId, customerId: userId },
+      include: { ...baseInclude, pharmacy: withUsers.pharmacy, rider: withUsers.rider },
+    });
+  }
+
+  // ----------------------------------------------------------
+  // Pharmacy orders
+  // ----------------------------------------------------------
+  async listForPharmacy(pharmacyId: number, status?: OrderStatus) {
+    const where: any = { pharmacyId };
+    if (status && Object.values(OrderStatus).includes(status)) {
+      where.status = status;
+    }
+
+    return this.prisma.order.findMany({
+      where,
+      include: {
+        items: true,
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        rider: {
+          select: { id: true, name: true, phone: true, latitude: true, longitude: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getForPharmacy(pharmacyId: number, orderId: number) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, pharmacyId },
+      include: {
+        items: true,
+        prescription: true,
+        timeline: { orderBy: { createdAt: 'asc' } },
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        rider: {
+          select: { id: true, name: true, phone: true, latitude: true, longitude: true },
+        },
+      },
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  async pharmacyAccept(
+    pharmacyId: number,
+    orderId: number,
+    dto?: PharmacyAcceptDto,
+  ) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.pharmacyId !== pharmacyId)
+      throw new BadRequestException('Not authorized for this order');
+
+    // Idempotent: do not re-price / re-decrement inventory on repeated calls.
+    if (order.status !== OrderStatus.PENDING) {
+      return { order };
+    }
+
+    const manualMap = new Map<number, { price: number; note?: string }>();
+    for (const it of dto?.manualItems ?? []) {
+      manualMap.set(Number(it.orderItemId), {
+        price: Number(it.price),
+        note: it.note,
+      });
+    }
+
+    const medicineIds = (order.items || [])
+      .map((i) => i.medicineId)
+      .filter((v): v is number => typeof v === 'number');
+
+    const inv = await this.prisma.pharmacyInventory.findMany(({
+      where: { pharmacyId, medicineId: { in: medicineIds }, deletedAt: null },
+      select: {
+        id: true,
+        medicineId: true,
+        sellingPrice: true,
+        discount: true,
+        stock: true,
+      },
+    } as any));
+    const invMap = new Map<
+      number,
+      { inventoryId: number; price: number; discount: number; stock: number }
+    >();
+    for (const row of inv as any[]) {
+      invMap.set(Number(row.medicineId), {
+        inventoryId: Number(row.id),
+        price: Number(row.sellingPrice),
+        discount: Number(row.discount ?? 0),
+        stock: Number(row.stock ?? 0),
+      });
+    }
+
+    const pricedItems: any[] = [];
+    const missingItems: any[] = [];
+    const stockAllocations: Array<{
+      inventoryId: number;
+      medicineId: number;
+      quantity: number;
+      requestedQuantity: number;
+    }> = [];
+    let total = 0;
+
+    for (const item of order.items || []) {
+      const manual = manualMap.get(item.id);
+      if (manual) {
+        const price = Number(manual.price);
+        pricedItems.push({
+          orderItemId: item.id,
+          medicineId: item.medicineId ?? null,
+          name: item.name,
+          quantity: item.quantity,
+          price,
+          source: 'manual',
+          discount: null,
+          note: manual.note,
+        });
+        total += price * Number(item.quantity || 1);
+        continue;
+      }
+
+      const medicineId = item.medicineId ?? undefined;
+      if (medicineId && invMap.has(Number(medicineId))) {
+        const row = invMap.get(Number(medicineId))!;
+
+        const requestedQty = Number(item.quantity || 1);
+        const availableQty = Math.max(0, Number(row.stock ?? 0));
+        const fulfillQty = Math.min(requestedQty, availableQty);
+
+        if (fulfillQty <= 0) {
+          missingItems.push({
+            orderItemId: item.id,
+            medicineId,
+            name: item.name,
+            requestedQuantity: requestedQty,
+            availableStock: availableQty,
+            reason: 'INSUFFICIENT_STOCK',
+          });
+          continue;
+        }
+
+        const price = Number(row.price);
+        pricedItems.push({
+          orderItemId: item.id,
+          medicineId,
+          name: item.name,
+          quantity: fulfillQty,
+          requestedQuantity: requestedQty,
+          price,
+          source: 'inventory',
+          discount: row.discount,
+        });
+        total += price * fulfillQty;
+        stockAllocations.push({
+          inventoryId: row.inventoryId,
+          medicineId,
+          quantity: fulfillQty,
+          requestedQuantity: requestedQty,
+        });
+        continue;
+      }
+
+      // keep current price but require confirmation for missing inventory item
+      missingItems.push({
+        orderItemId: item.id,
+        medicineId: item.medicineId ?? null,
+        name: item.name,
+        quantity: item.quantity,
+        currentPrice: item.price,
+        reason: 'NOT_IN_INVENTORY',
+      });
+      total += Number(item.price) * Number(item.quantity || 1);
+    }
+
+    const needsConfirmation =
+      missingItems.length > 0 ||
+      stockAllocations.some((a) => a.quantity !== a.requestedQuantity) ||
+      pricedItems.some((p) => p.source === 'manual') ||
+      (dto?.totalPrice != null &&
+        Number.isFinite(Number(dto.totalPrice)) &&
+        Number(dto.totalPrice) !== total);
+
+    if (dto?.totalPrice != null && Number.isFinite(Number(dto.totalPrice))) {
+      total = Number(dto.totalPrice);
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      for (const p of pricedItems) {
+        const data: any = { price: Number(p.price) };
+        if (
+          Number.isFinite(Number(p.requestedQuantity)) &&
+          Number.isFinite(Number(p.quantity)) &&
+          Number(p.quantity) !== Number(p.requestedQuantity)
+        ) {
+          data.quantity = Number(p.quantity);
+        }
+        await tx.orderItem.update({
+          where: { id: p.orderItemId },
+          data,
+        });
+      }
+
+      for (const a of stockAllocations) {
+        const res = await tx.pharmacyInventory.updateMany(({
+          where: {
+            id: a.inventoryId,
+            deletedAt: null,
+            stock: { gte: a.quantity },
+          },
+          data: { stock: { decrement: a.quantity } },
+        } as any));
+
+        if (!res || (res as any).count !== 1) {
+          throw new BadRequestException(
+            `Insufficient stock for medicine ${a.medicineId}`,
+          );
+        }
+      }
+
+      if (pricedItems.length === 0) {
+        const { order: updated } = await this.lifecycle.transition({
+          orderId,
+          actor: { id: pharmacyId, role: UserRole.PHARMACY },
+          from: OrderStatus.PENDING,
+          to: OrderStatus.REJECTED,
+          event: 'PHARMACY_REJECTED_OUT_OF_STOCK',
+          data: { pharmacyId, missingItems },
+          db: tx as any,
+        });
+        return updated as any;
+      }
+
+      const nextStatus = needsConfirmation
+        ? NEEDS_CONFIRMATION_STATUS
+        : OrderStatus.ACCEPTED;
+
+      // Use the lifecycle service for the status update (single source of truth).
+      const { order: updated } = await this.lifecycle.transition({
+        orderId,
+        actor: { id: pharmacyId, role: UserRole.PHARMACY },
+        from: OrderStatus.PENDING,
+        to: nextStatus as any,
+        event: nextStatus === NEEDS_CONFIRMATION_STATUS ? 'ORDER_NEEDS_CONFIRMATION' : 'PHARMACY_ACCEPTED',
+        data: {
+          pharmacyId,
+          totalPrice: total,
+          pricedItems,
+          missingItems,
+          needsConfirmation,
+        },
+        extraUpdate: { totalPrice: total },
+        db: tx as any,
+      });
+
+      return updated as any;
+    });
+
+    // If order was rejected due to stock, lifecycle already wrote timeline + status.
+    if (String((updated as any).status) === String(OrderStatus.REJECTED)) {
+      this.notify.create(
+        order.customerId,
+        'ORDER_REJECTED',
+        `Order #${orderId} rejected (out of stock)`,
+        { orderId, missingItems },
+        pharmacyId,
+      );
+      this.ws.notifyUser(order.customerId, 'order_status_update', {
+        orderId,
+        stage: OrderStatus.REJECTED,
+      });
+      this.ws.notifyUser(pharmacyId, 'order.updated', {
+        orderId,
+        status: OrderStatus.REJECTED,
+      });
+      return { order: updated };
+    }
+
+    const ttAcceptSec = order?.createdAt
+      ? Math.max(0, Math.floor((Date.now() - order.createdAt.getTime()) / 1000))
+      : null;
+
+    // Keep enriched pricing timeline (separate from status transition event).
+    await this.logTimeline(orderId, 'PHARMACY_PRICED', {
+      pharmacyId,
+      totalPrice: total,
+      pricedItems,
+      missingItems,
+      needsConfirmation,
+      ttAcceptSec,
+    });
+
+    if (needsConfirmation) {
+      this.notify.create(
+        order.customerId,
+        'ORDER_NEEDS_CONFIRMATION',
+        `Order #${orderId} has price changes. Please confirm.`,
+        { orderId, totalPrice: total, pricedItems, missingItems },
+        pharmacyId,
+      );
+
+      this.ws.notifyUser(order.customerId, 'order_needs_confirmation', {
+        orderId,
+        totalPrice: total,
+        pricedItems,
+        missingItems,
+      });
+    } else {
+      this.notify.create(
+        order.customerId,
+        'ORDER_ACCEPTED',
+        `Order #${orderId} accepted by pharmacy`,
+        { orderId, totalPrice: total },
+        pharmacyId,
+      );
+
+      this.ws.notifyUser(order.customerId, 'order_status_update', {
+        orderId,
+        stage: OrderStatus.ACCEPTED,
+      });
+
+      if (
+        String(order.paymentMode) === String(PaymentMode.PAY_AFTER_ACCEPT)
+      ) {
+        await this.requestCustomerPayment({
+          id: orderId,
+          customerId: order.customerId,
+          pharmacyId,
+          status: OrderStatus.ACCEPTED,
+          paymentMode: order.paymentMode,
+          paymentStatus: (updated as any).paymentStatus,
+        } as any);
+      }
+    }
+
+    this.ws.notifyUser(pharmacyId, 'order.updated', {
+      orderId,
+      status: updated.status,
+      totalPrice: Number(updated.totalPrice),
+      needsConfirmation,
+    });
+
+    return { order: updated };
+  }
+
+  async pharmacyReject(pharmacyId: number, orderId: number, reason?: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.pharmacyId !== pharmacyId)
+      throw new BadRequestException('Not authorized for this order');
+
+    const ttAcceptSec = order?.createdAt
+      ? Math.max(0, Math.floor((Date.now() - order.createdAt.getTime()) / 1000))
+      : null;
+
+    if (order.status !== OrderStatus.PENDING) {
+      // idempotent success
+      if (order.status === OrderStatus.REJECTED) return { ok: true };
+      throw new BadRequestException(
+        `Cannot reject order in status ${order.status}`,
+      );
+    }
+
+    const { changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: pharmacyId, role: UserRole.PHARMACY },
+      from: OrderStatus.PENDING,
+      to: OrderStatus.REJECTED,
+      event: 'PHARMACY_REJECTED',
+      data: { pharmacyId, reason, ttAcceptSec },
+    });
+
+    if (!changed) return { ok: true };
+
+    this.notify.create(
+      order.customerId,
+      'ORDER_REJECTED',
+      `Order #${orderId} rejected by pharmacy`,
+      { orderId, reason },
+      pharmacyId,
+    );
+
+    this.ws.notifyUser(order.customerId, 'order_status_update', {
+      orderId,
+      stage: OrderStatus.REJECTED,
+      reason,
+    });
+    this.ws.notifyUser(pharmacyId, 'order.updated', {
+      orderId,
+      status: OrderStatus.REJECTED,
+    });
+    (this.ws as any).notifyAdmins?.('admin_order_override', {
+      orderId,
+      status: OrderStatus.REJECTED,
+      pharmacyId,
+      reason,
+    });
+
+    return { ok: true };
+  }
+
+  async pharmacyMarkReady(pharmacyId: number, orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { prescription: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.pharmacyId !== pharmacyId)
+      throw new BadRequestException('Not authorized for this order');
+
+    // ACCEPTED → READY
+    if (order.status !== OrderStatus.ACCEPTED) {
+      if (order.status === OrderStatus.ASSIGNED) return { order };
+      throw new BadRequestException(
+        `Cannot mark ready in status ${order.status}`,
+      );
+    }
+
+    if (
+      order.paymentMode === PaymentMode.PAY_AFTER_ACCEPT ||
+      order.paymentMode === PaymentMode.PAY_AFTER_VERIFICATION
+    ) {
+      const ps = String((order as any).paymentStatus || 'UNPAID').toUpperCase();
+      if (ps !== 'PAID') {
+        throw new BadRequestException('Payment required before marking ready');
+      }
+    }
+
+    if (order.requiresPrescription) {
+      if (!order.prescriptionId || !order.prescription) {
+        throw new BadRequestException('Prescription required for this order');
+      }
+      if (!order.prescription.verified) {
+        throw new BadRequestException('Prescription must be verified first');
+      }
+    }
+
+    const { order: updated, changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: pharmacyId, role: UserRole.PHARMACY },
+      from: OrderStatus.ACCEPTED,
+      to: OrderStatus.ASSIGNED,
+      event: 'PHARMACY_READY',
+      data: { pharmacyId },
+    });
+
+    if (changed) {
+      const delay = 0;
+      await this.orderAssignQueue.add(
+        'rider_escalation',
+        { orderId },
+        { delay },
+      );
+
+      this.ws.notifyAdmins('order_ready', { orderId });
+      this.ws.notifyUser(order.customerId, 'order_status_update', {
+        orderId,
+        stage: OrderStatus.ASSIGNED,
+      });
+      this.ws.notifyUser(pharmacyId, 'order.updated', {
+        orderId,
+        status: OrderStatus.ASSIGNED,
+      });
+    }
+
+    return { order: updated };
+  }
+
+  async pharmacyConfirmHandover(pharmacyId: number, orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.pharmacyId !== pharmacyId)
+      throw new BadRequestException('Not authorized for this order');
+    if (!order.riderId)
+      throw new BadRequestException('Rider not assigned yet');
+
+    if (order.status !== OrderStatus.REACHED_PHARMACY) {
+      if (order.status === OrderStatus.PICKED_UP) return { order };
+      throw new BadRequestException(
+        `Cannot confirm handover in status ${order.status}`,
+      );
+    }
+
+    const now = new Date();
+    const { order: updated, changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: pharmacyId, role: UserRole.PHARMACY },
+      from: OrderStatus.REACHED_PHARMACY,
+      to: OrderStatus.PICKED_UP,
+      event: 'PICKED_UP',
+      data: { pharmacyId, riderId: order.riderId, source: 'pharmacy_confirm_handover' },
+      extraUpdate: { pickedUpAt: now },
+    });
+
+    if (changed) {
+      await this.logTimeline(orderId, 'PHARMACY_HANDOVER_CONFIRMED', {
+        pharmacyId,
+        riderId: order.riderId,
+      });
+    }
+
+    if (changed) {
+      this.notify.create(
+        order.customerId,
+        'ORDER_PICKED_UP',
+        `Order #${orderId} picked up`,
+        { orderId, riderId: order.riderId },
+        pharmacyId,
+      );
+
+      this.ws.notifyUser(order.customerId, 'order_status_update', {
+        orderId,
+        stage: OrderStatus.PICKED_UP,
+      });
+
+      this.ws.notifyUser(order.riderId, 'order_status_update', {
+        orderId,
+        stage: OrderStatus.PICKED_UP,
+      });
+
+      this.ws.notifyUser(pharmacyId, 'order.updated', {
+        orderId,
+        status: OrderStatus.PICKED_UP,
+        riderId: order.riderId,
+      });
+
+      this.ws.notifyAdmins('admin_order_override', {
+        orderId,
+        status: OrderStatus.PICKED_UP,
+        pharmacyId,
+        riderId: order.riderId,
+      });
+    }
+
+    return { order: updated };
+  }
+
+  async pharmacyVerifyPrescription(pharmacyId: number, orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { prescription: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.pharmacyId !== pharmacyId)
+      throw new BadRequestException('Not authorized for this order');
+    if (!order.prescriptionId || !order.prescription)
+      throw new BadRequestException('No prescription uploaded');
+
+    if (order.prescription.verified) return { ok: true, verified: true };
+
+    await this.prisma.prescription.update({
+      where: { id: order.prescriptionId },
+      data: { verified: true },
+    });
+
+    // If payment is configured after verification, request it now (minimal flow).
+    if (
+      order.paymentMode === PaymentMode.PAY_AFTER_VERIFICATION &&
+      String(order.status) === String(OrderStatus.ACCEPTED)
+    ) {
+      await this.requestCustomerPayment(order as any);
+    }
+
+    await this.logTimeline(orderId, 'PRESCRIPTION_VERIFIED', {
+      by: 'PHARMACY',
+      pharmacyId,
+      prescriptionId: order.prescriptionId,
+    });
+
+    this.notify.create(
+      order.customerId,
+      'PRESCRIPTION_VERIFIED',
+      `Prescription verified for order #${orderId}`,
+      { orderId, prescriptionId: order.prescriptionId },
+      pharmacyId,
+    );
+
+    this.ws.notifyUser(order.customerId, 'prescription_verified', {
+      orderId,
+      prescriptionId: order.prescriptionId,
+    });
+    this.ws.notifyUser(pharmacyId, 'order.updated', {
+      orderId,
+      prescriptionId: order.prescriptionId,
+      prescriptionVerified: true,
+    });
+
+    return { ok: true, verified: true };
+  }
+
+  async adminVerifyPrescription(orderId: number, adminId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { prescription: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (!order.prescriptionId || !order.prescription)
+      throw new BadRequestException('No prescription uploaded');
+
+    if (!order.prescription.verified) {
+      await this.prisma.prescription.update({
+        where: { id: order.prescriptionId },
+        data: { verified: true },
+      });
+    }
+
+    await this.logTimeline(orderId, 'PRESCRIPTION_VERIFIED', {
+      by: 'ADMIN',
+      adminId,
+      prescriptionId: order.prescriptionId,
+    });
+
+    this.notify.create(
+      order.customerId,
+      'PRESCRIPTION_VERIFIED',
+      `Prescription verified for order #${orderId}`,
+      { orderId, prescriptionId: order.prescriptionId },
+      adminId,
+    );
+
+    this.ws.notifyUser(order.customerId, 'prescription_verified', {
+      orderId,
+      prescriptionId: order.prescriptionId,
+    });
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        prescriptionId: order.prescriptionId,
+        prescriptionVerified: true,
+      });
+    }
+
+    return { ok: true, verified: true };
   }
 
   // ----------------------------------------------------------
@@ -860,6 +2185,61 @@ export class OrdersService {
       data: e.data ? JSON.parse(e.data) : {},
       at: e.createdAt,
     }));
+  }
+
+  async getTimelineForUser(userId: number, role: string, orderId: number) {
+    if (!Number.isFinite(orderId)) throw new BadRequestException('Invalid order');
+    const r = String(role || '').toUpperCase();
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, customerId: true, pharmacyId: true, riderId: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const allowed =
+      r === String(UserRole.ADMIN) ||
+      order.customerId === userId ||
+      order.pharmacyId === userId ||
+      (order.riderId != null && order.riderId === userId);
+
+    if (!allowed) throw new BadRequestException('Not authorized for this order');
+
+    const raw = await this.getTimeline(orderId);
+
+    if (r !== String(UserRole.CUSTOMER)) return raw;
+
+    // Customer timeline should not expose internal ops/penalty/SLA details.
+    const hiddenExact = new Set<string>([
+      'PHARMACY_SLA_BREACHED',
+      'PHARMACY_SLA_WARNING',
+      'ORDER_ESCALATION',
+      'ORDER_OFFER_CREATED',
+      'OFFER_DISPATCHED',
+      'OFFER_EXPIRED',
+      'RIDER_RAPID_REJECT',
+      'RIDER_REJECTED',
+      'ADMIN_FORCE_STATUS',
+      'ADMIN_FORCE_CANCEL',
+      'ADMIN_UNASSIGNED_RIDER',
+      'ASSIGNED_BY_ADMIN',
+      'ADMIN_SETTLED_ORDER',
+      'ADMIN_UNSETTLED_ORDER',
+    ]);
+
+    return raw.filter((e) => {
+      const ev = String(e?.event || '').toUpperCase();
+      if (!ev) return false;
+      if (hiddenExact.has(ev)) return false;
+      if (ev.startsWith('ADMIN_')) return false;
+      if (ev.includes('SLA')) return false;
+      if (ev.includes('OFFER')) return false;
+      if (ev.includes('ESCALAT')) return false;
+      // Hide raw penalty/quality signals from customer view
+      if (ev.includes('PENALTY') || ev.includes('STRIKE') || ev.includes('FRAUD'))
+        return false;
+      return true;
+    });
   }
 
   // ----------------------------------------------------------
@@ -901,11 +2281,11 @@ export class OrdersService {
       const riderId = match ? Number(match[1]) : NaN;
 
       if (!isNaN(riderId)) {
-        const r = await this.prisma.user.findUnique({
+        const r = await this.prisma.user.findUnique(({
           where: { id: riderId },
-          select: { status: true },
-        });
-        if (r?.status === 'AVAILABLE') base += 20;
+          select: { riderAvailability: true },
+        } as any));
+        if ((r as any)?.riderAvailability === 'AVAILABLE') base += 20;
       }
     } catch {}
 
@@ -916,16 +2296,38 @@ export class OrdersService {
   // ADMIN OVERRIDES (E4.3)
   // ----------------------------------------------------------
 
-  async adminForceCancel(orderId: number, reason?: string) {
+  async adminForceCancel(orderId: number, reason?: string, adminId?: number) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found');
+    if (order.status === OrderStatus.CANCELED) return order;
 
-    const updated = await this.prisma.order.update({
-      where: { id: orderId },
-      data: { status: OrderStatus.CANCELED, riderId: null },
+    const riderIdBefore = order.riderId;
+
+    const { order: updated, changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: Number(adminId) || 0, role: UserRole.ADMIN },
+      to: OrderStatus.CANCELED,
+      event: 'ADMIN_FORCE_CANCEL',
+      data: { reason },
+      extraUpdate: { riderId: null },
     });
 
-    await this.logTimeline(orderId, 'ADMIN_FORCE_CANCEL', { reason });
+    if (!changed) return updated as any;
+
+    if (riderIdBefore) {
+      try {
+        await this.riderPayments.applyCancellationPenaltyForOrder(
+          orderId,
+          riderIdBefore,
+          reason,
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(
+          `Rider cancellation penalty failed for order ${orderId}: ${msg}`,
+        );
+      }
+    }
 
     this.ws.notifyUser(order.customerId, 'order_canceled', {
       orderId,
@@ -934,6 +2336,10 @@ export class OrdersService {
 
     if (order.pharmacyId) {
       this.ws.notifyUser(order.pharmacyId, 'order_canceled', {
+        orderId,
+        reason,
+      });
+      this.ws.notifyUser(order.pharmacyId, 'order.canceled', {
         orderId,
         reason,
       });
@@ -953,19 +2359,20 @@ export class OrdersService {
     orderId: number,
     status: OrderStatus,
     note?: string,
+    adminId?: number,
   ) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found');
 
-    const updated = await this.prisma.order.update({
-      where: { id: orderId },
-      data: { status },
-    });
-
-    await this.logTimeline(orderId, 'ADMIN_FORCE_STATUS', {
+    const { order: updated, changed } = await this.lifecycle.forceStatus({
+      orderId,
+      actor: { id: Number(adminId) || 0, role: UserRole.ADMIN },
       to: status,
-      note,
-    });
+      event: 'ADMIN_FORCE_STATUS',
+      data: { to: status, note },
+    } as any);
+
+    if (!changed) return updated as any;
 
     this.ws.notifyUser(order.customerId, 'order_status_update', {
       orderId,
@@ -977,28 +2384,420 @@ export class OrdersService {
         orderId,
         status,
       });
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        status,
+      });
     }
 
     return updated;
   }
 
-  async adminUnassignRider(orderId: number) {
+  async adminCompleteDelivery(
+    orderId: number,
+    adminId: number,
+    opts?: { note?: string; proofUrl?: string; signatureUrl?: string; otp?: string },
+  ) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (order.status === OrderStatus.DELIVERED) return { ok: true, order };
+    if (order.status === OrderStatus.CANCELED || order.status === OrderStatus.REJECTED) {
+      throw new BadRequestException(`Cannot deliver order in status ${order.status}`);
+    }
+
+    const now = new Date();
+    const extraUpdate: any = { deliveredAt: now };
+
+    const proofUrl = opts?.proofUrl != null ? String(opts.proofUrl).trim() : '';
+    const signatureUrl =
+      opts?.signatureUrl != null ? String(opts.signatureUrl).trim() : '';
+    const otp = opts?.otp != null ? String(opts.otp).trim() : '';
+
+    if (proofUrl) {
+      if (proofUrl.length > 1000) throw new BadRequestException('proofUrl too long');
+      if (!/^https?:\/\//i.test(proofUrl)) {
+        throw new BadRequestException('proofUrl must be a valid URL');
+      }
+      extraUpdate.deliveryProofUrl = proofUrl;
+    }
+    if (signatureUrl) {
+      if (signatureUrl.length > 1000)
+        throw new BadRequestException('signatureUrl too long');
+      extraUpdate.deliverySignatureUrl = signatureUrl;
+    }
+    if (otp) {
+      if (otp.length > 20) throw new BadRequestException('otp too long');
+      extraUpdate.deliveryOtp = otp;
+    }
+
+    const { order: updated, changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: Number(adminId) || 0, role: UserRole.ADMIN },
+      to: OrderStatus.DELIVERED,
+      event: 'ADMIN_MARK_DELIVERED',
+      data: {
+        adminId,
+        note: opts?.note,
+        proofUrl: extraUpdate.deliveryProofUrl ?? null,
+        signatureUrl: extraUpdate.deliverySignatureUrl ?? null,
+        otpProvided: extraUpdate.deliveryOtp ? true : false,
+        fromStatus: order.status,
+      },
+      extraUpdate,
+    });
+
+    if (changed && order.riderId) {
+      await this.prisma.user.update(({
+        where: { id: order.riderId },
+        data: { riderAvailability: 'AVAILABLE' },
+      } as any));
+
+      try {
+        await this.riderPayments.ensureDeliveryEarningForOrder(orderId);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Rider earning create failed for order ${orderId}: ${msg}`);
+      }
+
+      try {
+        await this.geoSurge.removePoint(`order:${orderId}`);
+      } catch {}
+    }
+
+    this.notify.create(
+      order.customerId,
+      'ORDER_DELIVERED',
+      `Order #${orderId} delivered (admin override).`,
+      { orderId },
+      adminId,
+    );
+
+    if (order.pharmacyId) {
+      this.notify.create(
+        order.pharmacyId,
+        'ORDER_DELIVERED',
+        `Order #${orderId} delivered (admin override).`,
+        { orderId },
+        adminId,
+      );
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        status: OrderStatus.DELIVERED,
+      });
+    }
+
+    if (order.riderId) {
+      this.ws.notifyUser(order.riderId, 'order.updated', {
+        orderId,
+        status: OrderStatus.DELIVERED,
+      });
+    }
+
+    this.ws.notifyUser(order.customerId, 'order_status_update', {
+      orderId,
+      stage: OrderStatus.DELIVERED,
+    });
+
+    if (typeof (this.ws as any).notifyAdmins === 'function') {
+      (this.ws as any).notifyAdmins('admin_order_override', {
+        orderId,
+        action: 'DELIVERED',
+      });
+    }
+
+    return { ok: true, order: updated };
+  }
+
+  async adminEscalateSla(
+    orderId: number,
+    adminId: number,
+    opts?: { reason?: string; note?: string },
+  ) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const reason = (opts?.reason ?? '').trim();
+    const note = (opts?.note ?? '').trim();
+
+    await this.logTimeline(orderId, 'ADMIN_SLA_ESCALATED', {
+      adminId,
+      reason: reason || undefined,
+      note: note || undefined,
+      status: order.status,
+    });
+
+    const admins = await this.prisma.user.findMany({
+      where: { role: UserRole.ADMIN },
+      select: { id: true },
+      take: 50,
+    });
+
+    await Promise.all(
+      admins.map((a) =>
+        this.notify.createDomainEvent(
+          a.id,
+          'order.sla_breached',
+          `SLA escalated for order #${orderId}`,
+          { orderId, reason: reason || undefined, note: note || undefined },
+          adminId,
+        ),
+      ),
+    );
+
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        slaEscalated: true,
+      });
+    }
+
+    return { ok: true };
+  }
+
+  // ----------------------------------------------------------
+  // Customer confirm / reject pharmacy changes
+  // ----------------------------------------------------------
+  async customerConfirmChanges(customerId: number, orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.customerId !== customerId)
+      throw new BadRequestException('Not your order');
+
+    if (order.status === OrderStatus.ACCEPTED) return { order };
+
+    if ((order.status as any) !== NEEDS_CONFIRMATION_STATUS) {
+      throw new BadRequestException(
+        `Order is not awaiting confirmation (status=${order.status})`,
+      );
+    }
+
+    const { order: updated, changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: customerId, role: UserRole.CUSTOMER },
+      from: NEEDS_CONFIRMATION_STATUS as any,
+      to: OrderStatus.ACCEPTED,
+      event: 'CUSTOMER_CONFIRMED_CHANGES',
+      data: { customerId },
+    });
+
+    if (!changed) return { order: updated };
+
+    this.notify.create(
+      customerId,
+      'ORDER_CONFIRMED',
+      `You confirmed changes for order #${orderId}`,
+      { orderId },
+      customerId,
+    );
+
+    this.ws.notifyUser(customerId, 'order_status_update', {
+      orderId,
+      stage: OrderStatus.ACCEPTED,
+    });
+
+    if (order.pharmacyId) {
+      this.notify.create(
+        order.pharmacyId,
+        'ORDER_CONFIRMED',
+        `Customer confirmed changes for order #${orderId}`,
+        { orderId },
+        customerId,
+      );
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        status: OrderStatus.ACCEPTED,
+      });
+    }
+
+    // Minimal pay-after-accept: request payment now that confirmation is done.
+    if (order.paymentMode === PaymentMode.PAY_AFTER_ACCEPT) {
+      await this.requestCustomerPayment({
+        id: orderId,
+        customerId,
+        pharmacyId: order.pharmacyId,
+        status: OrderStatus.ACCEPTED,
+        paymentMode: order.paymentMode,
+        paymentStatus: (updated as any).paymentStatus,
+      } as any);
+    }
+
+    return { order: updated };
+  }
+
+  async customerRejectChanges(
+    customerId: number,
+    orderId: number,
+    reason?: string,
+  ) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.customerId !== customerId)
+      throw new BadRequestException('Not your order');
+
+    if (order.status === OrderStatus.CANCELED) return { order };
+
+    if ((order.status as any) !== NEEDS_CONFIRMATION_STATUS) {
+      throw new BadRequestException(
+        `Order is not awaiting confirmation (status=${order.status})`,
+      );
+    }
+
+    const { order: updated, changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: customerId, role: UserRole.CUSTOMER },
+      from: NEEDS_CONFIRMATION_STATUS as any,
+      to: OrderStatus.CANCELED,
+      event: 'CUSTOMER_REJECTED_CHANGES',
+      data: { customerId, reason },
+      extraUpdate: { riderId: null },
+    });
+
+    if (!changed) return { order: updated };
+
+    if (order.riderId) {
+      try {
+        await this.riderPayments.applyCancellationPenaltyForOrder(
+          orderId,
+          order.riderId,
+          reason || 'CUSTOMER_REJECTED_CHANGES',
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(
+          `Rider cancellation penalty failed for order ${orderId}: ${msg}`,
+        );
+      }
+    }
+
+    this.ws.notifyUser(customerId, 'order_canceled', {
+      orderId,
+      reason: reason || 'Customer rejected pharmacy changes',
+    });
+
+    if (order.pharmacyId) {
+      this.notify.create(
+        order.pharmacyId,
+        'ORDER_CANCELED',
+        `Order #${orderId} canceled by customer (changes rejected)`,
+        { orderId, reason },
+        customerId,
+      );
+      this.ws.notifyUser(order.pharmacyId, 'order.canceled', {
+        orderId,
+        reason: reason || 'Customer rejected pharmacy changes',
+      });
+    }
+
+    return { order: updated };
+  }
+
+  async customerCancelPending(
+    customerId: number,
+    orderId: number,
+    reason?: string,
+  ) {
+    const order: any = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: ({
+        id: true,
+        customerId: true,
+        pharmacyId: true,
+        riderId: true,
+        status: true,
+        paymentStatus: true,
+      } as any),
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.customerId !== customerId)
+      throw new BadRequestException('Not your order');
+
+    if (order.status === OrderStatus.CANCELED) return { order };
+
+    const st = String(order.status || '').toUpperCase();
+    if (st !== String(OrderStatus.PENDING)) {
+      throw new BadRequestException(
+        `Only pending orders can be canceled (status=${order.status})`,
+      );
+    }
+
+    const ps = String(order.paymentStatus || 'UNPAID').toUpperCase();
+    if (ps === 'PAID') {
+      throw new BadRequestException('Cannot cancel a paid order');
+    }
+
+    const { order: updated, changed } = await this.transitionStatus({
+      orderId,
+      actor: { id: customerId, role: UserRole.CUSTOMER },
+      from: OrderStatus.PENDING,
+      to: OrderStatus.CANCELED,
+      event: 'CUSTOMER_CANCELED',
+      data: { customerId, reason },
+      extraUpdate: { riderId: null },
+    });
+
+    if (!changed) return { order: updated };
+
+    this.notify.create(
+      customerId,
+      'ORDER_CANCELED',
+      `Order #${orderId} canceled`,
+      { orderId, reason },
+      customerId,
+    );
+
+    this.ws.notifyUser(customerId, 'order_status_update', {
+      orderId,
+      stage: OrderStatus.CANCELED,
+    });
+
+    if (order.pharmacyId) {
+      this.notify.create(
+        order.pharmacyId,
+        'ORDER_CANCELED',
+        `Order #${orderId} canceled by customer`,
+        { orderId, reason },
+        customerId,
+      );
+      this.ws.notifyUser(order.pharmacyId, 'order.canceled', {
+        orderId,
+        reason: reason || 'Customer canceled order',
+      });
+    }
+
+    return { order: updated };
+  }
+
+  async adminUnassignRider(orderId: number, adminId?: number) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found');
 
     if (!order.riderId) return order;
 
-    await this.prisma.user.update({
+    await this.prisma.user.update(({
       where: { id: order.riderId },
-      data: { status: 'AVAILABLE' },
-    });
+      data: { riderAvailability: 'AVAILABLE' },
+    } as any));
 
-    const updated = await this.prisma.order.update({
-      where: { id: orderId },
-      data: { riderId: null, status: OrderStatus.ASSIGNED },
-    });
-
-    await this.logTimeline(orderId, 'ADMIN_UNASSIGNED_RIDER');
+    const { order: updated } = await this.lifecycle.forceStatus({
+      orderId,
+      actor: { id: Number(adminId) || 0, role: UserRole.ADMIN },
+      to: OrderStatus.ASSIGNED,
+      event: 'ADMIN_UNASSIGNED_RIDER',
+      data: { riderId: order.riderId },
+      extraUpdate: { riderId: null },
+    } as any);
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        status: OrderStatus.ASSIGNED,
+        riderId: null,
+      });
+    }
 
     return updated;
   }
@@ -1006,5 +2805,126 @@ export class OrdersService {
   async adminAddNote(orderId: number, note: string) {
     await this.logTimeline(orderId, 'ADMIN_NOTE', { note });
     return { ok: true };
+  }
+
+  // ----------------------------------------------------------
+  // SETTLEMENT (ADMIN)
+  // ----------------------------------------------------------
+  private async getSettlementState(orderId: number): Promise<{
+    settled: boolean;
+    lastEvent?: string;
+    at?: Date;
+    data?: any;
+  }> {
+    const last = await this.prisma.orderTimeline.findFirst({
+      where: {
+        orderId,
+        event: { in: ['ADMIN_SETTLED_ORDER', 'ADMIN_UNSETTLED_ORDER'] },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!last) return { settled: false };
+    return {
+      settled: last.event === 'ADMIN_SETTLED_ORDER',
+      lastEvent: last.event,
+      at: last.createdAt,
+      data: last.data ? JSON.parse(last.data) : undefined,
+    };
+  }
+
+  async adminSettleOrder(
+    orderId: number,
+    adminId: number,
+    opts?: { note?: string; force?: boolean },
+  ) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const force = Boolean(opts?.force);
+    if (!force) {
+      const ok =
+        order.status === OrderStatus.DELIVERED ||
+        order.status === OrderStatus.PAID;
+      if (!ok) {
+        throw new BadRequestException(
+          `Order cannot be settled until delivered/paid (status=${order.status}). Use force=true to override.`,
+        );
+      }
+    }
+
+    const current = await this.getSettlementState(orderId);
+    if (current.settled) {
+      return {
+        ok: true,
+        orderId,
+        settled: true,
+        already: true,
+        settledAt: current.at ?? null,
+      };
+    }
+
+    const note = (opts?.note ?? '').trim();
+
+    await this.logTimeline(orderId, 'ADMIN_SETTLED_ORDER', {
+      adminId,
+      note: note || undefined,
+      force,
+      orderStatus: order.status,
+    });
+
+    if (order.pharmacyId) {
+      this.notify.create(
+        order.pharmacyId,
+        'ORDER_SETTLED',
+        `Order #${orderId} settled`,
+        { orderId },
+        adminId,
+      );
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        settled: true,
+      });
+    }
+
+    return { ok: true, orderId, settled: true };
+  }
+
+  async adminUnsettleOrder(
+    orderId: number,
+    adminId: number,
+    opts?: { note?: string },
+  ) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const current = await this.getSettlementState(orderId);
+    if (!current.settled && current.lastEvent === 'ADMIN_UNSETTLED_ORDER') {
+      return { ok: true, orderId, settled: false, already: true };
+    }
+
+    const note = (opts?.note ?? '').trim();
+
+    await this.logTimeline(orderId, 'ADMIN_UNSETTLED_ORDER', {
+      adminId,
+      note: note || undefined,
+      orderStatus: order.status,
+    });
+
+    if (order.pharmacyId) {
+      this.notify.create(
+        order.pharmacyId,
+        'ORDER_UNSETTLED',
+        `Order #${orderId} marked as unsettled`,
+        { orderId },
+        adminId,
+      );
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        settled: false,
+      });
+    }
+
+    return { ok: true, orderId, settled: false };
   }
 }

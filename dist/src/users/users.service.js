@@ -24,7 +24,17 @@ let UsersService = class UsersService {
     async findOne(id) {
         const user = await this.prisma.user.findUnique({
             where: { id },
-            select: { id: true, name: true, email: true, role: true },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                role: true,
+                status: true,
+                riderAvailability: true,
+                riderReasonCode: true,
+                riderReasonNote: true,
+            },
         });
         if (!user)
             throw new common_1.NotFoundException('User not found');
@@ -37,6 +47,37 @@ let UsersService = class UsersService {
         return this.prisma.user.update({
             where: { id },
             data: { name: dto.name, email: dto.email, role: dto.role },
+        });
+    }
+    async updateMe(id, dto) {
+        const user = await this.prisma.user.findUnique({ where: { id } });
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        const data = {};
+        if (typeof dto.name === 'string')
+            data.name = dto.name;
+        if (typeof dto.phone === 'string')
+            data.phone = dto.phone;
+        if (typeof dto.latitude === 'number')
+            data.latitude = dto.latitude;
+        if (typeof dto.longitude === 'number')
+            data.longitude = dto.longitude;
+        return this.prisma.user.update({
+            where: { id },
+            data,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                role: true,
+                status: true,
+                riderAvailability: true,
+                riderReasonCode: true,
+                riderReasonNote: true,
+                latitude: true,
+                longitude: true,
+            },
         });
     }
     async remove(id) {

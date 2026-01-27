@@ -1,5 +1,6 @@
 // src/pharmacies/pharmacy-inventory.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../utils/prisma.service';
 import { SurgeService } from '../surge/surge.service';
 import { NotificationService } from '../utils/notification.service';
@@ -16,10 +17,10 @@ export class PharmacyInventoryService {
   // LIST INVENTORY
   // ---------------------------------------------------------------------
   async listInventory(pharmacyId: number) {
-    return this.prisma.pharmacyInventory.findMany({
-      where: { pharmacyId },
+    return this.prisma.pharmacyInventory.findMany(({
+      where: { pharmacyId, deletedAt: null },
       include: { medicine: true },
-    });
+    } as any));
   }
 
   // ---------------------------------------------------------------------
@@ -29,73 +30,89 @@ export class PharmacyInventoryService {
     const { medicineId, mrp, sellingPrice, discount = 0, stock = 0 } = dto;
 
     if (!medicineId) throw new BadRequestException('medicineId required');
+    if (mrp == null || sellingPrice == null) {
+      throw new BadRequestException('mrp and sellingPrice required');
+    }
+
+    const mrpDec = new Prisma.Decimal(mrp);
+    const sellingDec = new Prisma.Decimal(sellingPrice);
 
     return this.prisma.pharmacyInventory.upsert({
       where: { pharmacyId_medicineId: { pharmacyId, medicineId } },
       update: {
-        mrp,
-        sellingPrice,
+        mrp: mrpDec,
+        sellingPrice: sellingDec,
         discount,
         stock,
+        deletedAt: null,
       },
       create: {
         pharmacyId,
         medicineId,
-        mrp,
-        sellingPrice,
+        mrp: mrpDec,
+        sellingPrice: sellingDec,
         discount,
         stock,
+        deletedAt: null,
       },
-    });
+    } as any);
   }
 
   // ---------------------------------------------------------------------
   // UPDATE INVENTORY ITEM
   // ---------------------------------------------------------------------
   async update(inventoryId: number, dto: any) {
-    const rec = await this.prisma.pharmacyInventory.findUnique({
+    const rec: any = await this.prisma.pharmacyInventory.findUnique({
       where: { id: inventoryId },
     });
 
-    if (!rec) throw new NotFoundException('Inventory record not found');
+    if (!rec || rec.deletedAt) throw new NotFoundException('Inventory record not found');
+
+    const mrp =
+      dto.mrp != null ? new Prisma.Decimal(dto.mrp) : rec.mrp;
+    const sellingPrice =
+      dto.sellingPrice != null
+        ? new Prisma.Decimal(dto.sellingPrice)
+        : rec.sellingPrice;
 
     return this.prisma.pharmacyInventory.update({
       where: { id: inventoryId },
       data: {
-        mrp: dto.mrp ?? rec.mrp,
-        sellingPrice: dto.sellingPrice ?? rec.sellingPrice,
+        mrp,
+        sellingPrice,
         discount: dto.discount ?? rec.discount,
         stock: dto.stock ?? rec.stock,
       },
-    });
+    } as any);
   }
 
   // ---------------------------------------------------------------------
   // REMOVE INVENTORY ITEM
   // ---------------------------------------------------------------------
   async remove(inventoryId: number) {
-    const rec = await this.prisma.pharmacyInventory.findUnique({
+    const rec: any = await this.prisma.pharmacyInventory.findUnique({
       where: { id: inventoryId },
     });
 
-    if (!rec) throw new NotFoundException('Inventory not found');
+    if (!rec || rec.deletedAt) throw new NotFoundException('Inventory not found');
 
-    await this.prisma.pharmacyInventory.delete({
+    await this.prisma.pharmacyInventory.update(({
       where: { id: inventoryId },
-    });
+      data: { deletedAt: new Date(), stock: 0 },
+    } as any));
 
-    return { ok: true, deletedId: inventoryId };
+    return { ok: true, deletedId: inventoryId, softDeleted: true };
   }
 
   // ---------------------------------------------------------------------
   // GET PRICE
   // ---------------------------------------------------------------------
   async getMedicinePrice(pharmacyId: number, medicineId: number) {
-    const rec = await this.prisma.pharmacyInventory.findUnique({
+    const rec: any = await this.prisma.pharmacyInventory.findUnique({
       where: { pharmacyId_medicineId: { pharmacyId, medicineId } },
     });
 
-    if (!rec) throw new NotFoundException('Medicine not found in inventory');
+    if (!rec || rec.deletedAt) throw new NotFoundException('Medicine not found in inventory');
 
     return { price: Number(rec.sellingPrice), stock: rec.stock };
   }
@@ -118,17 +135,17 @@ export class PharmacyInventoryService {
   async updateStock(pharmacyId: number, medicineId: number, delta: number) {
     if (!Number.isFinite(delta)) throw new BadRequestException('delta required');
 
-    const rec = await this.prisma.pharmacyInventory.findUnique({
+    const rec: any = await this.prisma.pharmacyInventory.findUnique({
       where: { pharmacyId_medicineId: { pharmacyId, medicineId } },
     });
 
-    if (!rec) throw new NotFoundException('inventory record not found');
+    if (!rec || rec.deletedAt) throw new NotFoundException('inventory record not found');
 
     const newStock = Math.max(0, rec.stock + delta);
 
     return this.prisma.pharmacyInventory.update({
       where: { id: rec.id },
       data: { stock: newStock },
-    });
+    } as any);
   }
 }

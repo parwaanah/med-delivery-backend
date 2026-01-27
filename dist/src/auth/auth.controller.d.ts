@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { AuthService } from "./auth.service";
-import { LoginDto, RegisterDto, VerifyOtpDto } from "./dto/auth.dto";
+import { LoginDto, RegisterDto, VerifyOtpDto, SendOtpDto } from "./dto/auth.dto";
 export declare class AuthController {
     private readonly auth;
     constructor(auth: AuthService);
@@ -53,5 +53,9 @@ export declare class AuthController {
             role: any;
             status: any;
         };
+    }>;
+    sendOtp(dto: SendOtpDto): Promise<{
+        otp?: string | undefined;
+        message: string;
     }>;
 }

@@ -10,12 +10,19 @@ exports.OrdersModule = void 0;
 const common_1 = require("@nestjs/common");
 const orders_service_1 = require("./orders.service");
 const orders_controller_1 = require("./orders.controller");
+const pharmacy_orders_controller_1 = require("./pharmacy-orders.controller");
+const orders_sla_cron_1 = require("./orders.sla.cron");
+const order_offer_expiry_cron_1 = require("./order-offer-expiry.cron");
+const orders_stage_sla_cron_1 = require("./orders.stage-sla.cron");
+const order_lifecycle_service_1 = require("./order-lifecycle.service");
 const prisma_service_1 = require("../utils/prisma.service");
 const notification_service_1 = require("../utils/notification.service");
 const payments_module_1 = require("../payments/payments.module");
 const surge_module_1 = require("../surge/surge.module");
 const geo_surge_module_1 = require("../geosurge/geo-surge.module");
 const ws_module_1 = require("../ws/ws.module");
+const riders_module_1 = require("../riders/riders.module");
+const service_area_module_1 = require("../service-area/service-area.module");
 const queue_module_1 = require("../queues/queue.module");
 let OrdersModule = class OrdersModule {
 };
@@ -28,9 +35,19 @@ exports.OrdersModule = OrdersModule = __decorate([
             surge_module_1.SurgeModule,
             geo_surge_module_1.GeoSurgeModule,
             ws_module_1.WsModule,
+            service_area_module_1.ServiceAreaModule,
+            (0, common_1.forwardRef)(() => riders_module_1.RidersModule),
         ],
-        controllers: [orders_controller_1.OrdersController],
-        providers: [orders_service_1.OrdersService, prisma_service_1.PrismaService, notification_service_1.NotificationService],
+        controllers: [orders_controller_1.OrdersController, pharmacy_orders_controller_1.PharmacyOrdersController],
+        providers: [
+            orders_service_1.OrdersService,
+            order_lifecycle_service_1.OrderLifecycleService,
+            orders_sla_cron_1.OrdersSlaCron,
+            order_offer_expiry_cron_1.OrderOfferExpiryCron,
+            orders_stage_sla_cron_1.OrdersStageSlaCron,
+            prisma_service_1.PrismaService,
+            notification_service_1.NotificationService,
+        ],
         exports: [orders_service_1.OrdersService],
     })
 ], OrdersModule);

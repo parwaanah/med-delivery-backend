@@ -34,7 +34,11 @@ export class AdminOrdersController {
     const orderId = Number(id);
     if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
 
-    const res = await this.orders.adminForceCancel(orderId, body?.reason);
+    const res = await this.orders.adminForceCancel(
+      orderId,
+      body?.reason,
+      req.user.id,
+    );
 
     await this.audit.logAdminAction({
       userId: req.user.id,
@@ -59,6 +63,7 @@ export class AdminOrdersController {
       orderId,
       body.status,
       body.note,
+      req.user.id,
     );
 
     await this.audit.logAdminAction({
@@ -76,7 +81,7 @@ export class AdminOrdersController {
     const orderId = Number(id);
     if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
 
-    const res = await this.orders.adminUnassignRider(orderId);
+    const res = await this.orders.adminUnassignRider(orderId, req.user.id);
 
     await this.audit.logAdminAction({
       userId: req.user.id,
@@ -104,6 +109,69 @@ export class AdminOrdersController {
       action: 'ORDER_ADMIN_NOTE',
       resource: `order:${orderId}`,
       meta: { note: body.note },
+    });
+
+    return res;
+  }
+
+  @Patch(':id/settle')
+  async settle(
+    @Param('id') id: string,
+    @Body() body: { note?: string; force?: boolean },
+    @Req() req: any,
+  ) {
+    const orderId = Number(id);
+    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
+
+    const res = await this.orders.adminSettleOrder(orderId, req.user.id, {
+      note: body?.note,
+      force: Boolean(body?.force),
+    });
+
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'ORDER_SETTLED',
+      resource: `order:${orderId}`,
+      meta: { note: body?.note, force: Boolean(body?.force) },
+    });
+
+    return res;
+  }
+
+  @Patch(':id/unsettle')
+  async unsettle(
+    @Param('id') id: string,
+    @Body() body: { note?: string },
+    @Req() req: any,
+  ) {
+    const orderId = Number(id);
+    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
+
+    const res = await this.orders.adminUnsettleOrder(orderId, req.user.id, {
+      note: body?.note,
+    });
+
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'ORDER_UNSETTLED',
+      resource: `order:${orderId}`,
+      meta: { note: body?.note },
+    });
+
+    return res;
+  }
+
+  @Post(':id/prescription/verify')
+  async verifyPrescription(@Param('id') id: string, @Req() req: any) {
+    const orderId = Number(id);
+    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
+
+    const res = await this.orders.adminVerifyPrescription(orderId, req.user.id);
+
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'PRESCRIPTION_VERIFIED',
+      resource: `order:${orderId}`,
     });
 
     return res;

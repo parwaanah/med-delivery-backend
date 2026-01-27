@@ -26,14 +26,18 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User role missing in token');
 
     const userRole = String(user.role).toLowerCase();
-
-    const allowed = requiredRoles.some(
-      (role) => role.toLowerCase() === userRole,
+    const normalizedRequired = requiredRoles.map((role) =>
+      String(role).toLowerCase(),
     );
+
+    // Treat SUPERADMIN as ADMIN for role checks.
+    const effectiveRole = userRole === 'superadmin' ? 'admin' : userRole;
+
+    const allowed = normalizedRequired.some((role) => role === effectiveRole);
 
     if (!allowed) {
       throw new ForbiddenException(
-        `Access denied → requires [${requiredRoles}], got "${user.role}"`
+        `Access denied: requires [${requiredRoles}], got "${user.role}"`
       );
     }
 

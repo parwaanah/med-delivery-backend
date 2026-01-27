@@ -1,0 +1,6 @@
+-- Add MFA fields to User
+ALTER TABLE "User"
+  ADD COLUMN IF NOT EXISTS "mfaEnabled" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS "mfaSecret" TEXT,
+  ADD COLUMN IF NOT EXISTS "mfaTempSecret" TEXT,
+  ADD COLUMN IF NOT EXISTS "mfaRecoveryCodes" TEXT[] NOT NULL DEFAULT '{}';

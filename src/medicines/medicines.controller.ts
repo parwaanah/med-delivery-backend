@@ -14,10 +14,14 @@ export class MedicinesController {
   constructor(private readonly medicinesService: MedicinesService) {}
 
   @Get('search')
-  async search(@Query('q') q: string, @Res() res: Response) {
+  async search(
+    @Query('q') q: string,
+    @Query('query') queryAlt: string,
+    @Res() res: Response,
+  ) {
     res.setHeader('Cache-Control', 'no-store');
 
-    const query = (q || '').trim();
+    const query = (q || queryAlt || '').trim();
 
     if (!query) {
       const items = await this.medicinesService.getFeaturedMedicines();

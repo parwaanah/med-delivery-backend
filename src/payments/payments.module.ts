@@ -4,9 +4,10 @@ import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
 import { RazorpayService } from './razorpay.service';
 import { UtilsModule } from '../utils/utils.module';
+import { RidersModule } from '../riders/riders.module';
 
 @Module({
-  imports: [ConfigModule, UtilsModule],
+  imports: [ConfigModule, UtilsModule, RidersModule],
   controllers: [PaymentsController],
   providers: [PaymentsService, RazorpayService],
   exports: [PaymentsService],

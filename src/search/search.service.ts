@@ -5,6 +5,18 @@ import { PrismaService } from "../utils/prisma.service";
 export class SearchService {
   constructor(private prisma: PrismaService) {}
 
+  private devFallbackStock() {
+    const raw = Number(process.env.DEV_DEFAULT_STOCK ?? 0);
+    return Number.isFinite(raw) && raw > 0 ? raw : 0;
+  }
+
+  private devFallbackPrice(mPrice?: number | null) {
+    const base = Number(mPrice ?? 0);
+    if (Number.isFinite(base) && base > 0) return base;
+    const raw = Number(process.env.DEV_DEFAULT_PRICE ?? 0);
+    return Number.isFinite(raw) && raw > 0 ? raw : 0;
+  }
+
   async search(query: string) {
     if (!query || query.trim().length < 2) return [];
 
@@ -35,14 +47,16 @@ export class SearchService {
     return meds.map((m) => {
       const inv = m.inventory?.[0];
 
+      const fallbackPrice = this.devFallbackPrice(m.price as any);
+      const fallbackStock = this.devFallbackStock();
       return {
         id: m.id,
         name: m.name,
         category: m.category,
         rxType: m.rxType,
 
-        price: inv ? inv.sellingPrice : 0,
-        stock: inv ? inv.stock : 0,
+        price: inv ? inv.sellingPrice : fallbackPrice,
+        stock: inv ? inv.stock : fallbackStock,
         pharmacy: inv ? inv.pharmacy : null,
       };
     });

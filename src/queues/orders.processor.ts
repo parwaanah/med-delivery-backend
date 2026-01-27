@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, Logger, OnModuleDestroy } from '@nestjs/common';
-import { Worker, Job } from 'bullmq';
+import { Worker, Job, Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../utils/prisma.service';
@@ -11,6 +11,7 @@ export class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
   private worker!: Worker;
   private readonly logger = new Logger(OrdersProcessor.name);
   private redisClient!: IORedis;
+  private dlq!: Queue;
 
   constructor(
     private config: ConfigService,
@@ -26,6 +27,8 @@ export class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
       enableReadyCheck: true,
       maxRetriesPerRequest: null,
     });
+
+    this.dlq = new Queue('dead_letter', { connection: this.redisClient });
 
     this.worker = new Worker(
       'order_assign',
@@ -76,7 +79,23 @@ export class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Order escalation check completed for job ${job.id}`)
     );
     this.worker.on('failed', (job, err) =>
-      this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`)
+      (async () => {
+        this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`);
+        try {
+          await this.dlq.add(
+            'dead_letter',
+            {
+              queue: 'order_assign',
+              jobId: job?.id ?? null,
+              name: job?.name ?? null,
+              data: job?.data ?? null,
+              error: err?.message ?? String(err),
+              at: new Date().toISOString(),
+            },
+            { removeOnComplete: true, removeOnFail: false },
+          );
+        } catch {}
+      })()
     );
 
     this.logger.log('✅ OrdersProcessor worker started (order_assign)');
@@ -85,6 +104,9 @@ export class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     try {
       await this.worker.close();
+    } catch {}
+    try {
+      await this.dlq?.close();
     } catch {}
     try {
       await this.redisClient.quit();

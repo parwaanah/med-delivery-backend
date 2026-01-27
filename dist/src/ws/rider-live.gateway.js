@@ -15,10 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RiderLiveGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
-const riders_service_1 = require("../riders/riders.service");
+const rider_telemetry_service_1 = require("../riders/rider-telemetry.service");
 let RiderLiveGateway = class RiderLiveGateway {
-    constructor(riders) {
-        this.riders = riders;
+    constructor(telemetry) {
+        this.telemetry = telemetry;
     }
     handleConnection(client) {
         console.log('Rider WS connected:', client.id);
@@ -29,7 +29,20 @@ let RiderLiveGateway = class RiderLiveGateway {
     async updateLocation(client, data) {
         if (!data?.riderId)
             return;
-        await this.riders.updateLocationWS(data.riderId, data.lat, data.lon);
+        const userId = Number(client.handshake.query.userId);
+        const role = String(client.handshake.query.role || '').toUpperCase();
+        if (!Number.isFinite(userId) || userId !== Number(data.riderId))
+            return;
+        if (role !== 'RIDER')
+            return;
+        await this.telemetry.locationHeartbeat(data.riderId, {
+            lat: data.lat,
+            lon: data.lon,
+            accuracyM: data.accuracyM,
+            speedMps: data.speedMps,
+            headingDeg: data.headingDeg,
+            tsMs: data.tsMs,
+        });
     }
 };
 exports.RiderLiveGateway = RiderLiveGateway;
@@ -43,5 +56,5 @@ __decorate([
 ], RiderLiveGateway.prototype, "updateLocation", null);
 exports.RiderLiveGateway = RiderLiveGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: true }),
-    __metadata("design:paramtypes", [riders_service_1.RidersService])
+    __metadata("design:paramtypes", [rider_telemetry_service_1.RiderTelemetryService])
 ], RiderLiveGateway);

@@ -18,6 +18,10 @@ const admin_queue_controller_1 = require("./admin.queue.controller");
 const admin_escalation_controller_1 = require("./admin-escalation.controller");
 const admin_reports_controller_1 = require("./admin.reports.controller");
 const admin_notifications_controller_1 = require("./admin.notifications.controller");
+const admin_pharmacies_controller_1 = require("./admin.pharmacies.controller");
+const admin_rider_settlements_controller_1 = require("./admin.rider-settlements.controller");
+const admin_riders_quality_controller_1 = require("./admin.riders.quality.controller");
+const admin_ops_controller_1 = require("./admin.ops.controller");
 const admin_metrics_service_1 = require("./admin.metrics.service");
 const admin_metrics_listener_1 = require("./admin.metrics.listener");
 const escalation_service_1 = require("./escalation.service");
@@ -28,6 +32,7 @@ const geo_surge_module_1 = require("../geosurge/geo-surge.module");
 const ws_module_1 = require("../ws/ws.module");
 const reports_module_1 = require("../reports/reports.module");
 const notification_service_1 = require("../utils/notification.service");
+const riders_module_1 = require("../riders/riders.module");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
@@ -37,6 +42,7 @@ exports.AdminModule = AdminModule = __decorate([
             ws_module_1.WsModule,
             reports_module_1.ReportsModule,
             (0, common_1.forwardRef)(() => orders_module_1.OrdersModule),
+            (0, common_1.forwardRef)(() => riders_module_1.RidersModule),
             payments_module_1.PaymentsModule,
             surge_module_1.SurgeModule,
             geo_surge_module_1.GeoSurgeModule,
@@ -47,10 +53,14 @@ exports.AdminModule = AdminModule = __decorate([
             admin_audit_controller_1.AdminAuditController,
             admin_metrics_controller_1.AdminMetricsController,
             admin_orders_controller_1.AdminOrdersController,
+            admin_ops_controller_1.AdminOpsController,
             admin_queue_controller_1.AdminQueueController,
             admin_escalation_controller_1.AdminEscalationController,
             admin_reports_controller_1.AdminReportsController,
             admin_notifications_controller_1.AdminNotificationsController,
+            admin_pharmacies_controller_1.AdminPharmaciesController,
+            admin_rider_settlements_controller_1.AdminRiderSettlementsController,
+            admin_riders_quality_controller_1.AdminRiderQualityController,
         ],
         providers: [
             prisma_service_1.PrismaService,

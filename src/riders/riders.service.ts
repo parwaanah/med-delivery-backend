@@ -4,6 +4,7 @@ import { NotificationService } from '../utils/notification.service';
 import { GeoSurgeService } from '../geosurge/geo-surge.service';
 import { SurgeService } from '../surge/surge.service';
 import { WsGateway } from '../ws/ws.gateway';
+import { RiderShiftService } from './rider-shift.service';
 
 @Injectable()
 export class RidersService {
@@ -15,6 +16,7 @@ export class RidersService {
     private geo: GeoSurgeService,
     private surge: SurgeService,
     private ws: WsGateway,
+    private shifts: RiderShiftService,
   ) {}
 
   async updateLocationWS(riderId: number, lat: number, lon: number) {
@@ -44,14 +46,19 @@ export class RidersService {
       lon,
     });
 
+    // Heartbeat refresh for inactivity timeout + availability cache TTL
+    try {
+      await this.shifts.heartbeat(riderId);
+    } catch {}
+
     return { ok: true };
   }
 
   async updateStatus(riderId: number, status: 'AVAILABLE' | 'BUSY' | 'OFFLINE') {
-    await this.prisma.user.update({
+    await this.prisma.user.update(({
       where: { id: riderId },
-      data: { status },
-    });
+      data: { riderAvailability: status },
+    } as any));
 
     try {
       await this.surge.recordRiderAvailability(
@@ -60,7 +67,16 @@ export class RidersService {
       );
     } catch {}
 
-    // ✅ Notify admins for live metrics refresh
+    // Track shift active vs idle based on BUSY/AVAILABLE changes
+    try {
+      await this.shifts.transitionShiftState(
+        riderId,
+        status === 'BUSY' ? 'ACTIVE' : 'IDLE',
+      );
+      await this.shifts.heartbeat(riderId);
+    } catch {}
+
+    // Notify admins for live metrics refresh
     this.ws.notifyAdmins('admin_rider_event', {
       riderId,
       status,
@@ -70,3 +86,4 @@ export class RidersService {
     return { ok: true };
   }
 }
+

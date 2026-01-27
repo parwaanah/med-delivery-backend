@@ -24,7 +24,7 @@ let AdminAuditController = class AdminAuditController {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getLogs(page = '1', limit = '50', action, userId, from, to) {
+    async getLogs(page = '1', limit = '50', action, userId, resource, from, to) {
         const take = Number(limit);
         const skip = (Number(page) - 1) * take;
         const where = {};
@@ -32,6 +32,8 @@ let AdminAuditController = class AdminAuditController {
             where.action = action;
         if (userId)
             where.userId = Number(userId);
+        if (resource)
+            where.resource = { contains: resource };
         if (from || to) {
             where.createdAt = {};
             if (from)
@@ -86,10 +88,11 @@ __decorate([
     __param(1, (0, common_1.Query)('limit')),
     __param(2, (0, common_1.Query)('action')),
     __param(3, (0, common_1.Query)('userId')),
-    __param(4, (0, common_1.Query)('from')),
-    __param(5, (0, common_1.Query)('to')),
+    __param(4, (0, common_1.Query)('resource')),
+    __param(5, (0, common_1.Query)('from')),
+    __param(6, (0, common_1.Query)('to')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, String, String, String, String]),
+    __metadata("design:paramtypes", [Object, Object, String, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], AdminAuditController.prototype, "getLogs", null);
 __decorate([

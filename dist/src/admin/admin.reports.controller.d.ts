@@ -19,13 +19,13 @@ export declare class AdminReportsController {
             createdAt: Date;
             id: string;
             status: string;
-            method: string | null;
-            currency: string;
+            orderId: number | null;
             provider: string;
             providerOrder: string | null;
             providerPayment: string | null;
+            currency: string;
+            method: string | null;
             rawData: import("@prisma/client/runtime/library").JsonValue | null;
-            orderId: number | null;
         }[];
     }>;
     exportDaily(format: "csv" | "pdf" | "json" | undefined, res: Response): Promise<void | Response<any, Record<string, any>>>;

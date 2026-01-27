@@ -13998,5 +13998,110 @@
     "category": "NON_RX",
     "rxType": "NONE",
     "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Dextromethorphan 10mg Syrup",
+    "sku": "MED-02001",
+    "category": "COUGH",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Bromhexine 8mg Tablet",
+    "sku": "MED-02002",
+    "category": "COUGH",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Cough Relief Honey Lemon Syrup",
+    "sku": "MED-02003",
+    "category": "COUGH",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Naproxen 250mg Tablet",
+    "sku": "MED-02004",
+    "category": "HEADACHE",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Headache Relief Balm 10g",
+    "sku": "MED-02005",
+    "category": "HEADACHE",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Migraine Cooling Patch 5s",
+    "sku": "MED-02006",
+    "category": "HEADACHE",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Glucometer Strips 50s",
+    "sku": "MED-02007",
+    "category": "DIABETES",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Blood Glucose Lancets 100s",
+    "sku": "MED-02008",
+    "category": "DIABETES",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Diabetes Foot Care Cream 50g",
+    "sku": "MED-02009",
+    "category": "DIABETES",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Baby Diaper Small 24s",
+    "sku": "MED-02010",
+    "category": "BABY_CARE",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Baby Wipes 80s",
+    "sku": "MED-02011",
+    "category": "BABY_CARE",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Baby Shampoo 100ml",
+    "sku": "MED-02012",
+    "category": "BABY_CARE",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Aloe Vera Face Wash 100ml",
+    "sku": "MED-02013",
+    "category": "COSMETICS",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Moisturizing Lotion 200ml",
+    "sku": "MED-02014",
+    "category": "COSMETICS",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
+  },
+  {
+    "name": "Sunscreen SPF 50 50ml",
+    "sku": "MED-02015",
+    "category": "COSMETICS",
+    "rxType": "NONE",
+    "createdAt": "2025-12-06T15:41:24.237Z"
   }
 ]

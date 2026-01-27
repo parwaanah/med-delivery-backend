@@ -36,6 +36,7 @@ const utils_module_1 = require("./utils/utils.module");
 const cache_module_1 = require("./cache/cache.module");
 const uploads_module_1 = require("./uploads/uploads.module");
 const profile_module_1 = require("./auth/profile.module");
+const service_area_module_1 = require("./service-area/service-area.module");
 const global_logger_service_1 = require("./common/logger/global-logger.service");
 const request_logger_middleware_1 = require("./common/middleware/request-logger.middleware");
 const notification_service_1 = require("./utils/notification.service");
@@ -94,6 +95,7 @@ exports.AppModule = AppModule = __decorate([
             cache_module_1.CacheModule,
             uploads_module_1.UploadsModule,
             profile_module_1.ProfileModule,
+            service_area_module_1.ServiceAreaModule,
             schedule_1.ScheduleModule.forRoot(),
         ],
         providers: [

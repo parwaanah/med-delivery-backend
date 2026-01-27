@@ -25,12 +25,12 @@ RUN npx prisma generate
 # Build seed.ts → dist/prisma
 RUN npx tsc prisma/seed.ts --outDir dist/prisma
 
-# Copy the generated medicines.json into dist/prisma
-RUN cp prisma/medicines.json dist/prisma/medicines.json
-
 # Build NestJS project
 RUN npm run build
 
+# Ensure runtime seed can find medicines.json (Nest build recreates dist/)
+RUN cp prisma/medicines.json dist/prisma/medicines.json
+
 EXPOSE 3001
 
-CMD ["node", "dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]

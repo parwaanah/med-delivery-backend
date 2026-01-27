@@ -5,6 +5,16 @@ import { PrismaService } from '../utils/prisma.service';
 export class MedicinesService {
   constructor(private prisma: PrismaService) {}
 
+  private devFallbackStock() {
+    const raw = Number(process.env.DEV_DEFAULT_STOCK ?? 0);
+    return Number.isFinite(raw) && raw > 0 ? raw : 0;
+  }
+
+  private devFallbackPrice() {
+    const raw = Number(process.env.DEV_DEFAULT_PRICE ?? 0);
+    return Number.isFinite(raw) && raw > 0 ? raw : 0;
+  }
+
   /* ---------------------------------
      SEARCH
   --------------------------------- */
@@ -18,32 +28,32 @@ export class MedicinesService {
       },
       take: 50,
       orderBy: { id: 'asc' },
-    });
-
-    const enriched = await Promise.all(
-      medicines.map(async (m) => {
-        const inv = await this.prisma.pharmacyInventory.findFirst({
-          where: { medicineId: m.id, stock: { gt: 0 } },
+      include: {
+        inventory: {
+          where: { deletedAt: null },
+          orderBy: { stock: 'desc' },
+          take: 1,
           include: {
             pharmacy: { select: { id: true, name: true } },
           },
-        });
+        },
+      },
+    });
 
-        if (!inv) return null;
-
-        return {
-          ...m,
-          stock: inv.stock,
-          price: Number(inv.sellingPrice),
-          mrp: Number(inv.mrp),
-          discount: Number(inv.discount || 0),
-          pharmacy: inv.pharmacy.name,
-          pharmacyId: inv.pharmacy.id,
-        };
-      })
-    );
-
-    return enriched.filter(Boolean);
+    return medicines.map((m) => {
+      const inv = m.inventory?.[0];
+      const fallbackPrice = Number(m.price ?? 0) || this.devFallbackPrice();
+      const fallbackStock = this.devFallbackStock();
+      return {
+        ...m,
+        stock: inv ? (inv.stock ?? 0) : fallbackStock,
+        price: Number(inv?.sellingPrice ?? fallbackPrice),
+        mrp: Number(inv?.mrp ?? 0),
+        discount: Number(inv?.discount ?? 0),
+        pharmacy: inv?.pharmacy?.name ?? '',
+        pharmacyId: inv?.pharmacy?.id ?? 0,
+      };
+    });
   }
 
   /* ---------------------------------
@@ -53,32 +63,32 @@ export class MedicinesService {
     const medicines = await this.prisma.medicine.findMany({
       take: 16,
       orderBy: { createdAt: 'desc' },
-    });
-
-    const enriched = await Promise.all(
-      medicines.map(async (m) => {
-        const inv = await this.prisma.pharmacyInventory.findFirst({
-          where: { medicineId: m.id, stock: { gt: 0 } },
+      include: {
+        inventory: {
+          where: { deletedAt: null },
+          orderBy: { stock: 'desc' },
+          take: 1,
           include: {
             pharmacy: { select: { id: true, name: true } },
           },
-        });
+        },
+      },
+    });
 
-        if (!inv) return null;
-
-        return {
-          ...m,
-          stock: inv.stock,
-          price: Number(inv.sellingPrice),
-          mrp: Number(inv.mrp),
-          discount: Number(inv.discount || 0),
-          pharmacy: inv.pharmacy.name,
-          pharmacyId: inv.pharmacy.id,
-        };
-      })
-    );
-
-    return enriched.filter(Boolean);
+    return medicines.map((m) => {
+      const inv = m.inventory?.[0];
+      const fallbackPrice = Number(m.price ?? 0) || this.devFallbackPrice();
+      const fallbackStock = this.devFallbackStock();
+      return {
+        ...m,
+        stock: inv ? (inv.stock ?? 0) : fallbackStock,
+        price: Number(inv?.sellingPrice ?? fallbackPrice),
+        mrp: Number(inv?.mrp ?? 0),
+        discount: Number(inv?.discount ?? 0),
+        pharmacy: inv?.pharmacy?.name ?? '',
+        pharmacyId: inv?.pharmacy?.id ?? 0,
+      };
+    });
   }
 
   /* ---------------------------------
@@ -87,27 +97,31 @@ export class MedicinesService {
   async getMedicineById(id: number) {
     const m = await this.prisma.medicine.findUnique({
       where: { id },
+      include: {
+        inventory: {
+          where: { deletedAt: null },
+          orderBy: { stock: 'desc' },
+          take: 1,
+          include: {
+            pharmacy: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
 
     if (!m) return null;
 
-    const inv = await this.prisma.pharmacyInventory.findFirst({
-      where: { medicineId: m.id, stock: { gt: 0 } },
-      include: {
-        pharmacy: { select: { id: true, name: true } },
-      },
-    });
-
-    if (!inv) return null;
-
+    const inv = m.inventory?.[0];
+    const fallbackPrice = Number(m.price ?? 0) || this.devFallbackPrice();
+    const fallbackStock = this.devFallbackStock();
     return {
       ...m,
-      stock: inv.stock,
-      price: Number(inv.sellingPrice),
-      mrp: Number(inv.mrp),
-      discount: Number(inv.discount || 0),
-      pharmacy: inv.pharmacy.name,
-      pharmacyId: inv.pharmacy.id,
+      stock: inv ? (inv.stock ?? 0) : fallbackStock,
+      price: Number(inv?.sellingPrice ?? fallbackPrice),
+      mrp: Number(inv?.mrp ?? 0),
+      discount: Number(inv?.discount ?? 0),
+      pharmacy: inv?.pharmacy?.name ?? '',
+      pharmacyId: inv?.pharmacy?.id ?? 0,
     };
   }
 }

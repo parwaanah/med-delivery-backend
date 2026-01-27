@@ -20,7 +20,11 @@ const create_order_dto_1 = require("./dto/create-order.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const approval_guard_1 = require("../common/guards/approval.guard");
+const rate_limit_decorator_1 = require("../common/decorators/rate-limit.decorator");
+const rate_limit_guard_1 = require("../common/guards/rate-limit.guard");
 const client_1 = require("@prisma/client");
+const rate_rider_dto_1 = require("./dto/rate-rider.dto");
 let OrdersController = class OrdersController {
     constructor(ordersService) {
         this.ordersService = ordersService;
@@ -38,19 +42,35 @@ let OrdersController = class OrdersController {
         return this.ordersService.pharmacyRespond(req.user.id, Number(orderId), dto.action);
     }
     riderRespond(req, orderId, dto) {
-        return this.ordersService.riderRespond(req.user.id, Number(orderId), dto.action);
+        return this.ordersService.riderRespond(req.user.id, Number(orderId), dto.action, dto.reason);
+    }
+    riderIssue(req, orderId, dto) {
+        return this.ordersService.riderReportIssue(req.user.id, Number(orderId), dto);
     }
     updateStage(req, orderId, dto) {
         if (!Object.values(client_1.OrderStatus).includes(dto.stage)) {
             throw new common_1.BadRequestException('Invalid order stage');
         }
-        return this.ordersService.updateStage(req.user.id, Number(orderId), dto.stage, { lat: dto.lat, lng: dto.lng });
+        return this.ordersService.updateStage(req.user.id, Number(orderId), dto.stage, { lat: dto.lat, lng: dto.lng }, {
+            proofUrl: dto.proofUrl,
+            signatureUrl: dto.signatureUrl,
+            otp: dto.otp,
+        });
+    }
+    rateRider(req, orderId, dto) {
+        return this.ordersService.rateRider(req.user.id, Number(orderId), dto);
     }
     list(req) {
         return this.ordersService.findByUser(req.user.id, req.user.role);
     }
-    getTimeline(orderId) {
-        return this.ordersService.getTimeline(Number(orderId));
+    getTimeline(req, orderId) {
+        return this.ordersService.getTimelineForUser(Number(req.user?.id), String(req.user?.role || ''), Number(orderId));
+    }
+    confirmChanges(req, orderId) {
+        return this.ordersService.customerConfirmChanges(req.user.id, Number(orderId));
+    }
+    rejectChanges(req, orderId, body) {
+        return this.ordersService.customerRejectChanges(req.user.id, Number(orderId), body?.reason);
     }
 };
 exports.OrdersController = OrdersController;
@@ -89,6 +109,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/pharmacy-response'),
     (0, roles_decorator_1.Roles)('PHARMACY'),
+    (0, rate_limit_decorator_1.RateLimit)({ key: 'orders.pharmacy-response', limit: 30, windowMs: 60_000 }),
     openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
@@ -109,6 +130,17 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "riderRespond", null);
 __decorate([
+    (0, common_1.Post)(':id/rider-issue'),
+    (0, roles_decorator_1.Roles)('RIDER'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "riderIssue", null);
+__decorate([
     (0, common_1.Patch)(':id/stage'),
     (0, roles_decorator_1.Roles)('RIDER'),
     openapi.ApiResponse({ status: 200 }),
@@ -120,6 +152,17 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "updateStage", null);
 __decorate([
+    (0, common_1.Post)(':id/rate-rider'),
+    (0, roles_decorator_1.Roles)('CUSTOMER'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, rate_rider_dto_1.RateRiderDto]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "rateRider", null);
+__decorate([
     (0, common_1.Get)(),
     openapi.ApiResponse({ status: 200, type: [Object] }),
     __param(0, (0, common_1.Req)()),
@@ -130,13 +173,35 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id/timeline'),
     openapi.ApiResponse({ status: 200 }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getTimeline", null);
+__decorate([
+    (0, common_1.Post)(':id/confirm-changes'),
+    (0, roles_decorator_1.Roles)('CUSTOMER'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "confirmChanges", null);
+__decorate([
+    (0, common_1.Post)(':id/reject-changes'),
+    (0, roles_decorator_1.Roles)('CUSTOMER'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "rejectChanges", null);
 exports.OrdersController = OrdersController = __decorate([
     (0, common_1.Controller)('orders'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, approval_guard_1.ApprovalGuard, rate_limit_guard_1.RateLimitGuard),
     __metadata("design:paramtypes", [orders_service_1.OrdersService])
 ], OrdersController);

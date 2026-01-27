@@ -12,8 +12,14 @@ export declare class OrderAssignWorker implements OnModuleInit, OnModuleDestroy 
     private readonly esc;
     private worker;
     private redisClient;
+    private dlq;
     private readonly logger;
     constructor(config: ConfigService, prisma: PrismaService, notify: NotificationService, ws: WsGateway, esc: EscalationService);
+    private offerLockKey;
+    private offerRoundKey;
+    private offerTtlSec;
+    private offerBatchSize;
+    private maxRounds;
     onModuleInit(): void;
     onModuleDestroy(): Promise<void>;
 }

@@ -2,8 +2,11 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { getWsCorsOrigin } from '../utils/cors';
 
-@WebSocketGateway({ namespace: '/surge-live', cors: true })
+const wsCorsOrigin: any = getWsCorsOrigin();
+
+@WebSocketGateway({ namespace: '/surge-live', cors: { origin: wsCorsOrigin } })
 export class SurgeLiveGateway {
   @WebSocketServer()
   server!: Server;

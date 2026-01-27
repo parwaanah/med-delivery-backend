@@ -20,8 +20,14 @@ export class GlobalLogger implements LoggerService {
 
   private format(level: string, message: any, context?: string): string {
     const ts = new Date().toISOString();
-    const ctx = context ? `[${context}]` : '';
-    return `[${ts}] [${level}] ${ctx} ${typeof message === 'string' ? message : JSON.stringify(message)}`;
+    const base: any = { ts, level };
+    if (context) base.context = context;
+    if (typeof message === 'string') {
+      base.message = message;
+    } else {
+      base.message = message;
+    }
+    return JSON.stringify(base);
   }
 
   log(message: any, context?: string) {
@@ -31,9 +37,15 @@ export class GlobalLogger implements LoggerService {
   }
 
   error(message: any, trace?: string, context?: string) {
-    const formatted = this.format('ERROR', message, context);
-    console.error(formatted, trace || '');
-    this.writeToFile(this.errorFile, formatted + (trace ? `\n${trace}` : ''));
+    const withTrace =
+      trace && message && typeof message === 'object'
+        ? { ...message, trace }
+        : trace
+          ? { message, trace }
+          : message;
+    const formatted = this.format('ERROR', withTrace, context);
+    console.error(formatted);
+    this.writeToFile(this.errorFile, formatted);
   }
 
   warn(message: any, context?: string) {

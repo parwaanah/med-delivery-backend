@@ -13,14 +13,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("./prisma.service");
+const ws_gateway_1 = require("../ws/ws.gateway");
 let NotificationService = NotificationService_1 = class NotificationService {
-    constructor(prisma) {
+    constructor(prisma, ws) {
         this.prisma = prisma;
+        this.ws = ws;
         this.logger = new common_1.Logger(NotificationService_1.name);
     }
     async create(receiverId, type, message, meta = {}, senderId) {
         try {
-            return await this.prisma.notification.create({
+            const notif = await this.prisma.notification.create({
                 data: {
                     receiverId,
                     senderId: senderId ?? null,
@@ -29,9 +31,43 @@ let NotificationService = NotificationService_1 = class NotificationService {
                     meta,
                 },
             });
+            this.ws.notifyUser(receiverId, 'notification.new', {
+                id: notif.id,
+                type: notif.type,
+                status: notif.status,
+                createdAt: notif.createdAt,
+            });
+            return notif;
         }
         catch (err) {
             this.logger.error('Notification failed:', err);
+        }
+    }
+    async createDomainEvent(receiverId, eventName, message, payload, senderId) {
+        try {
+            const notif = await this.prisma.notification.create({
+                data: {
+                    receiverId,
+                    senderId: senderId ?? null,
+                    type: eventName,
+                    message,
+                    meta: payload,
+                },
+            });
+            this.ws.notifyUser(receiverId, 'notification.new', {
+                id: notif.id,
+                type: notif.type,
+                status: notif.status,
+                createdAt: notif.createdAt,
+            });
+            this.ws.notifyUser(receiverId, eventName, {
+                eventId: notif.id,
+                ...payload,
+            });
+            return notif;
+        }
+        catch (err) {
+            this.logger.error('Domain event notification failed:', err);
         }
     }
     sendAdminToast(data) {
@@ -41,5 +77,6 @@ let NotificationService = NotificationService_1 = class NotificationService {
 exports.NotificationService = NotificationService;
 exports.NotificationService = NotificationService = NotificationService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        ws_gateway_1.WsGateway])
 ], NotificationService);

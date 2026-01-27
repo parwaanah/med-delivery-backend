@@ -23,13 +23,13 @@ export declare class ReportsService {
             createdAt: Date;
             id: string;
             status: string;
-            method: string | null;
-            currency: string;
+            orderId: number | null;
             provider: string;
             providerOrder: string | null;
             providerPayment: string | null;
+            currency: string;
+            method: string | null;
             rawData: import("@prisma/client/runtime/library").JsonValue | null;
-            orderId: number | null;
         }[];
     }>;
     generateDailyReport(): Promise<{

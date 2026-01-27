@@ -23,7 +23,7 @@ let CartService = class CartService {
             throw new common_1.BadRequestException('Invalid cart item');
         }
         const inventory = await this.prisma.pharmacyInventory.findFirst({
-            where: { medicineId, stock: { gt: 0 } },
+            where: { medicineId, stock: { gt: 0 }, deletedAt: null },
             orderBy: { sellingPrice: 'asc' },
         });
         if (!inventory) {
@@ -43,7 +43,7 @@ let CartService = class CartService {
         if (cart.items.length > 0) {
             const firstMedicineId = Number(cart.items[0].productId);
             const existingInventory = await this.prisma.pharmacyInventory.findFirst({
-                where: { medicineId: firstMedicineId },
+                where: { medicineId: firstMedicineId, deletedAt: null },
             });
             if (existingInventory &&
                 existingInventory.pharmacyId !== inventory.pharmacyId) {
@@ -82,7 +82,7 @@ let CartService = class CartService {
                 where: { id: medicineId },
             });
             const inventory = await this.prisma.pharmacyInventory.findFirst({
-                where: { medicineId },
+                where: { medicineId, deletedAt: null },
                 include: { pharmacy: { select: { id: true, name: true } } },
             });
             return {

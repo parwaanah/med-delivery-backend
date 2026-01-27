@@ -1,26 +1,67 @@
 
 // src/notifications/notifications.controller.ts
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  UseGuards,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
 
 @Controller('notifications')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class NotificationsController {
   constructor(private prisma: PrismaService) {}
 
   @Get()
-  @Roles(UserRole.ADMIN, 'ADMIN', 'admin')
-  async getAdminNotifications(@Req() req: any) {
-    const adminId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
+  async list(@Req() req: any) {
+    const userId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
 
     return this.prisma.notification.findMany({
-      where: { receiverId: adminId },
+      where: { receiverId: userId },
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
+  }
+
+  @Patch(':id/read')
+  async markRead(@Param('id') id: string, @Req() req: any) {
+    const userId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
+    const notifId = Number(id);
+    if (isNaN(notifId)) throw new BadRequestException('Invalid notification id');
+
+    const notif = await this.prisma.notification.findUnique({
+      where: { id: notifId },
+    });
+
+    if (!notif || notif.receiverId !== userId) {
+      throw new BadRequestException('Notification not found');
+    }
+
+    await this.prisma.notification.update({
+      where: { id: notifId },
+      data: { status: 'READ' },
+    });
+
+    return { ok: true };
+  }
+
+  @Patch('read-all')
+  async markAllRead(@Req() req: any) {
+    const userId = Number(req.user?.id ?? req.user?.sub ?? req.user?.userId);
+
+    await this.prisma.notification.updateMany({
+      where: {
+        receiverId: userId,
+        status: { not: 'READ' },
+      },
+      data: { status: 'READ' },
+    });
+
+    return { ok: true };
   }
 }

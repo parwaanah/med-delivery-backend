@@ -3,7 +3,7 @@ import { Response } from 'express';
 export declare class AdminAuditController {
     private prisma;
     constructor(prisma: PrismaService);
-    getLogs(page?: string, limit?: string, action?: string, userId?: string, from?: string, to?: string): Promise<{
+    getLogs(page?: string, limit?: string, action?: string, userId?: string, resource?: string, from?: string, to?: string): Promise<{
         page: number;
         limit: number;
         total: number;

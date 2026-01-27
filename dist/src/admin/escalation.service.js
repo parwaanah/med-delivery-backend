@@ -13,15 +13,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EscalationService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../utils/prisma.service");
+const redis_service_1 = require("../utils/redis.service");
 const geo_surge_service_1 = require("../geosurge/geo-surge.service");
 const surge_service_1 = require("../surge/surge.service");
 let EscalationService = EscalationService_1 = class EscalationService {
-    constructor(prisma, geoSurge, surge) {
+    constructor(prisma, redis, geoSurge, surge) {
         this.prisma = prisma;
+        this.redis = redis;
         this.geoSurge = geoSurge;
         this.surge = surge;
         this.logger = new common_1.Logger(EscalationService_1.name);
         this.defaultRiderSearchKm = 5;
+        this.recentLoadWindowMs = 30 * 60 * 1000;
+        this.ratingWindowDays = 30;
     }
     toRad(v) {
         return (v * Math.PI) / 180;
@@ -36,38 +40,47 @@ let EscalationService = EscalationService_1 = class EscalationService {
                 Math.sin(dLon / 2) ** 2;
         return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
-    async computeRiderScore(rp, pickLat, pickLon) {
-        const meta = rp.meta || {};
-        const match = rp.memberId.match(/^rider:(\d+)$/);
-        const riderId = match ? Number(match[1]) : NaN;
-        let score = 0;
-        if (!isNaN(riderId)) {
-            const r = await this.prisma.user.findUnique({
-                where: { id: riderId },
-                select: { status: true },
-            });
-            score += r?.status === 'AVAILABLE' ? 40 : 10;
+    riderAvailabilityKey(riderId) {
+        return `rider:availability:${riderId}`;
+    }
+    riderIdleSinceKey(riderId) {
+        return `rider:idle_since:${riderId}`;
+    }
+    parseRiderId(memberId) {
+        const match = memberId.match(/^rider:(\d+)$/);
+        if (!match)
+            return null;
+        const id = Number(match[1]);
+        return Number.isFinite(id) ? id : null;
+    }
+    computeScore(input) {
+        const { rp, riderId, pickupLat, pickupLon, lifecycle, riderAvailability, cachedOnline, idleSinceMs, recentAssignedCount = 0, delivered30dCount = 0, surgeMultiplier = 1, } = input;
+        if (cachedOnline && String(cachedOnline).toUpperCase() !== 'ONLINE') {
+            return 0;
         }
+        const life = String(lifecycle || '').toUpperCase();
+        const avail = String(riderAvailability || '').toUpperCase();
+        if (life !== 'ACTIVE' || avail !== 'AVAILABLE') {
+            return 0;
+        }
+        let score = 40;
+        const meta = (rp.meta || {});
         if (typeof rp.distKm === 'number') {
             score += Math.max(0, 30 - Math.min(30, rp.distKm * 6));
         }
-        else if (pickLat && pickLon && meta?.lat && meta?.lon) {
-            const km = this.haversineKm(Number(meta.lat), Number(meta.lon), pickLat, pickLon);
+        else if (meta?.lat != null && meta?.lon != null) {
+            const km = this.haversineKm(Number(meta.lat), Number(meta.lon), pickupLat, pickupLon);
             score += Math.max(0, 30 - Math.min(30, km * 6));
         }
-        if (!isNaN(riderId)) {
-            const since = new Date(Date.now() - 30 * 60 * 1000);
-            const assigned = await this.prisma.order.count({
-                where: { riderId, createdAt: { gte: since } },
-            });
-            score += Math.max(0, 20 - assigned * 6);
+        score += Math.max(0, 20 - Math.min(20, recentAssignedCount * 6));
+        if (idleSinceMs && Number.isFinite(idleSinceMs)) {
+            const idleMinutes = Math.max(0, Math.floor((Date.now() - idleSinceMs) / 60000));
+            score += Math.min(15, Math.floor(idleMinutes / 2));
         }
-        try {
-            const { multiplier } = await this.surge.getStatus();
-            score += Math.min(10, Math.max(0, (multiplier - 1) * 5));
-        }
-        catch { }
-        return Math.min(100, Math.round(score));
+        const ratingPoints = Math.floor(Math.log2((delivered30dCount || 0) + 1) * 5);
+        score += Math.min(15, Math.max(0, ratingPoints));
+        score += Math.min(10, Math.max(0, (surgeMultiplier - 1) * 5));
+        return Math.min(100, Math.max(0, Math.round(score)));
     }
     async findCandidatesForOrder(orderId, radiusKm = this.defaultRiderSearchKm, limit = 20) {
         const order = await this.prisma.order.findUnique({
@@ -80,24 +93,120 @@ let EscalationService = EscalationService_1 = class EscalationService {
             where: { id: order.pharmacyId },
             select: { latitude: true, longitude: true },
         });
-        if (pharmacy?.latitude == null ||
-            pharmacy?.longitude == null) {
+        if (!pharmacy ||
+            pharmacy.latitude == null ||
+            pharmacy.longitude == null) {
             this.logger.warn(`Pharmacy ${order.pharmacyId} missing coordinates`);
             return [];
         }
-        const points = await this.geoSurge.findNearbyPoints(pharmacy.longitude, pharmacy.latitude, radiusKm, true, 100);
+        const pickupLat = pharmacy.latitude;
+        const pickupLon = pharmacy.longitude;
+        const points = await this.geoSurge.findNearbyPoints(pickupLon, pickupLat, radiusKm, true, 100);
         const riders = points.filter((p) => /^rider:\d+$/.test(p.memberId));
-        const scored = [];
-        for (const rp of riders) {
-            const score = await this.computeRiderScore(rp, pharmacy.latitude, pharmacy.longitude);
-            const match = rp.memberId.match(/^rider:(\d+)$/);
-            scored.push({
-                riderId: match ? Number(match[1]) : null,
+        const riderIds = riders
+            .map((rp) => this.parseRiderId(rp.memberId))
+            .filter((v) => typeof v === 'number');
+        let surgeMultiplier = 1;
+        try {
+            const s = await this.surge.getStatus();
+            if (s?.multiplier != null)
+                surgeMultiplier = Number(s.multiplier) || 1;
+        }
+        catch { }
+        const sinceRecent = new Date(Date.now() - this.recentLoadWindowMs);
+        const sinceDelivered = new Date(Date.now() - this.ratingWindowDays * 24 * 60 * 60 * 1000);
+        const [userRows, recentGroup, deliveredGroup, cachedAvail, idleSince] = await Promise.all([
+            this.prisma.user.findMany({
+                where: { id: { in: riderIds } },
+                select: { id: true, status: true, riderAvailability: true },
+            }),
+            this.prisma.order.groupBy({
+                by: ['riderId'],
+                where: { riderId: { in: riderIds }, createdAt: { gte: sinceRecent } },
+                _count: { _all: true },
+            }),
+            this.prisma.order.groupBy({
+                by: ['riderId'],
+                where: {
+                    riderId: { in: riderIds },
+                    status: 'DELIVERED',
+                    createdAt: { gte: sinceDelivered },
+                },
+                _count: { _all: true },
+            }),
+            (async () => {
+                try {
+                    const keys = riderIds.map((id) => this.riderAvailabilityKey(id));
+                    return (await this.redis.client.mGet(keys));
+                }
+                catch {
+                    return riderIds.map(() => null);
+                }
+            })(),
+            (async () => {
+                try {
+                    const keys = riderIds.map((id) => this.riderIdleSinceKey(id));
+                    return (await this.redis.client.mGet(keys));
+                }
+                catch {
+                    return riderIds.map(() => null);
+                }
+            })(),
+        ]);
+        const userById = new Map();
+        for (const u of userRows)
+            userById.set(Number(u.id), u);
+        const recentById = new Map();
+        for (const row of recentGroup) {
+            if (row?.riderId == null)
+                continue;
+            recentById.set(Number(row.riderId), Number(row?._count?._all || 0));
+        }
+        const deliveredById = new Map();
+        for (const row of deliveredGroup) {
+            if (row?.riderId == null)
+                continue;
+            deliveredById.set(Number(row.riderId), Number(row?._count?._all || 0));
+        }
+        const cachedById = new Map();
+        const idleById = new Map();
+        for (let i = 0; i < riderIds.length; i++) {
+            const id = riderIds[i];
+            cachedById.set(id, cachedAvail?.[i] ?? null);
+            const n = idleSince?.[i] ? Number(idleSince[i]) : NaN;
+            idleById.set(id, Number.isFinite(n) ? n : null);
+        }
+        const scored = riders.map((rp) => {
+            const riderId = this.parseRiderId(rp.memberId);
+            if (!riderId) {
+                return {
+                    riderId: null,
+                    score: 0,
+                    distKm: rp.distKm ?? null,
+                    meta: rp.meta,
+                };
+            }
+            const u = userById.get(riderId);
+            const score = this.computeScore({
+                rp,
+                riderId,
+                pickupLat,
+                pickupLon,
+                lifecycle: u?.status ?? null,
+                riderAvailability: u?.riderAvailability ?? null,
+                cachedOnline: cachedById.get(riderId) ?? null,
+                idleSinceMs: idleById.get(riderId) ?? null,
+                recentAssignedCount: recentById.get(riderId) ?? 0,
+                delivered30dCount: deliveredById.get(riderId) ?? 0,
+                surgeMultiplier,
+            });
+            return {
+                riderId,
                 score,
                 distKm: rp.distKm ?? null,
                 meta: rp.meta,
-            });
-        }
+            };
+        });
         scored.sort((a, b) => b.score - a.score ||
             ((a.distKm || 0) - (b.distKm || 0)));
         return scored.slice(0, limit);
@@ -107,6 +216,7 @@ exports.EscalationService = EscalationService;
 exports.EscalationService = EscalationService = EscalationService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        redis_service_1.RedisService,
         geo_surge_service_1.GeoSurgeService,
         surge_service_1.SurgeService])
 ], EscalationService);

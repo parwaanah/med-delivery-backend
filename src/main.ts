@@ -7,8 +7,10 @@ import * as crypto from 'crypto';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from './utils/prisma.service';
+import { RedisService } from './utils/redis.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import helmet from 'helmet';
@@ -17,6 +19,8 @@ import * as bodyParser from 'body-parser';
 
 // Redis connection logs
 import { checkRedisConnection, closeRedisConnection } from './utils/redis-logger';
+import { validateEnv } from './utils/env';
+import { getHttpCorsOrigins } from './utils/cors';
 
 async function bootstrap() {
   // -----------------------------------------------------------
@@ -24,6 +28,8 @@ async function bootstrap() {
   // -----------------------------------------------------------
   process.env.REDIS_RETRY_DELAY = '500';
   process.env.REDIS_RETRY_ATTEMPTS = '10';
+
+  validateEnv();
 
   const app = await NestFactory.create(AppModule);
 
@@ -36,6 +42,14 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // -----------------------------------------------------------
+  // GLOBAL IDEMPOTENCY (Idempotency-Key header)
+  // -----------------------------------------------------------
+  try {
+    const redis = app.get(RedisService);
+    app.useGlobalInterceptors(new IdempotencyInterceptor(redis));
+  } catch {}
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') || 3001;
@@ -50,8 +64,14 @@ async function bootstrap() {
   app.use(
     helmet({
       contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
+
+  // Trust proxy when deployed behind a reverse proxy / load balancer
+  if (String(process.env.TRUST_PROXY || '').trim() === '1') {
+    (app as any).set('trust proxy', 1);
+  }
 
   // -----------------------------------------------------------
   // RATE LIMITING
@@ -59,10 +79,12 @@ async function bootstrap() {
   if (process.env.DISABLE_RATELIMIT === '1') {
     console.log('⚡ LOADTEST MODE — RateLimit DISABLED');
   } else {
+    const rateLimitWindowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
+    const rateLimitMax = Number(process.env.RATE_LIMIT_MAX || 120);
     app.use(
       rateLimit({
-        windowMs: 60_000,
-        max: 120,
+        windowMs: Number.isFinite(rateLimitWindowMs) ? rateLimitWindowMs : 60_000,
+        max: Number.isFinite(rateLimitMax) ? rateLimitMax : 120,
         standardHeaders: true,
         legacyHeaders: false,
         message: {
@@ -74,13 +96,28 @@ async function bootstrap() {
   }
 
   // -----------------------------------------------------------
-  // ✅ CORS — JWT ONLY (NO COOKIES, NO WILDCARD)
+  // ✅ CORS — allow flexible dev origins (cookie mode safe)
   // -----------------------------------------------------------
+  const cookieMode = String(process.env.AUTH_COOKIE_MODE || '').trim() === '1';
+  const corsOrigins = getHttpCorsOrigins();
+  const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+
   app.enableCors({
-    origin: ['http://localhost:3000'],
+    origin: isProd
+      ? (corsOrigins.length ? corsOrigins : ['http://localhost:3000'])
+      : (origin, cb) => {
+          // In dev, allow any origin (echo back) to avoid "Failed to fetch"
+          if (!origin) return cb(null, true);
+          return cb(null, true);
+        },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Idempotency-Key',
+      'X-Request-Id',
+    ],
+    credentials: cookieMode,
   });
 
   // -----------------------------------------------------------
@@ -95,20 +132,30 @@ async function bootstrap() {
   );
 
   // JSON parser for all other routes
-  app.use(bodyParser.json());
+  app.use(
+    bodyParser.json({
+      limit: '2mb',
+    }),
+  );
 
   // -----------------------------------------------------------
   // Swagger
   // -----------------------------------------------------------
-  const swaggerCfg = new DocumentBuilder()
-    .setTitle('Medicine Delivery API')
-    .setDescription('API documentation')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+  const disableSwagger =
+    String(process.env.DISABLE_SWAGGER || '').trim() === '1' ||
+    String(process.env.NODE_ENV || '').toLowerCase() === 'production';
 
-  const document = SwaggerModule.createDocument(app, swaggerCfg);
-  SwaggerModule.setup('docs', app, document);
+  if (!disableSwagger) {
+    const swaggerCfg = new DocumentBuilder()
+      .setTitle('Medicine Delivery API')
+      .setDescription('API documentation')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerCfg);
+    SwaggerModule.setup('docs', app, document);
+  }
 
   // -----------------------------------------------------------
   // Prisma graceful shutdown
@@ -116,6 +163,26 @@ async function bootstrap() {
   const prisma = app.get(PrismaService);
   if (prisma?.enableShutdownHooks) {
     await prisma.enableShutdownHooks(app);
+  }
+
+  // -----------------------------------------------------------
+  // DB SAFETY: ensure enum values exist for old DBs
+  // -----------------------------------------------------------
+  try {
+    await prisma.$executeRawUnsafe(`
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_enum e ON t.oid = e.enumtypid
+    WHERE t.typname = 'OrderStatus' AND e.enumlabel = 'NEEDS_CONFIRMATION'
+  ) THEN
+    ALTER TYPE "OrderStatus" ADD VALUE 'NEEDS_CONFIRMATION';
+  END IF;
+END$$;
+    `);
+  } catch (e) {
+    console.warn('Enum patch skipped:', (e as any)?.message ?? e);
   }
 
   // -----------------------------------------------------------

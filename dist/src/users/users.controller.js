@@ -17,6 +17,7 @@ const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const update_me_dto_1 = require("./dto/update-me.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
@@ -31,6 +32,10 @@ let UsersController = class UsersController {
             throw new Error('Authenticated user missing id');
         }
         return this.usersService.findOne(user.id);
+    }
+    updateMe(req, dto) {
+        const user = req.user;
+        return this.usersService.updateMe(user.id, dto);
     }
     findAll() {
         return this.usersService.findAll();
@@ -55,6 +60,17 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getMe", null);
+__decorate([
+    openapi.ApiOperation({ description: "Update current authenticated user (safe subset)" }),
+    (0, common_1.Patch)('me'),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.PHARMACY, client_1.UserRole.RIDER, client_1.UserRole.CUSTOMER),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_me_dto_1.UpdateMeDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updateMe", null);
 __decorate([
     openapi.ApiOperation({ description: "\u2705 ADMIN \u2014 LIST ALL USERS" }),
     (0, common_1.Get)(),

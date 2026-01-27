@@ -33,7 +33,8 @@ let AdminMetricsService = class AdminMetricsService {
             this.prisma.user.count({
                 where: {
                     role: client_1.UserRole.RIDER,
-                    status: 'AVAILABLE',
+                    status: 'ACTIVE',
+                    riderAvailability: 'AVAILABLE',
                 },
             }),
         ]);

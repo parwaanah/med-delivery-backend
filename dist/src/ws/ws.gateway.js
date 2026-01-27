@@ -19,6 +19,7 @@ let WsGateway = WsGateway_1 = class WsGateway {
         this.logger = new common_1.Logger(WsGateway_1.name);
         this.users = new Map();
         this.admins = new Set();
+        this.riders = new Set();
     }
     handleConnection(client) {
         const userId = Number(client.handshake.query.userId);
@@ -27,6 +28,8 @@ let WsGateway = WsGateway_1 = class WsGateway {
             this.users.set(userId, client.id);
         if (role === 'ADMIN')
             this.admins.add(client.id);
+        if (role === 'RIDER')
+            this.riders.add(client.id);
         this.logger.log(`WS connected: ${client.id} user=${userId} role=${role}`);
     }
     handleDisconnect(client) {
@@ -35,6 +38,7 @@ let WsGateway = WsGateway_1 = class WsGateway {
                 this.users.delete(uid);
         });
         this.admins.delete(client.id);
+        this.riders.delete(client.id);
         this.logger.log(`WS disconnected: ${client.id}`);
     }
     notifyUser(userId, event, payload) {
@@ -45,6 +49,11 @@ let WsGateway = WsGateway_1 = class WsGateway {
     }
     notifyAdmins(event, payload) {
         for (const sid of this.admins) {
+            this.server.to(sid).emit(event, payload);
+        }
+    }
+    notifyRiders(event, payload) {
+        for (const sid of this.riders) {
             this.server.to(sid).emit(event, payload);
         }
     }

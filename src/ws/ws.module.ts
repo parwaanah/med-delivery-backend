@@ -9,6 +9,7 @@ import { SurgeLiveGateway } from './surge-live.gateway';
 import { RiderLiveGateway } from './rider-live.gateway';
 import { ChatLiveGateway } from './chat-live.gateway';
 import { GeoSurgeLiveGateway } from './geo-surge-live.gateway';
+import { WsAuthService } from './ws-auth.service';
 
 // Import ChatModule and RidersModule (use forwardRef to avoid circular import)
 import { ChatModule } from '../chat/chat.module';
@@ -35,6 +36,7 @@ import { RidersModule } from '../riders/riders.module';
     RiderLiveGateway,
     ChatLiveGateway,
     GeoSurgeLiveGateway,
+    WsAuthService,
   ],
   exports: [
     WsGateway,
@@ -43,6 +45,7 @@ import { RidersModule } from '../riders/riders.module';
     RiderLiveGateway,
     ChatLiveGateway,
     GeoSurgeLiveGateway,
+    WsAuthService,
   ],
 })
 export class WsModule {}

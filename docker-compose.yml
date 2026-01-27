@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15
@@ -15,6 +13,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - mednet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d med_delivery"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7
@@ -24,6 +27,11 @@ services:
       - "6379:6379"
     networks:
       - mednet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
   backend:
     build: .
@@ -38,6 +46,46 @@ services:
       - redis
     networks:
       - mednet
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://localhost:3001/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1));\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ../uskery-frontend
+      dockerfile: Dockerfile
+    container_name: med_delivery_frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:3001"
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ../uskery-frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: ["npm", "run", "dev", "--", "--port", "3000", "--hostname", "0.0.0.0"]
+    networks:
+      - mednet
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://localhost:3000',r=>process.exit(r.statusCode>=200&&r.statusCode<500?0:1)).on('error',()=>process.exit(1));\""
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:

@@ -20,9 +20,9 @@ let MedicinesController = class MedicinesController {
     constructor(medicinesService) {
         this.medicinesService = medicinesService;
     }
-    async search(q, res) {
+    async search(q, queryAlt, res) {
         res.setHeader('Cache-Control', 'no-store');
-        const query = (q || '').trim();
+        const query = (q || queryAlt || '').trim();
         if (!query) {
             const items = await this.medicinesService.getFeaturedMedicines();
             return res.json({ items });
@@ -46,9 +46,10 @@ __decorate([
     (0, common_1.Get)('search'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Query)('q')),
-    __param(1, (0, common_1.Res)()),
+    __param(1, (0, common_1.Query)('query')),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], MedicinesController.prototype, "search", null);
 __decorate([

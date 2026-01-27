@@ -21,10 +21,21 @@ model User {
 
   otpCode         String?
   otpExpiresAt    DateTime?
+  mfaEnabled      Boolean   @default(false)
+  mfaSecret       String?
+  mfaTempSecret   String?
+  mfaRecoveryCodes String[] @default([])
 
   role            UserRole  @default(CUSTOMER)
   status          String    @default("PENDING")
   approvedBy      Int?
+
+  // Rider-specific control plane fields (do not overload `status` for availability)
+  riderAvailability String  @default("OFFLINE")
+  riderReasonCode   String?
+  riderReasonNote   String?
+  riderAvgRating    Float   @default(0)
+  riderRatingCount  Int     @default(0)
 
   latitude        Float?
   longitude       Float?
@@ -41,6 +52,12 @@ model User {
   customerOrders        Order[] @relation("CustomerOrders")
   pharmacyOrders        Order[] @relation("PharmacyOrders")
   riderOrders           Order[] @relation("RiderOrders")
+  riderShiftSessions    RiderShiftSession[] @relation("RiderShiftSessions")
+  riderEarnings         RiderEarning[]
+  riderRatingsReceived  RiderRating[] @relation("RiderRatingsReceived")
+  riderRatingsGiven     RiderRating[] @relation("RiderRatingsGiven")
+  riderStrikes          RiderStrike[]
+  riderFraudSignals     RiderFraudSignal[]
   pharmacyInventory     PharmacyInventory[] @relation("PharmacyInventoryRelation")
   prescriptions         Prescription[]
   refreshTokens         RefreshToken[]
@@ -50,6 +67,55 @@ model User {
 
   partnerProfile        PartnerProfile?
   verificationDocs      VerificationDocument[]
+
+  supportTicketsRequested SupportTicket[] @relation("SupportTicketRequester")
+  supportTicketsAssigned  SupportTicket[] @relation("SupportTicketAssignee")
+  supportMessages         SupportMessage[]
+
+  refundRequestsRequested RefundRequest[] @relation("RefundRequestRequester")
+  refundRequestsApproved  RefundRequest[] @relation("RefundRequestApprover")
+
+  adminPermissions        AdminPermission[]
+
+  addresses               UserAddress[]
+
+  incidentsCreated        Incident[] @relation("IncidentCreatedBy")
+  incidentsAssigned       Incident[] @relation("IncidentAssignedTo")
+  incidentEvents          IncidentEvent[]
+}
+
+model AdminPermission {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  code      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, code])
+  @@index([userId])
+  @@index([code])
+}
+
+model UserAddress {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  label     String   @default("Home")
+  name      String
+  phone     String
+  line1     String
+  line2     String?  @default("")
+  city      String
+  state     String?  @default("")
+  pin       String
+  landmark  String?  @default("")
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model Medicine {
@@ -75,6 +141,7 @@ model PharmacyInventory {
   medicineId   Int
   stock        Int      @default(0)
   createdAt    DateTime @default(now())
+  deletedAt    DateTime?
   discount     Float    @default(0)
   mrp          Decimal  @db.Decimal(12, 2)
   sellingPrice Decimal  @db.Decimal(12, 2)
@@ -101,12 +168,37 @@ model Order {
   riderId              Int?
   status               OrderStatus     @default(PENDING)
   totalPrice           Float
+  // Minimal payment tracking (keeps OrderStatus focused on logistics)
+  paymentStatus        String          @default("UNPAID") // UNPAID | REQUESTED | PAID
+  paymentRequestedAt   DateTime?
+  paidAt               DateTime?
+  riderAssignedAt      DateTime?
+  reachedPharmacyAt    DateTime?
+  pickedUpAt           DateTime?
+  outForDeliveryAt     DateTime?
+  deliveredAt          DateTime?
+  deliveryProofUrl     String?
+  deliverySignatureUrl String?
+  deliveryOtp          String?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
   deletedAt            DateTime?
   paymentMode          PaymentMode     @default(PAY_AFTER_ACCEPT)
   prescriptionId       Int?
   requiresPrescription Boolean         @default(false)
+
+  // Delivery snapshot (immutable per-order for audit/history)
+  deliveryAddressText  String?
+  deliveryName         String?
+  deliveryPhone        String?
+  deliveryLine1        String?
+  deliveryLine2        String?         @default("")
+  deliveryCity         String?
+  deliveryState        String?         @default("")
+  deliveryPin          String?
+  deliveryLandmark     String?         @default("")
+  deliveryNotes        String?         @default("")
+
   customer             User            @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Cascade)
   pharmacy             User            @relation("PharmacyOrders", fields: [pharmacyId], references: [id], onDelete: Cascade)
   prescription         Prescription?   @relation(fields: [prescriptionId], references: [id])
@@ -114,6 +206,12 @@ model Order {
   items                OrderItem[]
   offers               OrderOffer[]
   timeline             OrderTimeline[]
+  riderEarning         RiderEarning?
+  riderRating          RiderRating?
+
+  supportTickets       SupportTicket[]
+  refundRequests       RefundRequest[]
+  incidents            Incident[]
 }
 
 model OrderItem {
@@ -134,6 +232,10 @@ model OrderOffer {
   riderId    Int?
   offeredTo  String
   status     String   @default("PENDING")
+  score      Int      @default(0)
+  expiresAt  DateTime?
+  respondedAt DateTime?
+  rejectReason String?
   createdAt  DateTime @default(now())
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
@@ -175,6 +277,56 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+enum SupportTicketStatus {
+  OPEN
+  PENDING_ADMIN
+  PENDING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum SupportMessageType {
+  USER
+  ADMIN
+  INTERNAL
+}
+
+model SupportTicket {
+  id              Int                 @id @default(autoincrement())
+  requesterId     Int
+  orderId         Int?
+  assignedAdminId Int?
+  status          SupportTicketStatus @default(OPEN)
+  subject         String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  requester       User                @relation("SupportTicketRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  order           Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  assignedAdmin   User?               @relation("SupportTicketAssignee", fields: [assignedAdminId], references: [id])
+  messages        SupportMessage[]
+  incidents       Incident[]
+
+  @@index([requesterId, createdAt])
+  @@index([status, updatedAt])
+  @@index([assignedAdminId, updatedAt])
+}
+
+model SupportMessage {
+  id        Int                @id @default(autoincrement())
+  ticketId  Int
+  senderId  Int?
+  type      SupportMessageType
+  message   String
+  attachments Json?
+  createdAt DateTime           @default(now())
+
+  ticket    SupportTicket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender    User?              @relation(fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, createdAt])
+}
+
 model AuditLog {
   id        Int      @id @default(autoincrement())
   userId    Int?
@@ -183,6 +335,15 @@ model AuditLog {
   meta      Json?
   createdAt DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
+}
+
+model ServiceZone {
+  id        Int      @id @default(autoincrement())
+  name      String
+  geojson   Json
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model LoginAudit {
@@ -249,8 +410,56 @@ model Transaction {
   createdAt       DateTime @default(now())
   orderId         Int?
 
+  refundRequests  RefundRequest[]
+
   @@index([orderId])
   @@index([providerOrder])
+}
+
+model RiderSettlementBatch {
+  id          Int      @id @default(autoincrement())
+  periodStart DateTime
+  periodEnd   DateTime
+  status      String   @default("CREATED") // CREATED | PAID | CANCELED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  earnings RiderEarning[]
+
+  @@unique([periodStart, periodEnd])
+  @@index([createdAt])
+}
+
+model RiderEarning {
+  id               Int      @id @default(autoincrement())
+  riderId          Int
+  orderId          Int      @unique
+  type             String   @default("EARNING") // EARNING | BONUS | PENALTY
+
+  distanceKm       Float?
+  baseFare         Decimal  @db.Decimal(12, 2)
+  distanceFare     Decimal  @db.Decimal(12, 2)
+  surgeMultiplier  Float    @default(1)
+  surgeBonus       Decimal  @db.Decimal(12, 2)
+  bonus            Decimal  @db.Decimal(12, 2)
+  penalty          Decimal  @db.Decimal(12, 2)
+  netAmount        Decimal  @db.Decimal(12, 2)
+
+  status           String   @default("PENDING") // PENDING | SETTLED
+  settledAt        DateTime?
+  batchId          Int?
+  meta             Json?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  rider            User                 @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  order            Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  batch            RiderSettlementBatch? @relation(fields: [batchId], references: [id])
+
+  @@index([riderId, createdAt])
+  @@index([status, createdAt])
+  @@index([batchId])
 }
 
 model PaymentAttempt {
@@ -280,6 +489,7 @@ enum UserRole {
 
 enum OrderStatus {
   PENDING
+  NEEDS_CONFIRMATION
   ACCEPTED
   REJECTED
   ASSIGNED
@@ -295,6 +505,11 @@ enum MedicineCategory {
   NON_RX
   CHRONIC
   STRICT_RX
+  COUGH
+  HEADACHE
+  DIABETES
+  BABY_CARE
+  COSMETICS
 }
 
 enum PrescriptionType {
@@ -317,6 +532,38 @@ model OtpRequest {
   createdAt DateTime @default(now())
 }
 
+enum RefundRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELED
+}
+
+model RefundRequest {
+  id              Int                 @id @default(autoincrement())
+  orderId         Int
+  transactionId   String
+  requestedById   Int
+  status          RefundRequestStatus @default(PENDING)
+  requestedAmount Decimal?            @db.Decimal(12, 2) // INR (rupees)
+  approvedAmount  Decimal?            @db.Decimal(12, 2) // INR (rupees)
+  reason          String?
+  adminNote       String?
+  approvedById    Int?
+  resolvedAt      DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  order           Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  transaction     Transaction         @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  requestedBy     User                @relation("RefundRequestRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  approvedBy      User?               @relation("RefundRequestApprover", fields: [approvedById], references: [id])
+
+  @@index([orderId, createdAt])
+  @@index([requestedById, createdAt])
+  @@index([status, createdAt])
+ }
+
 model PartnerProfile {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique
@@ -328,6 +575,71 @@ model PartnerProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model RiderShiftSession {
+  id            Int      @id @default(autoincrement())
+  riderId       Int
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+  durationSec   Int      @default(0)
+  activeSec     Int      @default(0)
+  idleSec       Int      @default(0)
+  lastState     String   @default("IDLE") // ACTIVE | IDLE
+  lastStateAt   DateTime @default(now())
+  lastHeartbeat DateTime @default(now())
+  endedReason   String?
+
+  rider User @relation("RiderShiftSessions", fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([endTime])
+}
+
+model RiderRating {
+  id         Int      @id @default(autoincrement())
+  orderId    Int      @unique
+  riderId    Int
+  customerId Int
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  order    Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  rider    User  @relation("RiderRatingsReceived", fields: [riderId], references: [id], onDelete: Cascade)
+  customer User  @relation("RiderRatingsGiven", fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([customerId])
+}
+
+model RiderStrike {
+  id        Int      @id @default(autoincrement())
+  riderId   Int
+  type      String
+  points    Int      @default(1)
+  reason    String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  rider User @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([createdAt])
+}
+
+model RiderFraudSignal {
+  id        Int      @id @default(autoincrement())
+  riderId   Int
+  type      String
+  severity  Int      @default(50)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  rider User @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([createdAt])
 }
 
 model VerificationDocument {
@@ -342,4 +654,48 @@ model VerificationDocument {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Incident {
+  id              Int      @id @default(autoincrement())
+  title           String
+  severity        String   @default("SEV3") // SEV1..SEV4 (string for flexibility)
+  status          String   @default("OPEN") // OPEN | INVESTIGATING | MITIGATED | RESOLVED | CLOSED
+  description     String?
+  orderId         Int?
+  supportTicketId Int?
+  createdById     Int?
+  assignedToId    Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  resolvedAt      DateTime?
+  meta            Json?
+
+  order           Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  supportTicket   SupportTicket? @relation(fields: [supportTicketId], references: [id], onDelete: SetNull)
+  createdBy       User?         @relation("IncidentCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  assignedTo      User?         @relation("IncidentAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  events          IncidentEvent[]
+
+  @@index([status, createdAt])
+  @@index([severity, createdAt])
+  @@index([orderId])
+  @@index([supportTicketId])
+  @@index([assignedToId])
+}
+
+model IncidentEvent {
+  id         Int      @id @default(autoincrement())
+  incidentId Int
+  actorId    Int?
+  type       String   @default("COMMENT") // COMMENT | STATUS_CHANGE | ASSIGNMENT | LINKED_ORDER | LINKED_TICKET
+  message    String
+  createdAt  DateTime @default(now())
+  meta       Json?
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  actor    User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId, createdAt])
+  @@index([actorId, createdAt])
 }

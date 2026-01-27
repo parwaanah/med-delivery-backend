@@ -18,7 +18,8 @@
     "seed": "ts-node prisma/seed.ts",
     "check:types": "tsc --noEmit",
     "generate:medicines": "node prisma/generate_medicines.js",
-    "seed:medicines": "node prisma/seed.js"
+    "seed:medicines": "node prisma/seed.js",
+    "e2e:roles": "ts-node scripts/test-e2e-roles.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
@@ -50,6 +51,7 @@
     "lru-cache": "^10.4.3",
     "nanoid": "^5.1.6",
     "node-fetch": "^2.7.0",
+    "otplib": "^12.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",

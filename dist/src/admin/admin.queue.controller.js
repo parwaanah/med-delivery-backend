@@ -28,6 +28,8 @@ let AdminQueueController = class AdminQueueController {
         this.queues = {
             notifications: new bullmq_1.Queue('notifications', { connection: this.redis }),
             orders: new bullmq_1.Queue('orders', { connection: this.redis }),
+            order_assign: new bullmq_1.Queue('order_assign', { connection: this.redis }),
+            dead_letter: new bullmq_1.Queue('dead_letter', { connection: this.redis }),
         };
     }
     async getQueueStatus() {

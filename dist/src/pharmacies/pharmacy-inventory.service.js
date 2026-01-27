@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PharmacyInventoryService = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../utils/prisma.service");
 const surge_service_1 = require("../surge/surge.service");
 const notification_service_1 = require("../utils/notification.service");
@@ -22,7 +23,7 @@ let PharmacyInventoryService = class PharmacyInventoryService {
     }
     async listInventory(pharmacyId) {
         return this.prisma.pharmacyInventory.findMany({
-            where: { pharmacyId },
+            where: { pharmacyId, deletedAt: null },
             include: { medicine: true },
         });
     }
@@ -30,21 +31,28 @@ let PharmacyInventoryService = class PharmacyInventoryService {
         const { medicineId, mrp, sellingPrice, discount = 0, stock = 0 } = dto;
         if (!medicineId)
             throw new common_1.BadRequestException('medicineId required');
+        if (mrp == null || sellingPrice == null) {
+            throw new common_1.BadRequestException('mrp and sellingPrice required');
+        }
+        const mrpDec = new client_1.Prisma.Decimal(mrp);
+        const sellingDec = new client_1.Prisma.Decimal(sellingPrice);
         return this.prisma.pharmacyInventory.upsert({
             where: { pharmacyId_medicineId: { pharmacyId, medicineId } },
             update: {
-                mrp,
-                sellingPrice,
+                mrp: mrpDec,
+                sellingPrice: sellingDec,
                 discount,
                 stock,
+                deletedAt: null,
             },
             create: {
                 pharmacyId,
                 medicineId,
-                mrp,
-                sellingPrice,
+                mrp: mrpDec,
+                sellingPrice: sellingDec,
                 discount,
                 stock,
+                deletedAt: null,
             },
         });
     }
@@ -52,13 +60,17 @@ let PharmacyInventoryService = class PharmacyInventoryService {
         const rec = await this.prisma.pharmacyInventory.findUnique({
             where: { id: inventoryId },
         });
-        if (!rec)
+        if (!rec || rec.deletedAt)
             throw new common_1.NotFoundException('Inventory record not found');
+        const mrp = dto.mrp != null ? new client_1.Prisma.Decimal(dto.mrp) : rec.mrp;
+        const sellingPrice = dto.sellingPrice != null
+            ? new client_1.Prisma.Decimal(dto.sellingPrice)
+            : rec.sellingPrice;
         return this.prisma.pharmacyInventory.update({
             where: { id: inventoryId },
             data: {
-                mrp: dto.mrp ?? rec.mrp,
-                sellingPrice: dto.sellingPrice ?? rec.sellingPrice,
+                mrp,
+                sellingPrice,
                 discount: dto.discount ?? rec.discount,
                 stock: dto.stock ?? rec.stock,
             },
@@ -68,18 +80,19 @@ let PharmacyInventoryService = class PharmacyInventoryService {
         const rec = await this.prisma.pharmacyInventory.findUnique({
             where: { id: inventoryId },
         });
-        if (!rec)
+        if (!rec || rec.deletedAt)
             throw new common_1.NotFoundException('Inventory not found');
-        await this.prisma.pharmacyInventory.delete({
+        await this.prisma.pharmacyInventory.update({
             where: { id: inventoryId },
+            data: { deletedAt: new Date(), stock: 0 },
         });
-        return { ok: true, deletedId: inventoryId };
+        return { ok: true, deletedId: inventoryId, softDeleted: true };
     }
     async getMedicinePrice(pharmacyId, medicineId) {
         const rec = await this.prisma.pharmacyInventory.findUnique({
             where: { pharmacyId_medicineId: { pharmacyId, medicineId } },
         });
-        if (!rec)
+        if (!rec || rec.deletedAt)
             throw new common_1.NotFoundException('Medicine not found in inventory');
         return { price: Number(rec.sellingPrice), stock: rec.stock };
     }
@@ -95,7 +108,7 @@ let PharmacyInventoryService = class PharmacyInventoryService {
         const rec = await this.prisma.pharmacyInventory.findUnique({
             where: { pharmacyId_medicineId: { pharmacyId, medicineId } },
         });
-        if (!rec)
+        if (!rec || rec.deletedAt)
             throw new common_1.NotFoundException('inventory record not found');
         const newStock = Math.max(0, rec.stock + delta);
         return this.prisma.pharmacyInventory.update({

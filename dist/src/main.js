@@ -41,8 +41,10 @@ globalThis.crypto = crypto;
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
+const idempotency_interceptor_1 = require("./common/interceptors/idempotency.interceptor");
 const config_1 = require("@nestjs/config");
 const prisma_service_1 = require("./utils/prisma.service");
+const redis_service_1 = require("./utils/redis.service");
 const swagger_1 = require("@nestjs/swagger");
 const helmet_1 = __importDefault(require("helmet"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
@@ -56,12 +58,18 @@ async function bootstrap() {
         whitelist: true,
         transform: true,
     }));
+    try {
+        const redis = app.get(redis_service_1.RedisService);
+        app.useGlobalInterceptors(new idempotency_interceptor_1.IdempotencyInterceptor(redis));
+    }
+    catch { }
     const config = app.get(config_1.ConfigService);
     const port = config.get('PORT') || 3001;
     const redisUrl = config.get('REDIS_URL') || 'redis://redis:6379';
     console.log('🧠 Using Redis URL:', redisUrl);
     app.use((0, helmet_1.default)({
         contentSecurityPolicy: false,
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
     }));
     if (process.env.DISABLE_RATELIMIT === '1') {
         console.log('⚡ LOADTEST MODE — RateLimit DISABLED');
@@ -81,7 +89,12 @@ async function bootstrap() {
     app.enableCors({
         origin: ['http://localhost:3000'],
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: [
+            'Content-Type',
+            'Authorization',
+            'Idempotency-Key',
+            'X-Request-Id',
+        ],
         credentials: false,
     });
     app.use('/payments/webhook', bodyParser.raw({
@@ -100,6 +113,23 @@ async function bootstrap() {
     const prisma = app.get(prisma_service_1.PrismaService);
     if (prisma?.enableShutdownHooks) {
         await prisma.enableShutdownHooks(app);
+    }
+    try {
+        await prisma.$executeRawUnsafe(`
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_enum e ON t.oid = e.enumtypid
+    WHERE t.typname = 'OrderStatus' AND e.enumlabel = 'NEEDS_CONFIRMATION'
+  ) THEN
+    ALTER TYPE "OrderStatus" ADD VALUE 'NEEDS_CONFIRMATION';
+  END IF;
+END$$;
+    `);
+    }
+    catch (e) {
+        console.warn('Enum patch skipped:', e?.message ?? e);
     }
     await (0, redis_logger_1.checkRedisConnection)(redisUrl).catch((err) => console.warn('⚠️ Redis check failed:', err?.message || err));
     console.log('💓 System Health OK — Redis + Prisma connected');

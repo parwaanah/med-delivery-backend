@@ -11,6 +11,7 @@ export declare class OrdersProcessor implements OnModuleInit, OnModuleDestroy {
     private worker;
     private readonly logger;
     private redisClient;
+    private dlq;
     constructor(config: ConfigService, prisma: PrismaService, notify: NotificationService, ws: WsGateway);
     onModuleInit(): void;
     onModuleDestroy(): Promise<void>;

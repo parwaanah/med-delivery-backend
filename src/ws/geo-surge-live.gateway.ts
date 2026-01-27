@@ -7,8 +7,14 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { getWsCorsOrigin } from '../utils/cors';
 
-@WebSocketGateway({ namespace: '/geo-surge-live', cors: true })
+const wsCorsOrigin: any = getWsCorsOrigin();
+
+@WebSocketGateway({
+  namespace: '/geo-surge-live',
+  cors: { origin: wsCorsOrigin },
+})
 export class GeoSurgeLiveGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;

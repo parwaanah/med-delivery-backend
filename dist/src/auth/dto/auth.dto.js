@@ -15,7 +15,7 @@ const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
 class RegisterDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { name: { required: true, type: () => String }, email: { required: true, type: () => String }, password: { required: true, type: () => String, minLength: 6 }, role: { required: false, type: () => Object } };
+        return { name: { required: true, type: () => String }, email: { required: false, type: () => String }, phone: { required: false, type: () => String }, password: { required: true, type: () => String, minLength: 6 }, role: { required: false, type: () => Object } };
     }
 }
 exports.RegisterDto = RegisterDto;
@@ -25,9 +25,17 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterDto.prototype, "name", void 0);
 __decorate([
+    (0, class_validator_1.ValidateIf)((o) => !o.phone),
     (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.ValidateIf)((o) => !o.email),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "phone", void 0);
 __decorate([
     (0, class_validator_1.MinLength)(6),
     (0, class_validator_1.IsString)(),
@@ -39,14 +47,22 @@ __decorate([
 ], RegisterDto.prototype, "role", void 0);
 class LoginDto {
     static _OPENAPI_METADATA_FACTORY() {
-        return { email: { required: true, type: () => String }, password: { required: true, type: () => String, minLength: 6 } };
+        return { email: { required: false, type: () => String }, phone: { required: false, type: () => String }, password: { required: true, type: () => String, minLength: 6 } };
     }
 }
 exports.LoginDto = LoginDto;
 __decorate([
+    (0, class_validator_1.ValidateIf)((o) => !o.phone),
     (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], LoginDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.ValidateIf)((o) => !o.email),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], LoginDto.prototype, "phone", void 0);
 __decorate([
     (0, class_validator_1.MinLength)(6),
     (0, class_validator_1.IsString)(),

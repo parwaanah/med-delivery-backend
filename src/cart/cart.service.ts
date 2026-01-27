@@ -19,7 +19,7 @@ export class CartService {
     }
 
     const inventory = await this.prisma.pharmacyInventory.findFirst({
-      where: { medicineId, stock: { gt: 0 } },
+      where: ({ medicineId, stock: { gt: 0 }, deletedAt: null } as any),
       orderBy: { sellingPrice: 'asc' },
     });
 
@@ -46,7 +46,7 @@ export class CartService {
       const firstMedicineId = Number(cart.items[0].productId);
 
       const existingInventory = await this.prisma.pharmacyInventory.findFirst({
-        where: { medicineId: firstMedicineId },
+        where: ({ medicineId: firstMedicineId, deletedAt: null } as any),
       });
 
       if (
@@ -102,7 +102,7 @@ export class CartService {
         });
 
         const inventory = await this.prisma.pharmacyInventory.findFirst({
-          where: { medicineId },
+          where: ({ medicineId, deletedAt: null } as any),
           include: { pharmacy: { select: { id: true, name: true } } },
         });
 
@@ -167,7 +167,15 @@ export class CartService {
   // --------------------------------------------------
   // CHECKOUT (PAY AFTER ACCEPT — FINAL)
   // --------------------------------------------------
-  async checkout(userId: string, body: { notes?: string }) {
+  async checkout(
+    userId: string,
+    body: {
+      notes?: string;
+      addressId?: number;
+      deliveryNotes?: string;
+      paymentMode?: string;
+    },
+  ) {
     const cart = await this.prisma.cart.findFirst({
       where: { userId },
       include: { items: true },
@@ -207,7 +215,10 @@ export class CartService {
     // Minimal DTO — OrdersService decides payment mode
     const dto = {
       items,
-      address: 'Cart checkout',
+      addressId: body?.addressId,
+      deliveryNotes: body?.deliveryNotes,
+      paymentMode: body?.paymentMode,
+      address: 'Cart checkout', // legacy fallback only
       notes: body?.notes,
     };
 

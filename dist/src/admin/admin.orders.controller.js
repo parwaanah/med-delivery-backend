@@ -30,7 +30,7 @@ let AdminOrdersController = class AdminOrdersController {
         const orderId = Number(id);
         if (isNaN(orderId))
             throw new common_1.BadRequestException('Invalid order id');
-        const res = await this.orders.adminForceCancel(orderId, body?.reason);
+        const res = await this.orders.adminForceCancel(orderId, body?.reason, req.user.id);
         await this.audit.logAdminAction({
             userId: req.user.id,
             action: 'ORDER_FORCE_CANCEL',
@@ -43,7 +43,7 @@ let AdminOrdersController = class AdminOrdersController {
         const orderId = Number(id);
         if (isNaN(orderId))
             throw new common_1.BadRequestException('Invalid order id');
-        const res = await this.orders.adminForceStatus(orderId, body.status, body.note);
+        const res = await this.orders.adminForceStatus(orderId, body.status, body.note, req.user.id);
         await this.audit.logAdminAction({
             userId: req.user.id,
             action: 'ORDER_FORCE_STATUS',
@@ -56,7 +56,7 @@ let AdminOrdersController = class AdminOrdersController {
         const orderId = Number(id);
         if (isNaN(orderId))
             throw new common_1.BadRequestException('Invalid order id');
-        const res = await this.orders.adminUnassignRider(orderId);
+        const res = await this.orders.adminUnassignRider(orderId, req.user.id);
         await this.audit.logAdminAction({
             userId: req.user.id,
             action: 'ORDER_UNASSIGN_RIDER',
@@ -77,11 +77,54 @@ let AdminOrdersController = class AdminOrdersController {
         });
         return res;
     }
+    async settle(id, body, req) {
+        const orderId = Number(id);
+        if (isNaN(orderId))
+            throw new common_1.BadRequestException('Invalid order id');
+        const res = await this.orders.adminSettleOrder(orderId, req.user.id, {
+            note: body?.note,
+            force: Boolean(body?.force),
+        });
+        await this.audit.logAdminAction({
+            userId: req.user.id,
+            action: 'ORDER_SETTLED',
+            resource: `order:${orderId}`,
+            meta: { note: body?.note, force: Boolean(body?.force) },
+        });
+        return res;
+    }
+    async unsettle(id, body, req) {
+        const orderId = Number(id);
+        if (isNaN(orderId))
+            throw new common_1.BadRequestException('Invalid order id');
+        const res = await this.orders.adminUnsettleOrder(orderId, req.user.id, {
+            note: body?.note,
+        });
+        await this.audit.logAdminAction({
+            userId: req.user.id,
+            action: 'ORDER_UNSETTLED',
+            resource: `order:${orderId}`,
+            meta: { note: body?.note },
+        });
+        return res;
+    }
+    async verifyPrescription(id, req) {
+        const orderId = Number(id);
+        if (isNaN(orderId))
+            throw new common_1.BadRequestException('Invalid order id');
+        const res = await this.orders.adminVerifyPrescription(orderId, req.user.id);
+        await this.audit.logAdminAction({
+            userId: req.user.id,
+            action: 'PRESCRIPTION_VERIFIED',
+            resource: `order:${orderId}`,
+        });
+        return res;
+    }
 };
 exports.AdminOrdersController = AdminOrdersController;
 __decorate([
     (0, common_1.Post)(':id/cancel'),
-    openapi.ApiResponse({ status: 201 }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
@@ -91,7 +134,7 @@ __decorate([
 ], AdminOrdersController.prototype, "forceCancel", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
-    openapi.ApiResponse({ status: 200 }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
@@ -101,7 +144,7 @@ __decorate([
 ], AdminOrdersController.prototype, "forceStatus", null);
 __decorate([
     (0, common_1.Post)(':id/unassign'),
-    openapi.ApiResponse({ status: 201 }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -118,6 +161,35 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], AdminOrdersController.prototype, "addNote", null);
+__decorate([
+    (0, common_1.Patch)(':id/settle'),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "settle", null);
+__decorate([
+    (0, common_1.Patch)(':id/unsettle'),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "unsettle", null);
+__decorate([
+    (0, common_1.Post)(':id/prescription/verify'),
+    openapi.ApiResponse({ status: 201 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "verifyPrescription", null);
 exports.AdminOrdersController = AdminOrdersController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),

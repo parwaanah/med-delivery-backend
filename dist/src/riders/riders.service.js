@@ -17,13 +17,15 @@ const notification_service_1 = require("../utils/notification.service");
 const geo_surge_service_1 = require("../geosurge/geo-surge.service");
 const surge_service_1 = require("../surge/surge.service");
 const ws_gateway_1 = require("../ws/ws.gateway");
+const rider_shift_service_1 = require("./rider-shift.service");
 let RidersService = RidersService_1 = class RidersService {
-    constructor(prisma, notify, geo, surge, ws) {
+    constructor(prisma, notify, geo, surge, ws, shifts) {
         this.prisma = prisma;
         this.notify = notify;
         this.geo = geo;
         this.surge = surge;
         this.ws = ws;
+        this.shifts = shifts;
         this.logger = new common_1.Logger(RidersService_1.name);
     }
     async updateLocationWS(riderId, lat, lon) {
@@ -48,15 +50,24 @@ let RidersService = RidersService_1 = class RidersService {
             lat,
             lon,
         });
+        try {
+            await this.shifts.heartbeat(riderId);
+        }
+        catch { }
         return { ok: true };
     }
     async updateStatus(riderId, status) {
         await this.prisma.user.update({
             where: { id: riderId },
-            data: { status },
+            data: { riderAvailability: status },
         });
         try {
             await this.surge.recordRiderAvailability(riderId, status === 'AVAILABLE');
+        }
+        catch { }
+        try {
+            await this.shifts.transitionShiftState(riderId, status === 'BUSY' ? 'ACTIVE' : 'IDLE');
+            await this.shifts.heartbeat(riderId);
         }
         catch { }
         this.ws.notifyAdmins('admin_rider_event', {
@@ -74,5 +85,6 @@ exports.RidersService = RidersService = RidersService_1 = __decorate([
         notification_service_1.NotificationService,
         geo_surge_service_1.GeoSurgeService,
         surge_service_1.SurgeService,
-        ws_gateway_1.WsGateway])
+        ws_gateway_1.WsGateway,
+        rider_shift_service_1.RiderShiftService])
 ], RidersService);

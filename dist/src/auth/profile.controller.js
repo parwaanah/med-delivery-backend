@@ -22,6 +22,7 @@ const cloudinary_service_1 = require("../uploads/cloudinary.service");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
+const profile_dto_1 = require("./dto/profile.dto");
 let ProfileController = class ProfileController {
     constructor(prisma, cloud) {
         this.prisma = prisma;
@@ -33,17 +34,59 @@ let ProfileController = class ProfileController {
         });
     }
     async saveMyProfile(req, data) {
+        const jsonData = JSON.parse(JSON.stringify(data));
         return this.prisma.partnerProfile.upsert({
             where: { userId: req.user.id },
             create: {
                 userId: req.user.id,
                 role: client_1.UserRole.PHARMACY,
-                data,
+                data: jsonData,
             },
             update: {
-                data,
+                data: jsonData,
             },
         });
+    }
+    async getStatus(req) {
+        const userId = req.user.id;
+        const [profile, docs, user] = await Promise.all([
+            this.prisma.partnerProfile.findUnique({
+                where: { userId },
+            }),
+            this.prisma.verificationDocument.findMany({
+                where: { userId },
+            }),
+            this.prisma.user.findUnique({
+                where: { id: userId },
+                select: { status: true },
+            }),
+        ]);
+        const data = (profile?.data || {});
+        const profileComplete = typeof data.pharmacyName === 'string' &&
+            data.pharmacyName.trim() &&
+            typeof data.ownerName === 'string' &&
+            data.ownerName.trim() &&
+            typeof data.gstNumber === 'string' &&
+            data.gstNumber.trim() &&
+            typeof data.drugLicenseNumber === 'string' &&
+            data.drugLicenseNumber.trim() &&
+            typeof data.openingHours === 'string' &&
+            data.openingHours.trim() &&
+            data.address &&
+            typeof data.address.line1 === 'string' &&
+            data.address.line1.trim() &&
+            typeof data.address.city === 'string' &&
+            data.address.city.trim() &&
+            typeof data.address.pin === 'string' &&
+            data.address.pin.trim();
+        const docsUploaded = docs.length > 0;
+        const docsVerified = docsUploaded && docs.every((d) => d.verified === true);
+        return {
+            profileComplete: Boolean(profileComplete),
+            docsUploaded,
+            docsVerified,
+            accountStatus: user?.status ?? 'PENDING',
+        };
     }
     async uploadDocument(req, file, type) {
         if (!file)
@@ -81,9 +124,17 @@ __decorate([
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, profile_dto_1.PharmacyProfileDto]),
     __metadata("design:returntype", Promise)
 ], ProfileController.prototype, "saveMyProfile", null);
+__decorate([
+    (0, common_1.Get)('status'),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ProfileController.prototype, "getStatus", null);
 __decorate([
     (0, common_1.Post)('documents'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),

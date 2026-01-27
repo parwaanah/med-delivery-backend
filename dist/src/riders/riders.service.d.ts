@@ -3,14 +3,16 @@ import { NotificationService } from '../utils/notification.service';
 import { GeoSurgeService } from '../geosurge/geo-surge.service';
 import { SurgeService } from '../surge/surge.service';
 import { WsGateway } from '../ws/ws.gateway';
+import { RiderShiftService } from './rider-shift.service';
 export declare class RidersService {
     private prisma;
     private notify;
     private geo;
     private surge;
     private ws;
+    private shifts;
     private readonly logger;
-    constructor(prisma: PrismaService, notify: NotificationService, geo: GeoSurgeService, surge: SurgeService, ws: WsGateway);
+    constructor(prisma: PrismaService, notify: NotificationService, geo: GeoSurgeService, surge: SurgeService, ws: WsGateway, shifts: RiderShiftService);
     updateLocationWS(riderId: number, lat: number, lon: number): Promise<void>;
     updateLocation(riderId: number, lat: number, lon: number): Promise<{
         ok: boolean;

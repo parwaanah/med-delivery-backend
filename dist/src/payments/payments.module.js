@@ -13,12 +13,13 @@ const payments_service_1 = require("./payments.service");
 const payments_controller_1 = require("./payments.controller");
 const razorpay_service_1 = require("./razorpay.service");
 const utils_module_1 = require("../utils/utils.module");
+const riders_module_1 = require("../riders/riders.module");
 let PaymentsModule = class PaymentsModule {
 };
 exports.PaymentsModule = PaymentsModule;
 exports.PaymentsModule = PaymentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule, utils_module_1.UtilsModule],
+        imports: [config_1.ConfigModule, utils_module_1.UtilsModule, riders_module_1.RidersModule],
         controllers: [payments_controller_1.PaymentsController],
         providers: [payments_service_1.PaymentsService, razorpay_service_1.RazorpayService],
         exports: [payments_service_1.PaymentsService],

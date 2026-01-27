@@ -1,10 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
+import { AuditService } from '../utils/audit.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
 
   async findAll() {
     return this.prisma.user.findMany({
@@ -13,10 +18,23 @@ export class UsersService {
   }
 
   async findOne(id: number) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique(({
       where: { id },
-      select: { id: true, name: true, email: true, role: true },
-    });
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        emailVerified: true,
+        phoneVerified: true,
+        mfaEnabled: true,
+        riderAvailability: true,
+        riderReasonCode: true,
+        riderReasonNote: true,
+      },
+    } as any));
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
@@ -31,8 +49,180 @@ export class UsersService {
     });
   }
 
+  async updateMe(id: number, dto: UpdateMeDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const data: any = {};
+    if (typeof dto.name === 'string') data.name = dto.name;
+    if (typeof dto.phone === 'string') data.phone = dto.phone;
+    if (typeof dto.latitude === 'number') data.latitude = dto.latitude;
+    if (typeof dto.longitude === 'number') data.longitude = dto.longitude;
+
+    // Cast select to `any` to remain compatible with older generated Prisma clients.
+    return this.prisma.user.update(({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        emailVerified: true,
+        phoneVerified: true,
+        mfaEnabled: true,
+        riderAvailability: true,
+        riderReasonCode: true,
+        riderReasonNote: true,
+        latitude: true,
+        longitude: true,
+      },
+    } as any));
+  }
+
   async remove(id: number) {
     await this.prisma.user.delete({ where: { id } });
     return { message: 'User deleted' };
+  }
+
+  async exportMe(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        emailVerified: true,
+        phoneVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const addresses = await this.prisma.userAddress.findMany({
+      where: { userId },
+    });
+
+    const orders = await this.prisma.order.findMany({
+      where: {
+        OR: [{ customerId: userId }, { pharmacyId: userId }, { riderId: userId }],
+      },
+      include: {
+        items: true,
+        offers: true,
+        timeline: true,
+        refundRequests: true,
+      },
+    });
+
+    const notifications = await this.prisma.notification.findMany({
+      where: { OR: [{ receiverId: userId }, { senderId: userId }] },
+    });
+
+    const supportTickets = await this.prisma.supportTicket.findMany({
+      where: { requesterId: userId },
+      include: { messages: true },
+    });
+
+    const verificationDocuments = await this.prisma.verificationDocument.findMany({
+      where: { userId },
+    });
+
+    const loginAudit = await this.prisma.loginAudit.findMany({
+      where: { userId },
+    });
+
+    const sessions = await this.prisma.session.findMany({
+      where: { userId },
+      include: { refreshTokens: true },
+    });
+
+    const riderData = await this.prisma.riderShiftSession.findMany({
+      where: { riderId: userId },
+    });
+
+    const riderRatings = await this.prisma.riderRating.findMany({
+      where: { riderId: userId },
+    });
+
+    const riderStrikes = await this.prisma.riderStrike.findMany({
+      where: { riderId: userId },
+    });
+
+    return {
+      exportedAt: new Date().toISOString(),
+      user,
+      addresses,
+      orders,
+      notifications,
+      supportTickets,
+      verificationDocuments,
+      loginAudit,
+      sessions,
+      rider: {
+        shiftSessions: riderData,
+        ratings: riderRatings,
+        strikes: riderStrikes,
+      },
+    };
+  }
+
+  async deleteMe(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const deletedEmail = user.email
+      ? `deleted+${userId}@deleted.local`
+      : null;
+    const deletedPhone = user.phone ? `deleted-${userId}` : null;
+
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.deleteMany({ where: { userId } }),
+      this.prisma.session.deleteMany({ where: { userId } }),
+      this.prisma.userAddress.deleteMany({ where: { userId } }),
+      this.prisma.notification.deleteMany({
+        where: { OR: [{ receiverId: userId }, { senderId: userId }] },
+      }),
+      this.prisma.supportMessage.deleteMany({ where: { senderId: userId } }),
+      this.prisma.supportTicket.deleteMany({ where: { requesterId: userId } }),
+      this.prisma.loginAudit.deleteMany({ where: { userId } }),
+      this.prisma.verificationDocument.deleteMany({ where: { userId } }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          deletedAt: new Date(),
+          email: deletedEmail,
+          phone: deletedPhone,
+          name: `Deleted User ${userId}`,
+          password: null,
+          googleId: null,
+          otpCode: null,
+          otpExpiresAt: null,
+          mfaEnabled: false,
+          mfaSecret: null,
+          mfaTempSecret: null,
+          mfaRecoveryCodes: [],
+          emailVerified: false,
+          phoneVerified: false,
+          status: 'DELETED',
+          riderAvailability: 'OFFLINE',
+        },
+      }),
+    ]);
+
+    await this.audit.logAdminAction({
+      userId,
+      action: 'USER_DATA_DELETE',
+      resource: 'USER',
+      meta: { userId, deletedAt: new Date().toISOString() },
+    });
+
+    return { message: 'User data deleted' };
   }
 }

@@ -5,9 +5,11 @@ export declare class WsGateway implements OnGatewayConnection, OnGatewayDisconne
     private readonly logger;
     private users;
     private admins;
+    private riders;
     handleConnection(client: Socket): void;
     handleDisconnect(client: Socket): void;
     notifyUser(userId: number, event: string, payload: any): void;
     notifyAdmins(event: string, payload: any): void;
+    notifyRiders(event: string, payload: any): void;
     broadcast(event: string, payload: any): void;
 }

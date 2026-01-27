@@ -3,6 +3,7 @@ import {
   Get,
   Param,
   Put,
+  Patch,
   Delete,
   Body,
   UseGuards,
@@ -11,6 +12,7 @@ import {
 import { Request } from 'express';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -34,6 +36,51 @@ export class UsersController {
     }
 
     return this.usersService.findOne(user.id);
+  }
+
+  /**
+   * Update current authenticated user (safe subset)
+   */
+  @Patch('me')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.PHARMACY,
+    UserRole.RIDER,
+    UserRole.CUSTOMER,
+  )
+  updateMe(@Req() req: Request, @Body() dto: UpdateMeDto) {
+    const user = req.user as { id: number };
+    return this.usersService.updateMe(user.id, dto);
+  }
+
+  /**
+   * Export current user's data (privacy request)
+   */
+  @Get('me/export')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.PHARMACY,
+    UserRole.RIDER,
+    UserRole.CUSTOMER,
+  )
+  exportMe(@Req() req: Request) {
+    const user = req.user as { id: number };
+    return this.usersService.exportMe(user.id);
+  }
+
+  /**
+   * Delete (anonymize) current user's data
+   */
+  @Delete('me')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.PHARMACY,
+    UserRole.RIDER,
+    UserRole.CUSTOMER,
+  )
+  deleteMe(@Req() req: Request) {
+    const user = req.user as { id: number };
+    return this.usersService.deleteMe(user.id);
   }
 
   /**

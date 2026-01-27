@@ -12,11 +12,11 @@ export declare class MedicinesService {
         name: string;
         createdAt: Date;
         id: number;
-        category: import(".prisma/client").$Enums.MedicineCategory;
         sku: string | null;
         salt: string | null;
         manufacturer: string | null;
         imageUrl: string | null;
+        category: import(".prisma/client").$Enums.MedicineCategory;
         rxType: import(".prisma/client").$Enums.PrescriptionType;
     } | null)[]>;
     getFeaturedMedicines(): Promise<({
@@ -29,11 +29,11 @@ export declare class MedicinesService {
         name: string;
         createdAt: Date;
         id: number;
-        category: import(".prisma/client").$Enums.MedicineCategory;
         sku: string | null;
         salt: string | null;
         manufacturer: string | null;
         imageUrl: string | null;
+        category: import(".prisma/client").$Enums.MedicineCategory;
         rxType: import(".prisma/client").$Enums.PrescriptionType;
     } | null)[]>;
     getMedicineById(id: number): Promise<{
@@ -46,11 +46,11 @@ export declare class MedicinesService {
         name: string;
         createdAt: Date;
         id: number;
-        category: import(".prisma/client").$Enums.MedicineCategory;
         sku: string | null;
         salt: string | null;
         manufacturer: string | null;
         imageUrl: string | null;
+        category: import(".prisma/client").$Enums.MedicineCategory;
         rxType: import(".prisma/client").$Enums.PrescriptionType;
     } | null>;
 }

@@ -1,5 +1,7 @@
 import { PrismaService } from '../utils/prisma.service';
 import { CloudinaryService } from '../uploads/cloudinary.service';
+import { Prisma } from '@prisma/client';
+import { PharmacyProfileDto } from './dto/profile.dto';
 export declare class ProfileController {
     private prisma;
     private cloud;
@@ -7,18 +9,24 @@ export declare class ProfileController {
     getMyProfile(req: any): Promise<{
         role: import(".prisma/client").$Enums.UserRole;
         userId: number;
-        data: import("@prisma/client/runtime/library").JsonValue;
+        data: Prisma.JsonValue;
         createdAt: Date;
         id: number;
         updatedAt: Date;
     } | null>;
-    saveMyProfile(req: any, data: any): Promise<{
+    saveMyProfile(req: any, data: PharmacyProfileDto): Promise<{
         role: import(".prisma/client").$Enums.UserRole;
         userId: number;
-        data: import("@prisma/client/runtime/library").JsonValue;
+        data: Prisma.JsonValue;
         createdAt: Date;
         id: number;
         updatedAt: Date;
+    }>;
+    getStatus(req: any): Promise<{
+        profileComplete: boolean;
+        docsUploaded: boolean;
+        docsVerified: boolean;
+        accountStatus: string;
     }>;
     uploadDocument(req: any, file: any, type: string): Promise<{
         userId: number;

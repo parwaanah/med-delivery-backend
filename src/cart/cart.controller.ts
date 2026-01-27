@@ -54,7 +54,13 @@ export class CartController {
   @Post('checkout')
   checkout(
     @Req() req: Request,
-    @Body() body: { notes?: string },
+    @Body()
+    body: {
+      notes?: string;
+      addressId?: number;
+      deliveryNotes?: string;
+      paymentMode?: string;
+    },
   ) {
     return this.cartService.checkout(
       String((req as any).user.id),

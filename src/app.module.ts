@@ -37,10 +37,14 @@ import { UtilsModule } from './utils/utils.module';
 import { CacheModule } from './cache/cache.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ProfileModule } from './auth/profile.module';
+import { ServiceAreaModule } from './service-area/service-area.module';
+import { SupportModule } from './support/support.module';
+import { RefundsModule } from './refunds/refunds.module';
 
 /* LOGGER */
 import { GlobalLogger } from './common/logger/global-logger.service';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { HttpMetricsMiddleware } from './metrics/http-metrics.middleware';
 import { NotificationService } from './utils/notification.service';
 import { ChatLiveGateway } from './ws/chat-live.gateway';
 
@@ -108,6 +112,9 @@ function forcedRedisUrl(config: ConfigService): string {
     CacheModule,
     UploadsModule,
     ProfileModule,
+    ServiceAreaModule,
+    SupportModule,
+    RefundsModule,
 
     ScheduleModule.forRoot(),
   ],
@@ -130,6 +137,6 @@ function forcedRedisUrl(config: ConfigService): string {
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+    consumer.apply(HttpMetricsMiddleware, RequestLoggerMiddleware).forRoutes('*');
   }
 }

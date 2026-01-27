@@ -32,10 +32,11 @@ export class AdminMetricsService {
       }),
 
       this.prisma.user.count({
-        where: {
+        where: ({
           role: UserRole.RIDER,
-          status: 'AVAILABLE',
-        },
+          status: 'ACTIVE',
+          riderAvailability: 'AVAILABLE',
+        } as any),
       }),
     ]);
 

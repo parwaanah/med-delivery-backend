@@ -35,6 +35,7 @@ let OrdersProcessor = OrdersProcessor_1 = class OrdersProcessor {
             enableReadyCheck: true,
             maxRetriesPerRequest: null,
         });
+        this.dlq = new bullmq_1.Queue('dead_letter', { connection: this.redisClient });
         this.worker = new bullmq_1.Worker('order_assign', async (job) => {
             try {
                 const { orderId } = job.data;
@@ -65,12 +66,29 @@ let OrdersProcessor = OrdersProcessor_1 = class OrdersProcessor {
             connection: this.redisClient,
         });
         this.worker.on('completed', (job) => this.logger.log(`Order escalation check completed for job ${job.id}`));
-        this.worker.on('failed', (job, err) => this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`));
+        this.worker.on('failed', (job, err) => (async () => {
+            this.logger.warn(`Escalation job failed ${job?.id}: ${err?.message}`);
+            try {
+                await this.dlq.add('dead_letter', {
+                    queue: 'order_assign',
+                    jobId: job?.id ?? null,
+                    name: job?.name ?? null,
+                    data: job?.data ?? null,
+                    error: err?.message ?? String(err),
+                    at: new Date().toISOString(),
+                }, { removeOnComplete: true, removeOnFail: false });
+            }
+            catch { }
+        })());
         this.logger.log('✅ OrdersProcessor worker started (order_assign)');
     }
     async onModuleDestroy() {
         try {
             await this.worker.close();
+        }
+        catch { }
+        try {
+            await this.dlq?.close();
         }
         catch { }
         try {

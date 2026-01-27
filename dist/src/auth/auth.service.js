@@ -60,37 +60,61 @@ let AuthService = AuthService_1 = class AuthService {
         this.logger = new common_1.Logger(AuthService_1.name);
     }
     async register(data) {
-        if (!data.name || !data.email || !data.password) {
-            throw new common_1.BadRequestException("Name, email and password required");
+        if (!data.name || !data.password) {
+            throw new common_1.BadRequestException("Name and password required");
         }
-        const exists = await this.prisma.user.findUnique({
-            where: { email: data.email },
-        });
-        if (exists)
-            throw new common_1.BadRequestException("Email already in use");
+        if (!data.email && !data.phone) {
+            throw new common_1.BadRequestException("Either email or phone is required");
+        }
+        if (data.email) {
+            const existsEmail = await this.prisma.user.findUnique({
+                where: { email: data.email },
+            });
+            if (existsEmail)
+                throw new common_1.BadRequestException("Email already in use");
+        }
+        if (data.phone) {
+            const existsPhone = await this.prisma.user.findUnique({
+                where: { phone: data.phone },
+            });
+            if (existsPhone)
+                throw new common_1.BadRequestException("Phone already in use");
+        }
         const hashed = await bcrypt.hash(data.password, 10);
         const role = data.role || client_1.UserRole.CUSTOMER;
         const user = await this.prisma.user.create({
             data: {
                 name: data.name,
-                email: data.email,
+                email: data.email ?? null,
+                phone: data.phone ?? null,
                 password: hashed,
                 role,
                 status: role === client_1.UserRole.CUSTOMER ? "APPROVED" : "PENDING",
                 emailVerified: role !== client_1.UserRole.CUSTOMER,
+                phoneVerified: role !== client_1.UserRole.CUSTOMER,
             },
         });
         return this.issueTokens(user);
     }
     async login(data, ip, ua) {
-        const user = await this.prisma.user.findUnique({
-            where: { email: data.email },
-        });
+        if (!data?.email && !data?.phone) {
+            throw new common_1.BadRequestException("Either email or phone is required");
+        }
+        const user = data.email
+            ? await this.prisma.user.findUnique({ where: { email: data.email } })
+            : await this.prisma.user.findUnique({ where: { phone: data.phone } });
         if (!user || !user.password) {
             throw new common_1.UnauthorizedException("Invalid credentials");
         }
         if (user.role === client_1.UserRole.CUSTOMER && !user.emailVerified) {
             throw new common_1.UnauthorizedException("Please verify your email");
+        }
+        if (user.role === client_1.UserRole.PHARMACY && user.status !== "APPROVED") {
+            throw new common_1.UnauthorizedException("ACCOUNT_NOT_APPROVED");
+        }
+        if (user.role === client_1.UserRole.RIDER &&
+            !["ACTIVE", "OFFLINE", "APPROVED"].includes(String(user.status || "").toUpperCase())) {
+            throw new common_1.UnauthorizedException("ACCOUNT_NOT_APPROVED");
         }
         const match = await bcrypt.compare(data.password, user.password);
         if (!match)
@@ -136,6 +160,13 @@ let AuthService = AuthService_1 = class AuthService {
         if (user.otpExpiresAt && (0, date_fns_1.isBefore)(user.otpExpiresAt, new Date())) {
             throw new common_1.UnauthorizedException("OTP expired");
         }
+        if (user.role === client_1.UserRole.PHARMACY && user.status !== "APPROVED") {
+            throw new common_1.UnauthorizedException("ACCOUNT_NOT_APPROVED");
+        }
+        if (user.role === client_1.UserRole.RIDER &&
+            !["ACTIVE", "OFFLINE", "APPROVED"].includes(String(user.status || "").toUpperCase())) {
+            throw new common_1.UnauthorizedException("ACCOUNT_NOT_APPROVED");
+        }
         await this.prisma.user.update({
             where: { id: user.id },
             data: {
@@ -145,6 +176,26 @@ let AuthService = AuthService_1 = class AuthService {
             },
         });
         return this.issueTokens(user);
+    }
+    async sendOtp(data) {
+        const phone = String(data?.phone || "").trim();
+        if (!phone)
+            throw new common_1.BadRequestException("Phone required");
+        const user = await this.prisma.user.findUnique({ where: { phone } });
+        if (!user) {
+            throw new common_1.BadRequestException("Phone not registered");
+        }
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        const expiresAt = (0, date_fns_1.addHours)(new Date(), 1);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { otpCode: otp, otpExpiresAt: expiresAt },
+        });
+        const includeOtp = process.env.RETURN_OTP === "1";
+        return {
+            message: "OTP sent",
+            ...(includeOtp ? { otp } : {}),
+        };
     }
     async refresh(refreshToken) {
         if (!refreshToken) {
@@ -160,6 +211,14 @@ let AuthService = AuthService_1 = class AuthService {
         });
         if (!stored || stored.expiresAt < new Date()) {
             throw new common_1.UnauthorizedException("Invalid refresh token");
+        }
+        const u = stored.user;
+        if (u.role === client_1.UserRole.PHARMACY && u.status !== "APPROVED") {
+            throw new common_1.UnauthorizedException("ACCOUNT_NOT_APPROVED");
+        }
+        if (u.role === client_1.UserRole.RIDER &&
+            !["ACTIVE", "OFFLINE", "APPROVED"].includes(String(u.status || "").toUpperCase())) {
+            throw new common_1.UnauthorizedException("ACCOUNT_NOT_APPROVED");
         }
         await this.prisma.refreshToken.update({
             where: { id: stored.id },

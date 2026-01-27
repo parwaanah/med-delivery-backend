@@ -29,7 +29,7 @@ let MedicinesService = class MedicinesService {
         });
         const enriched = await Promise.all(medicines.map(async (m) => {
             const inv = await this.prisma.pharmacyInventory.findFirst({
-                where: { medicineId: m.id, stock: { gt: 0 } },
+                where: { medicineId: m.id, stock: { gt: 0 }, deletedAt: null },
                 include: {
                     pharmacy: { select: { id: true, name: true } },
                 },
@@ -55,7 +55,7 @@ let MedicinesService = class MedicinesService {
         });
         const enriched = await Promise.all(medicines.map(async (m) => {
             const inv = await this.prisma.pharmacyInventory.findFirst({
-                where: { medicineId: m.id, stock: { gt: 0 } },
+                where: { medicineId: m.id, stock: { gt: 0 }, deletedAt: null },
                 include: {
                     pharmacy: { select: { id: true, name: true } },
                 },
@@ -81,7 +81,7 @@ let MedicinesService = class MedicinesService {
         if (!m)
             return null;
         const inv = await this.prisma.pharmacyInventory.findFirst({
-            where: { medicineId: m.id, stock: { gt: 0 } },
+            where: { medicineId: m.id, stock: { gt: 0 }, deletedAt: null },
             include: {
                 pharmacy: { select: { id: true, name: true } },
             },

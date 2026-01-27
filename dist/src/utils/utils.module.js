@@ -12,6 +12,8 @@ const prisma_service_1 = require("./prisma.service");
 const notification_service_1 = require("./notification.service");
 const audit_service_1 = require("./audit.service");
 const jwt_blacklist_service_1 = require("./jwt-blacklist.service");
+const redis_service_1 = require("./redis.service");
+const lock_service_1 = require("./lock.service");
 const ws_module_1 = require("../ws/ws.module");
 let UtilsModule = class UtilsModule {
 };
@@ -25,12 +27,16 @@ exports.UtilsModule = UtilsModule = __decorate([
             notification_service_1.NotificationService,
             audit_service_1.AuditService,
             jwt_blacklist_service_1.JwtBlacklistService,
+            redis_service_1.RedisService,
+            lock_service_1.LockService,
         ],
         exports: [
             prisma_service_1.PrismaService,
             notification_service_1.NotificationService,
             audit_service_1.AuditService,
             jwt_blacklist_service_1.JwtBlacklistService,
+            redis_service_1.RedisService,
+            lock_service_1.LockService,
         ],
     })
 ], UtilsModule);

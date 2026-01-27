@@ -5,9 +5,11 @@ export class CreateInventoryDto {
   medicineId!: number;
 
   @IsNumber()
+  @Min(0)
   mrp!: number;
 
   @IsNumber()
+  @Min(0)
   sellingPrice!: number;
 
   @IsNumber()

@@ -27,6 +27,7 @@ export class AdminAuditController {
     @Query('limit') limit = '50',
     @Query('action') action?: string,
     @Query('userId') userId?: string,
+    @Query('resource') resource?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
@@ -37,6 +38,7 @@ export class AdminAuditController {
 
     if (action) where.action = action;
     if (userId) where.userId = Number(userId);
+    if (resource) where.resource = { contains: resource };
 
     if (from || to) {
       where.createdAt = {};

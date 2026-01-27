@@ -33,23 +33,23 @@ let PaymentsController = class PaymentsController {
     async createIntent(body) {
         const orderId = Number(body.orderId);
         if (isNaN(orderId))
-            throw new common_1.BadRequestException('Invalid orderId');
+            throw new common_1.BadRequestException("Invalid orderId");
         return this.paymentsService.createPaymentForOrder(orderId);
     }
     async webhook(req, res, signature) {
         try {
             const raw = req.rawBody;
             if (!raw)
-                return res.status(400).send('raw body missing');
+                return res.status(400).send("raw body missing");
             const valid = this.rzpService.verifyWebhookSignature(raw, signature);
             if (!valid)
-                return res.status(400).send('invalid signature');
-            const json = JSON.parse(raw.toString('utf8'));
+                return res.status(400).send("invalid signature");
+            const json = JSON.parse(raw.toString("utf8"));
             await this.paymentsService.handleWebhookEvent(json);
-            return res.status(200).send('ok');
+            return res.status(200).send("ok");
         }
         catch {
-            return res.status(500).send('error');
+            return res.status(500).send("error");
         }
     }
     async refund(req, dto) {
@@ -64,13 +64,19 @@ let PaymentsController = class PaymentsController {
             return [];
         return this.prisma.transaction.findMany({
             where: { orderId: idNum },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
         });
+    }
+    async devPayOrder(req, body) {
+        const orderId = Number(body?.orderId);
+        if (!Number.isFinite(orderId))
+            throw new common_1.BadRequestException("Invalid orderId");
+        return this.paymentsService.devCaptureOrder(orderId, Number(req.user?.id));
     }
 };
 exports.PaymentsController = PaymentsController;
 __decorate([
-    (0, common_1.Post)('create-intent'),
+    (0, common_1.Post)("create-intent"),
     openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -78,12 +84,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "createIntent", null);
 __decorate([
-    (0, common_1.Post)('webhook'),
+    (0, common_1.Post)("webhook"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     openapi.ApiResponse({ status: common_1.HttpStatus.OK }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Res)()),
-    __param(2, (0, common_1.Headers)('x-razorpay-signature')),
+    __param(2, (0, common_1.Headers)("x-razorpay-signature")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object, String]),
     __metadata("design:returntype", Promise)
@@ -91,7 +97,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
-    (0, common_1.Post)('refund'),
+    (0, common_1.Post)("refund"),
     openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
@@ -100,22 +106,37 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "refund", null);
 __decorate([
-    (0, common_1.Get)('admin/list'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
+    (0, common_1.Get)("admin/list"),
     openapi.ApiResponse({ status: 200 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "adminList", null);
 __decorate([
-    (0, common_1.Get)('by-order/:orderId'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
+    (0, common_1.Get)("by-order/:orderId"),
     openapi.ApiResponse({ status: 200 }),
-    __param(0, (0, common_1.Param)('orderId')),
+    __param(0, (0, common_1.Param)("orderId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "byOrder", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.CUSTOMER),
+    (0, common_1.Post)("dev/pay-order"),
+    openapi.ApiResponse({ status: 201, type: Object }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PaymentsController.prototype, "devPayOrder", null);
 exports.PaymentsController = PaymentsController = __decorate([
-    (0, common_1.Controller)('payments'),
+    (0, common_1.Controller)("payments"),
     __metadata("design:paramtypes", [payments_service_1.PaymentsService,
         razorpay_service_1.RazorpayService,
         prisma_service_1.PrismaService])

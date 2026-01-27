@@ -15,6 +15,8 @@ export class AdminQueueController {
     this.queues = {
       notifications: new Queue('notifications', { connection: this.redis }),
       orders: new Queue('orders', { connection: this.redis }),
+      order_assign: new Queue('order_assign', { connection: this.redis }),
+      dead_letter: new Queue('dead_letter', { connection: this.redis }),
     };
   }
 

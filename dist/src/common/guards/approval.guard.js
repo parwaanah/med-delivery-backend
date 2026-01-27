@@ -19,8 +19,42 @@ let ApprovalGuard = class ApprovalGuard {
             return true;
         if (user.role === client_1.UserRole.ADMIN)
             return true;
-        if (user.status !== "APPROVED") {
-            throw new common_1.ForbiddenException("Account pending admin approval");
+        const rawPath = req.originalUrl || req.url || "";
+        const path = rawPath.split("?")[0];
+        if (path === "/users/me")
+            return true;
+        if (user.role === client_1.UserRole.PHARMACY && user.status === "SUSPENDED") {
+            if (path.startsWith("/auth/") || path === "/users/me")
+                return true;
+            throw new common_1.ForbiddenException("Account suspended. Contact support.");
+        }
+        if (user.role === client_1.UserRole.PHARMACY && user.status !== "APPROVED") {
+            const allowed = path.startsWith("/auth/") ||
+                path === "/users/me" ||
+                path === "/profile/me" ||
+                path === "/profile/documents";
+            if (!allowed) {
+                throw new common_1.ForbiddenException("Account pending admin approval");
+            }
+            return true;
+        }
+        if (user.role === client_1.UserRole.RIDER) {
+            const allowed = path.startsWith("/auth/") ||
+                path === "/users/me" ||
+                path.startsWith("/notifications") ||
+                path.startsWith("/rider/profile/documents") ||
+                path === "/rider/lifecycle";
+            if (user.status === "SUSPENDED") {
+                if (allowed)
+                    return true;
+                throw new common_1.ForbiddenException("Account suspended. Contact support.");
+            }
+            if (user.status !== "ACTIVE") {
+                if (allowed)
+                    return true;
+                throw new common_1.ForbiddenException("Access denied: rider must be ACTIVE");
+            }
+            return true;
         }
         return true;
     }

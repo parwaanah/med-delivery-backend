@@ -7,9 +7,13 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { WsAuthService } from './ws-auth.service';
+import { getWsCorsOrigin } from '../utils/cors';
+
+const wsCorsOrigin: any = getWsCorsOrigin();
 
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: { origin: wsCorsOrigin },
   namespace: '/',
 })
 export class WsGateway
@@ -21,18 +25,26 @@ export class WsGateway
   private readonly logger = new Logger(WsGateway.name);
   private users = new Map<number, string>();
   private admins = new Set<string>();
+  private riders = new Set<string>();
 
-  handleConnection(client: Socket) {
-    const userId = Number(client.handshake.query.userId);
-    const role =
-      (client.handshake.query.role as string)?.toUpperCase() ?? 'UNKNOWN';
+  constructor(private readonly wsAuth: WsAuthService) {}
 
-    if (!isNaN(userId)) this.users.set(userId, client.id);
+  async handleConnection(client: Socket) {
+    const user = await this.wsAuth.authenticate(client);
+    if (!user) {
+      client.disconnect(true);
+      return;
+    }
+
+    (client.data as any).user = user;
+
+    this.users.set(user.id, client.id);
+
+    const role = String(user.role || '').toUpperCase();
     if (role === 'ADMIN') this.admins.add(client.id);
+    if (role === 'RIDER') this.riders.add(client.id);
 
-    this.logger.log(
-      `WS connected: ${client.id} user=${userId} role=${role}`,
-    );
+    this.logger.log(`WS connected: ${client.id} user=${user.id} role=${role}`);
   }
 
   handleDisconnect(client: Socket) {
@@ -40,6 +52,7 @@ export class WsGateway
       if (sid === client.id) this.users.delete(uid);
     });
     this.admins.delete(client.id);
+    this.riders.delete(client.id);
     this.logger.log(`WS disconnected: ${client.id}`);
   }
 
@@ -52,6 +65,12 @@ export class WsGateway
 
   notifyAdmins(event: string, payload: any) {
     for (const sid of this.admins) {
+      this.server.to(sid).emit(event, payload);
+    }
+  }
+
+  notifyRiders(event: string, payload: any) {
+    for (const sid of this.riders) {
       this.server.to(sid).emit(event, payload);
     }
   }
