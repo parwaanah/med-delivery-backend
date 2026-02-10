@@ -17,6 +17,58 @@ import { UserRole } from '@prisma/client';
 import { AppConfigService } from '../app-config/app-config.service';
 import { CloudinaryService } from '../uploads/cloudinary.service';
 
+const DEFAULT_MOBILE_TABS = [
+  { key: 'index', title: 'Home', icon: 'home-outline', enabled: true },
+  { key: 'orders', title: 'Orders', icon: 'file-tray-outline', enabled: true },
+  { key: 'lab', title: 'Lab Test', icon: 'flask-outline', enabled: true },
+  { key: 'cart', title: 'Cart', icon: 'cart-outline', enabled: true },
+  { key: 'offers', title: 'Offers', icon: 'pricetag-outline', enabled: true },
+  { key: 'profile', title: 'Profile', icon: 'person-outline', enabled: true },
+] as const;
+
+type MobileTabKey = (typeof DEFAULT_MOBILE_TABS)[number]['key'];
+
+function normalizeMobileTabsForAdmin(value: any) {
+  // Backward compatible: { tabs: string[] }
+  const legacy = value && typeof value === 'object' ? (value as any).tabs : null;
+  if (Array.isArray(legacy) && legacy.every((t) => typeof t === 'string')) {
+    const allowed = new Set(DEFAULT_MOBILE_TABS.map((t) => t.key));
+    const enabled = new Set(
+      Array.from(new Set(legacy.map((t) => String(t).trim()))).filter((t) => allowed.has(t as any)),
+    );
+    return DEFAULT_MOBILE_TABS.map((t) => ({ ...t, enabled: enabled.has(t.key) }));
+  }
+
+  const tabs = value && typeof value === 'object' ? (value as any).tabs : null;
+  if (!Array.isArray(tabs)) return DEFAULT_MOBILE_TABS.slice();
+
+  const allowed = new Set(DEFAULT_MOBILE_TABS.map((t) => t.key));
+  const seen = new Set<string>();
+  const out: Array<{ key: MobileTabKey; title: string; icon: string; enabled: boolean }> = [];
+
+  for (const raw of tabs) {
+    const key = String((raw as any)?.key || '').trim() as MobileTabKey;
+    if (!allowed.has(key)) continue;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const fallback = DEFAULT_MOBILE_TABS.find((t) => t.key === key)!;
+    const title = typeof (raw as any)?.title === 'string' ? String((raw as any).title).trim() : '';
+    const icon = typeof (raw as any)?.icon === 'string' ? String((raw as any).icon).trim() : '';
+    const enabled = (raw as any)?.enabled !== false;
+
+    out.push({
+      key,
+      title: title || fallback.title,
+      icon: icon || fallback.icon,
+      enabled,
+    });
+  }
+
+  const byKey = new Map(out.map((t) => [t.key, t]));
+  return DEFAULT_MOBILE_TABS.map((d) => byKey.get(d.key) || { ...d, enabled: false });
+}
+
 function toIsoOrNull(v: any) {
   if (v == null || v === '') return null;
   const d = new Date(v);
@@ -128,24 +180,65 @@ export class AdminAppConfigController {
   @Get('mobile-tabs')
   async getMobileTabs() {
     const row = await this.appConfig.getConfig('mobileTabs');
-    const tabs =
-      row && typeof row.value === 'object' && row.value
-        ? (row.value as any).tabs || null
-        : null;
+    const tabs = normalizeMobileTabsForAdmin(row?.value);
     return { tabs, updatedAt: row?.updatedAt || null };
   }
 
   @Put('mobile-tabs')
-  async setMobileTabs(@Body() body: { tabs?: string[] }) {
-    const allowed = new Set(['index', 'cart', 'orders', 'lab', 'offers', 'profile']);
-    const tabs = Array.isArray(body?.tabs)
-      ? body.tabs
-          .map((t) => String(t).trim())
-          .filter((t) => allowed.has(t))
-      : [];
-    const unique = Array.from(new Set(tabs));
-    const row = await this.appConfig.setConfig('mobileTabs', { tabs: unique });
-    return { ok: true, tabs: (row.value as any)?.tabs || [], updatedAt: row.updatedAt };
+  async setMobileTabs(
+    @Body()
+    body:
+      | { tabs?: string[] }
+      | {
+          tabs?: Array<{
+            key?: string;
+            title?: string;
+            icon?: string;
+            enabled?: boolean;
+          }>;
+        },
+  ) {
+    const allowed = new Set(DEFAULT_MOBILE_TABS.map((t) => t.key));
+
+    // Accept legacy string[]
+    const legacy = (body as any)?.tabs;
+    if (Array.isArray(legacy) && legacy.every((t) => typeof t === 'string')) {
+      const enabled = Array.from(new Set(legacy.map((t) => String(t).trim()))).filter((t) =>
+        allowed.has(t as any),
+      );
+      const next = DEFAULT_MOBILE_TABS.map((t) => ({ ...t, enabled: enabled.includes(t.key) }));
+      const row = await this.appConfig.setConfig('mobileTabs', { tabs: next });
+      return { ok: true, tabs: normalizeMobileTabsForAdmin(row.value), updatedAt: row.updatedAt };
+    }
+
+    const tabsRaw = Array.isArray((body as any)?.tabs) ? (body as any).tabs : [];
+    const seen = new Set<string>();
+    const out: Array<{ key: MobileTabKey; title: string; icon: string; enabled: boolean }> = [];
+
+    for (const raw of tabsRaw) {
+      const key = String(raw?.key || '').trim() as MobileTabKey;
+      if (!allowed.has(key)) continue;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const fallback = DEFAULT_MOBILE_TABS.find((t) => t.key === key)!;
+      const title = typeof raw?.title === 'string' ? raw.title.trim() : '';
+      const icon = typeof raw?.icon === 'string' ? raw.icon.trim() : '';
+      const enabled = raw?.enabled !== false;
+
+      out.push({
+        key,
+        title: title || fallback.title,
+        icon: icon || fallback.icon,
+        enabled,
+      });
+    }
+
+    const byKey = new Map(out.map((t) => [t.key, t]));
+    const next = DEFAULT_MOBILE_TABS.map((d) => byKey.get(d.key) || { ...d, enabled: false });
+
+    const row = await this.appConfig.setConfig('mobileTabs', { tabs: next });
+    return { ok: true, tabs: normalizeMobileTabsForAdmin(row.value), updatedAt: row.updatedAt };
   }
 
   @Get('mobile-categories')
