@@ -176,4 +176,25 @@ export class AdminOrdersController {
 
     return res;
   }
+
+  @Post(':id/prescription/reject')
+  async rejectPrescription(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @Req() req: any,
+  ) {
+    const orderId = Number(id);
+    if (isNaN(orderId)) throw new BadRequestException('Invalid order id');
+
+    const res = await this.orders.adminRejectPrescription(orderId, req.user.id, body?.reason);
+
+    await this.audit.logAdminAction({
+      userId: req.user.id,
+      action: 'PRESCRIPTION_REJECTED',
+      resource: `order:${orderId}`,
+      meta: { reason: body?.reason },
+    });
+
+    return res;
+  }
 }

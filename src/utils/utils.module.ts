@@ -8,10 +8,15 @@ import { RedisService } from './redis.service';
 import { LockService } from './lock.service';
 import { WsModule } from '../ws/ws.module';
 import { DataRetentionService } from './data-retention.service';
+import { FcmService } from './fcm.service';
+import { SentryService } from './sentry.service';
+import { AnalyticsService } from './analytics.service';
+import { AnalyticsController } from './analytics.controller';
 
 @Global()
 @Module({
   imports: [WsModule],
+  controllers: [AnalyticsController],
   providers: [
     PrismaService,
     NotificationService,
@@ -20,6 +25,9 @@ import { DataRetentionService } from './data-retention.service';
     RedisService,
     LockService,
     DataRetentionService,
+    FcmService,
+    SentryService,
+    AnalyticsService,
   ],
   exports: [
     PrismaService,
@@ -28,6 +36,9 @@ import { DataRetentionService } from './data-retention.service';
     JwtBlacklistService,
     RedisService,
     LockService,
+    FcmService,
+    SentryService,
+    AnalyticsService,
   ],
 })
 export class UtilsModule {}

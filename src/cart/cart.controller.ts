@@ -51,6 +51,16 @@ export class CartController {
   }
 
   // ✅ FIXED CHECKOUT
+  @Post('apply-coupon')
+  applyCoupon(@Req() req: Request, @Body() body: { code: string }) {
+    return this.cartService.applyCoupon(String((req as any).user.id), body?.code);
+  }
+
+  @Post('remove-coupon')
+  removeCoupon(@Req() req: Request) {
+    return this.cartService.removeCoupon(String((req as any).user.id));
+  }
+
   @Post('checkout')
   checkout(
     @Req() req: Request,

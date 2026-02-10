@@ -115,4 +115,18 @@ export class PharmacyOrdersController {
   ) {
     return this.orders.pharmacyVerifyPrescription(req.user.id, Number(id));
   }
+
+  @Post(':id/prescription/reject')
+  @RateLimit({
+    key: 'pharmacy.orders.prescription-reject',
+    limit: 60,
+    windowMs: 60_000,
+  })
+  rejectPrescription(
+    @Req() req: Request & { user: any },
+    @Param('id') id: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.orders.pharmacyRejectPrescription(req.user.id, Number(id), reason);
+  }
 }

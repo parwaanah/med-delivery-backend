@@ -45,6 +45,10 @@ export class CreateOrderDto {
   @IsNumber()
   prescriptionId?: number;
 
+  @IsOptional()
+  @IsString()
+  couponCode?: string;
+
   // location fallbacks
   @IsOptional()
   pickupLat?: number;

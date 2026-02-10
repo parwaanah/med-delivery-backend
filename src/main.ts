@@ -21,6 +21,8 @@ import * as bodyParser from 'body-parser';
 import { checkRedisConnection, closeRedisConnection } from './utils/redis-logger';
 import { validateEnv } from './utils/env';
 import { getHttpCorsOrigins } from './utils/cors';
+import { runDevSeedIfEmpty } from './utils/dev-seed';
+import { SentryService } from './utils/sentry.service';
 
 async function bootstrap() {
   // -----------------------------------------------------------
@@ -32,6 +34,9 @@ async function bootstrap() {
   validateEnv();
 
   const app = await NestFactory.create(AppModule);
+
+  // Observability: Sentry (no-op when SENTRY_DSN missing)
+  app.get(SentryService).init();
 
   // -----------------------------------------------------------
   // GLOBAL VALIDATION
@@ -192,6 +197,14 @@ END$$;
     console.warn('⚠️ Redis check failed:', err?.message || err),
   );
 
+  // -----------------------------------------------------------
+  // DEV SEED: ensure medicines exist for local/demo runs
+  // (runs only when DB is empty and dev flags are enabled)
+  // -----------------------------------------------------------
+  await runDevSeedIfEmpty(prisma).catch((err) =>
+    console.warn('⚠️  Dev seed failed:', (err as any)?.message ?? err),
+  );
+
   console.log('💓 System Health OK — Redis + Prisma connected');
   console.log('🔐 Security: Helmet active');
 
@@ -202,9 +215,7 @@ END$$;
 
   console.log(`🚀 Server: http://localhost:${port}`);
   console.log(`📘 Swagger: http://localhost:${port}/docs`);
-  console.log(
-    `🌐 Admin Static Dashboard: http://localhost:${port}/public/admin-dashboard.html`,
-  );
+  // Admin dashboard is served by the Next.js frontend (/admin).
 
   // -----------------------------------------------------------
   // GRACEFUL SHUTDOWN

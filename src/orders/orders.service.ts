@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../utils/prisma.service';
 import { NotificationService } from '../utils/notification.service';
+import { AnalyticsService } from '../utils/analytics.service';
 
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderItemDto } from './dto/order-item.dto';
@@ -23,11 +24,26 @@ import { RiderPaymentsService } from '../riders/rider-payments.service';
 import { RiderQualityService } from '../riders/rider-quality.service';
 import { OrderLifecycleService } from './order-lifecycle.service';
 
-import { OrderStatus, PaymentMode, UserRole } from '@prisma/client';
+import {
+  OrderStatus,
+  PaymentMode,
+  UserRole,
+} from '@prisma/client';
 import { ServiceAreaService } from '../service-area/service-area.service';
+import { badRequest } from '../common/api-error';
 
 // Backwards-compatible with older generated Prisma clients (before enum update).
 const NEEDS_CONFIRMATION_STATUS = 'NEEDS_CONFIRMATION' as unknown as OrderStatus;
+const PRESCRIPTION_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED',
+} as const;
+const COUPON_TYPE = {
+  PERCENT: 'PERCENT',
+  FLAT: 'FLAT',
+} as const;
 
 @Injectable()
 export class OrdersService {
@@ -39,6 +55,7 @@ export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private notify: NotificationService,
+    private analytics: AnalyticsService,
     private ws: WsGateway,
     private config: ConfigService,
     private surge: SurgeService,
@@ -140,6 +157,12 @@ export class OrdersService {
       { orderId: order.id },
       updated.pharmacyId,
     );
+
+    this.analytics.track({
+      name: 'payment_requested',
+      userId: updated.customerId,
+      props: { orderId: order.id, paymentMode: order.paymentMode },
+    });
 
     return { requested: true };
   }
@@ -251,6 +274,115 @@ export class OrdersService {
     // fallback: always return 1 to avoid FK crash
     return p?.id ?? 1;
   }
+
+  private consentRequired() {
+    return (
+      String(this.config.get('CONSENT_REQUIRED') ?? process.env.CONSENT_REQUIRED ?? '')
+        .trim()
+        .toLowerCase() === 'true'
+    );
+  }
+
+  private currentTermsVersion() {
+    return (
+      String(this.config.get('TERMS_VERSION') ?? process.env.TERMS_VERSION ?? 'v1').trim() ||
+      'v1'
+    );
+  }
+
+  private async assertTermsAccepted(customerId: number) {
+    if (!this.consentRequired()) return;
+    const version = this.currentTermsVersion();
+
+    const accepted = await (this.prisma as any).termsAcceptance.findUnique({
+      where: { userId_version: { userId: customerId, version } },
+      select: { acceptedAt: true },
+    });
+
+    if (!accepted) {
+      badRequest('TERMS_REQUIRED', 'Terms acceptance required', { version });
+    }
+  }
+
+  private couponsEnabled() {
+    const raw = String(this.config.get('COUPONS_ENABLED') ?? process.env.COUPONS_ENABLED ?? '')
+      .trim()
+      .toLowerCase();
+    if (!raw) return true;
+    return raw === 'true';
+  }
+
+  private async resolveCouponForSubtotal(customerId: number, couponCode: string | null, subtotal: number) {
+    if (!this.couponsEnabled()) return null;
+    const code = String(couponCode || '').trim().toUpperCase();
+    if (!code) return null;
+
+    const now = new Date();
+    const coupon = await (this.prisma as any).coupon.findUnique({ where: { code } });
+    if (!coupon || !coupon.active) badRequest('COUPON_INVALID', 'Invalid coupon');
+    if (coupon.startsAt && coupon.startsAt > now) {
+      badRequest('COUPON_NOT_STARTED', 'Coupon not started', { startsAt: coupon.startsAt });
+    }
+    if (coupon.endsAt && coupon.endsAt < now) {
+      badRequest('COUPON_EXPIRED', 'Coupon expired', { endsAt: coupon.endsAt });
+    }
+
+    const min = coupon.minOrder != null ? Number(coupon.minOrder) : null;
+    if (min != null && subtotal < min) {
+      badRequest('COUPON_MIN_ORDER', 'Order total too low for this coupon', { minOrder: min, subtotal });
+    }
+
+    const [totalUsed, userUsed] = await Promise.all([
+      coupon.usageLimit != null
+        ? (this.prisma as any).couponRedemption.count({
+            where: { couponId: coupon.id, orderId: { not: null } },
+          })
+        : Promise.resolve(0),
+      coupon.perUserLimit != null
+        ? (this.prisma as any).couponRedemption.count({
+            where: { couponId: coupon.id, userId: customerId, orderId: { not: null } },
+          })
+        : Promise.resolve(0),
+    ]);
+
+    if (coupon.usageLimit != null && totalUsed >= coupon.usageLimit) {
+      badRequest('COUPON_USAGE_LIMIT', 'Coupon usage limit reached', {
+        usageLimit: coupon.usageLimit,
+        totalUsed,
+      });
+    }
+    if (coupon.perUserLimit != null && userUsed >= coupon.perUserLimit) {
+      badRequest('COUPON_PER_USER_LIMIT', 'Coupon already used', {
+        perUserLimit: coupon.perUserLimit,
+        userUsed,
+      });
+    }
+
+    let discount = 0;
+    if (String(coupon.type).toUpperCase() === COUPON_TYPE.FLAT) {
+      discount = Number(coupon.amount);
+    } else {
+      const pct = Math.max(0, Math.min(100, Number(coupon.amount)));
+      discount = (subtotal * pct) / 100;
+    }
+
+    const max = coupon.maxDiscount != null ? Number(coupon.maxDiscount) : null;
+    if (max != null) discount = Math.min(discount, max);
+
+    discount = Math.max(0, Math.min(discount, subtotal));
+
+    return { couponId: coupon.id as number, code, discount };
+  }
+
+  private async recordCouponRedemption(tx: any, couponId: number, customerId: number, orderId: number) {
+    try {
+      await tx.couponRedemption.create({
+        data: { couponId, userId: customerId, orderId },
+      });
+    } catch (e) {
+      this.logger.debug('Coupon redemption create skipped', (e as any)?.message ?? e);
+    }
+  }
     // ----------------------------------------------------------
   // CREATE ORDER — FULL METHOD
   // ----------------------------------------------------------
@@ -259,6 +391,12 @@ export class OrdersService {
   throw new BadRequestException('Invalid customer');
     if (!dto.items?.length)
       throw new BadRequestException('No items provided');
+
+    await this.assertTermsAccepted(customerId);
+
+    const requestedCouponCode = String((dto as any)?.couponCode || '')
+      .trim()
+      .toUpperCase();
 
     const medicineIds = dto.items
       .map((i) => i.medicineId)
@@ -349,11 +487,21 @@ export class OrdersService {
           };
         });
 
+        const coupon = await this.resolveCouponForSubtotal(
+          customerId,
+          requestedCouponCode || null,
+          total,
+        );
+        const couponDiscount = coupon?.discount ?? 0;
+        const finalTotal = Math.max(0, total - couponDiscount);
+
         const created = await this.prisma.order.create({
           data: {
             customerId,
             pharmacyId,
-            totalPrice: total,
+            totalPrice: finalTotal,
+            couponCode: coupon?.code ?? null,
+            couponDiscount,
             status: OrderStatus.PENDING,
             paymentMode: mode,
             paymentStatus: initialPaymentStatus,
@@ -364,6 +512,10 @@ export class OrdersService {
           },
           include: { items: true },
         });
+
+        if (coupon) {
+          await this.recordCouponRedemption(this.prisma, coupon.couponId, customerId, created.id);
+        }
 
         await this.prisma.orderOffer.create({
           data: {
@@ -377,6 +529,18 @@ export class OrdersService {
           loadtest: true,
           mode,
           requiresPrescription,
+        });
+
+        this.analytics.track({
+          name: 'order_created',
+          userId: customerId,
+          props: {
+            orderId: created.id,
+            paymentMode: mode,
+            requiresPrescription,
+            totalPrice: finalTotal,
+            loadtest: true,
+          },
         });
 
         if (mode === PaymentMode.PAY_FIRST) {
@@ -461,11 +625,21 @@ export class OrdersService {
           });
         }
 
+        const coupon = await this.resolveCouponForSubtotal(
+          customerId,
+          requestedCouponCode || null,
+          total,
+        );
+        const couponDiscount = coupon?.discount ?? 0;
+        const finalTotal = Math.max(0, total - couponDiscount);
+
         const created = await tx.order.create(({
           data: {
             customerId,
             pharmacyId,
-            totalPrice: total,
+            totalPrice: finalTotal,
+            couponCode: coupon?.code ?? null,
+            couponDiscount,
             status: OrderStatus.PENDING,
             paymentMode: mode,
             paymentStatus: initialPaymentStatus,
@@ -476,6 +650,10 @@ export class OrdersService {
           },
           include: { items: true },
         } as any));
+
+        if (coupon) {
+          await this.recordCouponRedemption(tx, coupon.couponId, customerId, created.id);
+        }
 
         // Stock is validated now, but decremented on pharmacy acceptance / fulfillment.
 
@@ -493,6 +671,17 @@ export class OrdersService {
       await this.logTimeline(order.id, 'ORDER_CREATED', {
         mode,
         requiresPrescription,
+      });
+
+      this.analytics.track({
+        name: 'order_created',
+        userId: customerId,
+        props: {
+          orderId: order.id,
+          paymentMode: mode,
+          requiresPrescription,
+          totalPrice: (order as any)?.totalPrice ?? null,
+        },
       });
 
       if (mode === PaymentMode.PAY_FIRST) {
@@ -566,12 +755,22 @@ export class OrdersService {
         };
       });
 
+      const coupon = await this.resolveCouponForSubtotal(
+        customerId,
+        requestedCouponCode || null,
+        total,
+      );
+      const couponDiscount = coupon?.discount ?? 0;
+      const finalTotal = Math.max(0, total - couponDiscount);
+
       const created = await this.prisma.$transaction(async (tx) => {
         const ord = await tx.order.create(({
           data: {
             customerId,
             pharmacyId: best,
-            totalPrice: total,
+            totalPrice: finalTotal,
+            couponCode: coupon?.code ?? null,
+            couponDiscount,
             status: OrderStatus.PENDING,
             paymentMode: mode,
             paymentStatus: initialPaymentStatus,
@@ -582,6 +781,10 @@ export class OrdersService {
           },
           include: { items: true },
         } as any));
+
+        if (coupon) {
+          await this.recordCouponRedemption(tx, coupon.couponId, customerId, ord.id);
+        }
 
         await tx.orderOffer.create({
           data: {
@@ -599,6 +802,19 @@ export class OrdersService {
         bestPharmacyId: best,
         mode,
         requiresPrescription,
+      });
+
+      this.analytics.track({
+        name: 'order_created',
+        userId: customerId,
+        props: {
+          orderId: created.id,
+          paymentMode: mode,
+          requiresPrescription,
+          totalPrice: (created as any)?.totalPrice ?? null,
+          bestPharmacyId: best,
+          loadtest: true,
+        },
       });
 
       if (mode === PaymentMode.PAY_FIRST) {
@@ -684,11 +900,21 @@ export class OrdersService {
         itemsCreate.push({ medicineId: it.medicineId, name: med?.name ?? it.name ?? 'Item', quantity: it.quantity, price });
       }
 
+      const coupon = await this.resolveCouponForSubtotal(
+        customerId,
+        requestedCouponCode || null,
+        total,
+      );
+      const couponDiscount = coupon?.discount ?? 0;
+      const finalTotal = Math.max(0, total - couponDiscount);
+
       const created = await tx.order.create(({
         data: {
           customerId,
           pharmacyId: bestPharmacyId,
-          totalPrice: total,
+          totalPrice: finalTotal,
+          couponCode: coupon?.code ?? null,
+          couponDiscount,
           status: OrderStatus.PENDING,
           paymentMode: mode,
           paymentStatus: initialPaymentStatus,
@@ -699,6 +925,10 @@ export class OrdersService {
         },
         include: { items: true },
       } as any));
+
+      if (coupon) {
+        await this.recordCouponRedemption(tx, coupon.couponId, customerId, created.id);
+      }
 
       // Stock is validated now, but decremented on pharmacy acceptance / fulfillment.
 
@@ -716,6 +946,18 @@ export class OrdersService {
       bestPharmacyId,
       mode,
       requiresPrescription,
+    });
+
+    this.analytics.track({
+      name: 'order_created',
+      userId: customerId,
+      props: {
+        orderId: finalOrder.id,
+        paymentMode: mode,
+        requiresPrescription,
+        totalPrice: (finalOrder as any)?.totalPrice ?? null,
+        bestPharmacyId,
+      },
     });
 
     if (mode === PaymentMode.PAY_FIRST) {
@@ -1578,7 +1820,7 @@ export class OrdersService {
     orderId: number,
     dto?: PharmacyAcceptDto,
   ) {
-    const order = await this.prisma.order.findUnique({
+    const order: any = await (this.prisma as any).order.findUnique({
       where: { id: orderId },
       include: { items: true },
     });
@@ -1600,8 +1842,8 @@ export class OrdersService {
     }
 
     const medicineIds = (order.items || [])
-      .map((i) => i.medicineId)
-      .filter((v): v is number => typeof v === 'number');
+      .map((i: any) => i.medicineId)
+      .filter((v: any): v is number => typeof v === 'number');
 
     const inv = await this.prisma.pharmacyInventory.findMany(({
       where: { pharmacyId, medicineId: { in: medicineIds }, deletedAt: null },
@@ -1634,7 +1876,7 @@ export class OrdersService {
       quantity: number;
       requestedQuantity: number;
     }> = [];
-    let total = 0;
+    let subtotal = 0;
 
     for (const item of order.items || []) {
       const manual = manualMap.get(item.id);
@@ -1650,7 +1892,7 @@ export class OrdersService {
           discount: null,
           note: manual.note,
         });
-        total += price * Number(item.quantity || 1);
+        subtotal += price * Number(item.quantity || 1);
         continue;
       }
 
@@ -1685,7 +1927,7 @@ export class OrdersService {
           source: 'inventory',
           discount: row.discount,
         });
-        total += price * fulfillQty;
+        subtotal += price * fulfillQty;
         stockAllocations.push({
           inventoryId: row.inventoryId,
           medicineId,
@@ -1704,7 +1946,7 @@ export class OrdersService {
         currentPrice: item.price,
         reason: 'NOT_IN_INVENTORY',
       });
-      total += Number(item.price) * Number(item.quantity || 1);
+      subtotal += Number(item.price) * Number(item.quantity || 1);
     }
 
     const needsConfirmation =
@@ -1713,11 +1955,39 @@ export class OrdersService {
       pricedItems.some((p) => p.source === 'manual') ||
       (dto?.totalPrice != null &&
         Number.isFinite(Number(dto.totalPrice)) &&
-        Number(dto.totalPrice) !== total);
+        Number(dto.totalPrice) !== subtotal);
 
     if (dto?.totalPrice != null && Number.isFinite(Number(dto.totalPrice))) {
-      total = Number(dto.totalPrice);
+      subtotal = Number(dto.totalPrice);
     }
+
+    let couponDiscount = Number(order.couponDiscount ?? 0);
+    if (order.couponCode) {
+      const code = String(order.couponCode).trim().toUpperCase();
+      const coupon = code ? await (this.prisma as any).coupon.findUnique({ where: { code } }) : null;
+
+      if (!coupon) {
+        couponDiscount = 0;
+      } else {
+        const min = coupon.minOrder != null ? Number(coupon.minOrder) : null;
+        if (min != null && subtotal < min) {
+          couponDiscount = 0;
+        } else {
+          if (String(coupon.type).toUpperCase() === COUPON_TYPE.FLAT) {
+            couponDiscount = Number(coupon.amount);
+          } else {
+            const pct = Math.max(0, Math.min(100, Number(coupon.amount)));
+            couponDiscount = (subtotal * pct) / 100;
+          }
+
+          const max = coupon.maxDiscount != null ? Number(coupon.maxDiscount) : null;
+          if (max != null) couponDiscount = Math.min(couponDiscount, max);
+          couponDiscount = Math.max(0, Math.min(couponDiscount, subtotal));
+        }
+      }
+    }
+
+    const total = Math.max(0, subtotal - couponDiscount);
 
     const updated = await this.prisma.$transaction(async (tx) => {
       for (const p of pricedItems) {
@@ -1778,12 +2048,15 @@ export class OrdersService {
         event: nextStatus === NEEDS_CONFIRMATION_STATUS ? 'ORDER_NEEDS_CONFIRMATION' : 'PHARMACY_ACCEPTED',
         data: {
           pharmacyId,
+          subtotal,
+          couponCode: order.couponCode ?? null,
+          couponDiscount,
           totalPrice: total,
           pricedItems,
           missingItems,
           needsConfirmation,
         },
-        extraUpdate: { totalPrice: total },
+        extraUpdate: { totalPrice: total, couponDiscount },
         db: tx as any,
       });
 
@@ -1817,6 +2090,9 @@ export class OrdersService {
     // Keep enriched pricing timeline (separate from status transition event).
     await this.logTimeline(orderId, 'PHARMACY_PRICED', {
       pharmacyId,
+      subtotal,
+      couponCode: order.couponCode ?? null,
+      couponDiscount,
       totalPrice: total,
       pricedItems,
       missingItems,
@@ -2074,7 +2350,7 @@ export class OrdersService {
   }
 
   async pharmacyVerifyPrescription(pharmacyId: number, orderId: number) {
-    const order = await this.prisma.order.findUnique({
+    const order: any = await (this.prisma as any).order.findUnique({
       where: { id: orderId },
       include: { prescription: true },
     });
@@ -2084,11 +2360,23 @@ export class OrdersService {
     if (!order.prescriptionId || !order.prescription)
       throw new BadRequestException('No prescription uploaded');
 
-    if (order.prescription.verified) return { ok: true, verified: true };
+    if (
+      order.prescription.verified ||
+      String(order.prescription.status).toUpperCase() ===
+        PRESCRIPTION_STATUS.APPROVED
+    ) {
+      return { ok: true, verified: true };
+    }
 
-    await this.prisma.prescription.update({
+    await (this.prisma as any).prescription.update({
       where: { id: order.prescriptionId },
-      data: { verified: true },
+      data: {
+        verified: true,
+        status: PRESCRIPTION_STATUS.APPROVED as any,
+        verifiedAt: new Date(),
+        rejectedAt: null,
+        rejectedReason: null,
+      },
     });
 
     // If payment is configured after verification, request it now (minimal flow).
@@ -2127,7 +2415,7 @@ export class OrdersService {
   }
 
   async adminVerifyPrescription(orderId: number, adminId: number) {
-    const order = await this.prisma.order.findUnique({
+    const order: any = await (this.prisma as any).order.findUnique({
       where: { id: orderId },
       include: { prescription: true },
     });
@@ -2135,10 +2423,20 @@ export class OrdersService {
     if (!order.prescriptionId || !order.prescription)
       throw new BadRequestException('No prescription uploaded');
 
-    if (!order.prescription.verified) {
-      await this.prisma.prescription.update({
+    if (
+      !order.prescription.verified ||
+      String(order.prescription.status).toUpperCase() !==
+        PRESCRIPTION_STATUS.APPROVED
+    ) {
+      await (this.prisma as any).prescription.update({
         where: { id: order.prescriptionId },
-        data: { verified: true },
+        data: {
+          verified: true,
+          status: PRESCRIPTION_STATUS.APPROVED as any,
+          verifiedAt: new Date(),
+          rejectedAt: null,
+          rejectedReason: null,
+        },
       });
     }
 
@@ -2169,6 +2467,111 @@ export class OrdersService {
     }
 
     return { ok: true, verified: true };
+  }
+
+  async pharmacyRejectPrescription(pharmacyId: number, orderId: number, reason?: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { prescription: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.pharmacyId !== pharmacyId) {
+      throw new BadRequestException('Not authorized for this order');
+    }
+    if (!order.prescriptionId || !order.prescription) {
+      throw new BadRequestException('No prescription uploaded');
+    }
+
+    await (this.prisma as any).prescription.update({
+      where: { id: order.prescriptionId },
+      data: {
+        verified: false,
+        status: PRESCRIPTION_STATUS.REJECTED as any,
+        rejectedAt: new Date(),
+        rejectedReason: reason ? String(reason).trim().slice(0, 500) : null,
+        verifiedAt: null,
+      },
+    });
+
+    await this.logTimeline(orderId, 'PRESCRIPTION_REJECTED', {
+      by: 'PHARMACY',
+      pharmacyId,
+      prescriptionId: order.prescriptionId,
+      reason: reason ? String(reason).trim() : undefined,
+    });
+
+    this.notify.createDomainEvent(
+      order.customerId,
+      'prescription.rejected',
+      `Prescription rejected for order #${orderId}`,
+      { orderId, prescriptionId: order.prescriptionId, reason: reason || '' },
+      pharmacyId,
+    );
+
+    this.ws.notifyUser(order.customerId, 'prescription_rejected', {
+      orderId,
+      prescriptionId: order.prescriptionId,
+      reason: reason || '',
+    });
+    this.ws.notifyUser(pharmacyId, 'order.updated', {
+      orderId,
+      prescriptionId: order.prescriptionId,
+      prescriptionVerified: false,
+    });
+
+    return { ok: true, rejected: true };
+  }
+
+  async adminRejectPrescription(orderId: number, adminId: number, reason?: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { prescription: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (!order.prescriptionId || !order.prescription) {
+      throw new BadRequestException('No prescription uploaded');
+    }
+
+    await (this.prisma as any).prescription.update({
+      where: { id: order.prescriptionId },
+      data: {
+        verified: false,
+        status: PRESCRIPTION_STATUS.REJECTED as any,
+        rejectedAt: new Date(),
+        rejectedReason: reason ? String(reason).trim().slice(0, 500) : null,
+        verifiedAt: null,
+      },
+    });
+
+    await this.logTimeline(orderId, 'PRESCRIPTION_REJECTED', {
+      by: 'ADMIN',
+      adminId,
+      prescriptionId: order.prescriptionId,
+      reason: reason ? String(reason).trim() : undefined,
+    });
+
+    this.notify.createDomainEvent(
+      order.customerId,
+      'prescription.rejected',
+      `Prescription rejected for order #${orderId}`,
+      { orderId, prescriptionId: order.prescriptionId, reason: reason || '' },
+      adminId,
+    );
+
+    this.ws.notifyUser(order.customerId, 'prescription_rejected', {
+      orderId,
+      prescriptionId: order.prescriptionId,
+      reason: reason || '',
+    });
+    if (order.pharmacyId) {
+      this.ws.notifyUser(order.pharmacyId, 'order.updated', {
+        orderId,
+        prescriptionId: order.prescriptionId,
+        prescriptionVerified: false,
+      });
+    }
+
+    return { ok: true, rejected: true };
   }
 
   // ----------------------------------------------------------
@@ -2240,6 +2643,83 @@ export class OrdersService {
         return false;
       return true;
     });
+  }
+
+  async getTrackingForUser(userId: number, role: string, orderId: number) {
+    if (!Number.isFinite(orderId)) throw new BadRequestException('Invalid order');
+    const r = String(role || '').toUpperCase();
+
+    const order: any = await (this.prisma as any).order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        customerId: true,
+        pharmacyId: true,
+        riderId: true,
+        status: true,
+        deliveryLatitude: true,
+        deliveryLongitude: true,
+        updatedAt: true,
+      },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const allowed =
+      r === String(UserRole.ADMIN) ||
+      order.customerId === userId ||
+      order.pharmacyId === userId ||
+      (order.riderId != null && order.riderId === userId);
+    if (!allowed) throw new BadRequestException('Not authorized for this order');
+
+    const rider =
+      order.riderId != null
+        ? await this.prisma.user.findUnique({
+            where: { id: order.riderId },
+            select: { id: true, latitude: true, longitude: true, updatedAt: true },
+          })
+        : null;
+
+    const riderLat = rider?.latitude != null ? Number(rider.latitude) : null;
+    const riderLon = rider?.longitude != null ? Number(rider.longitude) : null;
+    const destLat =
+      order.deliveryLatitude != null ? Number(order.deliveryLatitude) : null;
+    const destLon =
+      order.deliveryLongitude != null ? Number(order.deliveryLongitude) : null;
+
+    let distanceKm: number | null = null;
+    let etaMinutes: number | null = null;
+    if (
+      riderLat != null &&
+      riderLon != null &&
+      destLat != null &&
+      destLon != null
+    ) {
+      distanceKm = this.haversineKm(riderLat, riderLon, destLat, destLon);
+      const speedKmph = Number(process.env.ETA_SPEED_KMPH ?? 25);
+      if (Number.isFinite(speedKmph) && speedKmph > 0) {
+        etaMinutes = Math.max(1, Math.round((distanceKm / speedKmph) * 60));
+      }
+    }
+
+    return {
+      orderId: order.id,
+      status: order.status,
+      rider: rider
+        ? {
+            id: rider.id,
+            latitude: riderLat,
+            longitude: riderLon,
+            updatedAt: rider.updatedAt,
+          }
+        : null,
+      destination:
+        destLat != null && destLon != null
+          ? { latitude: destLat, longitude: destLon }
+          : null,
+      distanceKm,
+      etaMinutes,
+      updatedAt: order.updatedAt,
+    };
   }
 
   // ----------------------------------------------------------

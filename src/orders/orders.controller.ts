@@ -224,6 +224,15 @@ export class OrdersController {
     );
   }
 
+  @Get(':id/tracking')
+  getTracking(@Req() req: Request & { user: any }, @Param('id') orderId: string) {
+    return this.ordersService.getTrackingForUser(
+      Number(req.user?.id),
+      String(req.user?.role || ''),
+      Number(orderId),
+    );
+  }
+
   // ----------------------------------------------------------
   // CUSTOMER: confirm / reject pharmacy changes
   // ----------------------------------------------------------

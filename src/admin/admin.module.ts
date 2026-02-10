@@ -19,9 +19,14 @@ import { AdminPermissionsController } from './admin.permissions.controller';
 import { AdminImpersonationController } from './admin.impersonation.controller';
 import { AdminSlaController } from './admin.sla.controller';
 import { AdminIncidentsController } from './admin.incidents.controller';
+import { AdminAppConfigController } from './admin.app-config.controller';
+import { AdminCouponsController } from './admin.coupons.controller';
+import { AdminMobilePromotionsController } from './admin.mobile-promotions.controller';
 import { AdminMetricsService } from './admin.metrics.service';
 import { AdminMetricsListener } from './admin.metrics.listener';
 import { EscalationService } from './escalation.service';
+import { AppConfigModule } from '../app-config/app-config.module';
+import { UploadsModule } from '../uploads/uploads.module';
 
 import { OrdersModule } from '../orders/orders.module';
 import { PaymentsModule } from '../payments/payments.module';
@@ -43,6 +48,8 @@ import { AuthModule } from '../auth/auth.module';
     SurgeModule,
     GeoSurgeModule,
     forwardRef(() => AuthModule),
+    AppConfigModule,
+    UploadsModule,
   ],
   controllers: [
     AdminController,
@@ -63,6 +70,9 @@ import { AuthModule } from '../auth/auth.module';
     AdminImpersonationController,
     AdminSlaController,
     AdminIncidentsController,
+    AdminAppConfigController,
+    AdminCouponsController,
+    AdminMobilePromotionsController,
   ],
   providers: [
     PrismaService,

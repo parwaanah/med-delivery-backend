@@ -40,6 +40,9 @@ import { ProfileModule } from './auth/profile.module';
 import { ServiceAreaModule } from './service-area/service-area.module';
 import { SupportModule } from './support/support.module';
 import { RefundsModule } from './refunds/refunds.module';
+import { AppConfigModule } from './app-config/app-config.module';
+import { LegalModule } from './legal/legal.module';
+import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 
 /* LOGGER */
 import { GlobalLogger } from './common/logger/global-logger.service';
@@ -115,6 +118,9 @@ function forcedRedisUrl(config: ConfigService): string {
     ServiceAreaModule,
     SupportModule,
     RefundsModule,
+    AppConfigModule,
+    LegalModule,
+    PrescriptionsModule,
 
     ScheduleModule.forRoot(),
   ],

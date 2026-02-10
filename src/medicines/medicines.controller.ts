@@ -46,4 +46,14 @@ export class MedicinesController {
 
     return medicine;
   }
+
+  @Get(':id/substitutes')
+  async substitutes(@Param('id') id: string) {
+    const medicineId = Number(id);
+    if (!Number.isFinite(medicineId)) {
+      throw new NotFoundException('Medicine not found');
+    }
+    const items = await this.medicinesService.getSubstitutesByMedicineId(medicineId);
+    return { items };
+  }
 }

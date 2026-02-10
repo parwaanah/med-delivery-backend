@@ -22,15 +22,17 @@ RUN node prisma/generate_medicines.js
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build seed.ts → dist/prisma
-RUN npx tsc prisma/seed.ts --outDir dist/prisma
-
 # Build NestJS project
 RUN npm run build
 
-# Ensure runtime seed can find medicines.json (Nest build recreates dist/)
-RUN cp prisma/medicines.json dist/prisma/medicines.json
+# Backward-compatible entrypoint: some older configs expect dist/src/main.js
+RUN mkdir -p dist/src && cp dist/main.js dist/src/main.js
+
+# Build seed.ts -> dist/prisma (Nest build recreates dist/) and ensure medicines.json is present at runtime
+RUN mkdir -p dist/prisma \
+  && npx tsc prisma/seed.ts --outDir dist/prisma \
+  && cp prisma/medicines.json dist/prisma/medicines.json
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

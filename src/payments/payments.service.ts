@@ -6,6 +6,8 @@ import { AuditService } from '../utils/audit.service';
 import { NotificationService } from '../utils/notification.service';
 import { RiderPaymentsService } from '../riders/rider-payments.service';
 import { LockService } from '../utils/lock.service';
+import { badRequest } from '../common/api-error';
+import { AnalyticsService } from '../utils/analytics.service';
 
 @Injectable()
 export class PaymentsService {
@@ -16,6 +18,7 @@ export class PaymentsService {
     private razorpay: RazorpayService,
     private audit: AuditService,
     private notify: NotificationService,
+    private analytics: AnalyticsService,
     private riderPayments: RiderPaymentsService,
     private lock: LockService,
   ) {}
@@ -45,7 +48,20 @@ export class PaymentsService {
     const paymentStatus = String(order.paymentStatus || 'UNPAID').toUpperCase();
     if (paymentStatus === 'PAID') return { ok: true, already: true };
     if (paymentStatus !== 'REQUESTED') {
-      throw new BadRequestException('Payment not requested for this order yet');
+      badRequest('PAYMENT_NOT_REQUESTED', 'Payment not requested for this order yet', {
+        paymentStatus,
+      });
+    }
+
+    const ttlMin = Number(process.env.PAYMENT_REQUEST_TTL_MINUTES || 30);
+    const ttlMs = Number.isFinite(ttlMin) && ttlMin > 0 ? ttlMin * 60_000 : 30 * 60_000;
+    const requestedAtRaw = (order as any)?.paymentRequestedAt;
+    const requestedAt = requestedAtRaw ? new Date(requestedAtRaw) : null;
+    if (requestedAt && Date.now() - requestedAt.getTime() > ttlMs) {
+      badRequest('PAYMENT_REQUEST_EXPIRED', 'Payment request expired. Please refresh the order.', {
+        requestedAt,
+        ttlMinutes: ttlMin,
+      });
     }
 
     // Pay-after-acceptance contract: only allow payment after pharmacy acceptance.
@@ -59,12 +75,16 @@ export class PaymentsService {
         st !== String(OrderStatus.PENDING) &&
         st !== String(OrderStatus.ACCEPTED) &&
         st !== String(OrderStatus.ASSIGNED)
-      ) {
-        throw new BadRequestException(`Cannot pay in status ${order.status}`);
-      }
+        ) {
+          badRequest('ORDER_STATUS_INVALID', `Cannot pay in status ${order.status}`, {
+            status: order.status,
+          });
+        }
     } else {
       if (st !== String(OrderStatus.ACCEPTED) && st !== String(OrderStatus.ASSIGNED)) {
-        throw new BadRequestException(`Cannot pay in status ${order.status}`);
+        badRequest('ORDER_STATUS_INVALID', `Cannot pay in status ${order.status}`, {
+          status: order.status,
+        });
       }
     }
 
@@ -222,6 +242,17 @@ export class PaymentsService {
       });
     }
 
+    this.analytics.track({
+      name: 'payment_success',
+      userId: order.customerId,
+      props: {
+        orderId: order.id,
+        provider: updatedTx.provider,
+        amount: Number(updatedTx.amount) / 100,
+        currency: updatedTx.currency,
+      },
+    });
+
     await this.notify.createDomainEvent(
       order.customerId,
       'payment.captured',
@@ -362,6 +393,15 @@ export class PaymentsService {
         providerPayment: payment.id,
         status: 'FAILED',
         rawData: JSON.parse(JSON.stringify(payment)),
+      },
+    });
+
+    this.analytics.track({
+      name: 'payment_fail',
+      userId: null,
+      props: {
+        orderId: tx.orderId ?? null,
+        provider: tx.provider,
       },
     });
 

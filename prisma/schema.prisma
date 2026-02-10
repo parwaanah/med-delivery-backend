@@ -79,6 +79,11 @@ model User {
 
   addresses               UserAddress[]
 
+  deviceTokens            DeviceToken[]
+  notificationPreference  NotificationPreference?
+  termsAcceptances        TermsAcceptance[]
+  couponRedemptions       CouponRedemption[]
+
   incidentsCreated        Incident[] @relation("IncidentCreatedBy")
   incidentsAssigned       Incident[] @relation("IncidentAssignedTo")
   incidentEvents          IncidentEvent[]
@@ -156,9 +161,17 @@ model Prescription {
   customerId Int
   url        String
   verified   Boolean  @default(false)
+  status     PrescriptionStatus @default(PENDING)
+  verifiedAt DateTime?
+  rejectedAt DateTime?
+  rejectedReason String?
+  expiresAt  DateTime?
   createdAt  DateTime @default(now())
   orders     Order[]
   user       User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+  @@index([status])
 }
 
 model Order {
@@ -168,6 +181,8 @@ model Order {
   riderId              Int?
   status               OrderStatus     @default(PENDING)
   totalPrice           Float
+  couponCode           String?
+  couponDiscount       Float           @default(0)
   // Minimal payment tracking (keeps OrderStatus focused on logistics)
   paymentStatus        String          @default("UNPAID") // UNPAID | REQUESTED | PAID
   paymentRequestedAt   DateTime?
@@ -198,6 +213,8 @@ model Order {
   deliveryPin          String?
   deliveryLandmark     String?         @default("")
   deliveryNotes        String?         @default("")
+  deliveryLatitude     Float?
+  deliveryLongitude    Float?
 
   customer             User            @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Cascade)
   pharmacy             User            @relation("PharmacyOrders", fields: [pharmacyId], references: [id], onDelete: Cascade)
@@ -212,6 +229,8 @@ model Order {
   supportTickets       SupportTicket[]
   refundRequests       RefundRequest[]
   incidents            Incident[]
+
+  couponRedemptions    CouponRedemption[]
 }
 
 model OrderItem {
@@ -251,6 +270,83 @@ model Notification {
   createdAt  DateTime @default(now())
   receiver   User     @relation("ReceivedNotifications", fields: [receiverId], references: [id], onDelete: Cascade)
   sender     User?    @relation("SentNotifications", fields: [senderId], references: [id])
+}
+
+model DeviceToken {
+  id         Int            @id @default(autoincrement())
+  userId     Int
+  token      String         @unique
+  platform   MobilePlatform
+  deviceId   String?
+  enabled    Boolean        @default(true)
+  lastSeenAt DateTime       @default(now())
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
+  @@index([platform])
+}
+
+model NotificationPreference {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  orderUpdates Boolean  @default(true)
+  promotions   Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TermsAcceptance {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  version    String
+  acceptedAt DateTime @default(now())
+  ip         String?
+  userAgent  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, version])
+  @@index([userId, acceptedAt])
+}
+
+model Coupon {
+  id           Int        @id @default(autoincrement())
+  code         String     @unique
+  type         CouponType
+  amount       Decimal    @db.Decimal(12, 2)
+  minOrder     Decimal?   @db.Decimal(12, 2)
+  maxDiscount  Decimal?   @db.Decimal(12, 2)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  usageLimit   Int?
+  perUserLimit Int?
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  redemptions CouponRedemption[]
+}
+
+model CouponRedemption {
+  id       Int      @id @default(autoincrement())
+  couponId Int
+  userId   Int
+  orderId  Int?
+  usedAt   DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order  Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([couponId, usedAt])
+  @@index([userId, usedAt])
+  @@unique([couponId, userId, orderId])
 }
 
 model Session {
@@ -379,6 +475,9 @@ model ChatMessage {
 model Cart {
   id        String     @id @default(cuid())
   userId    String
+  couponCode String?
+  couponDiscount Decimal? @db.Decimal(12, 2)
+  couponAppliedAt DateTime?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   items     CartItem[] @relation("CartItems")
@@ -524,6 +623,24 @@ enum PaymentMode {
   PAY_AFTER_VERIFICATION
 }
 
+enum MobilePlatform {
+  ANDROID
+  IOS
+  WEB
+}
+
+enum PrescriptionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum CouponType {
+  PERCENT
+  FLAT
+}
+
 model OtpRequest {
   id        Int      @id @default(autoincrement())
   phone     String
@@ -640,6 +757,14 @@ model RiderFraudSignal {
 
   @@index([riderId])
   @@index([createdAt])
+}
+
+model AppConfig {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationDocument {
