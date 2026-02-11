@@ -22,6 +22,7 @@ import { AdminIncidentsController } from './admin.incidents.controller';
 import { AdminAppConfigController } from './admin.app-config.controller';
 import { AdminCouponsController } from './admin.coupons.controller';
 import { AdminMobilePromotionsController } from './admin.mobile-promotions.controller';
+import { AdminAnalyticsController } from './admin.analytics.controller';
 import { AdminMetricsService } from './admin.metrics.service';
 import { AdminMetricsListener } from './admin.metrics.listener';
 import { EscalationService } from './escalation.service';
@@ -56,6 +57,7 @@ import { AuthModule } from '../auth/auth.module';
     AdminUsersController,
     AdminAuditController,
     AdminMetricsController,
+    AdminAnalyticsController,
     AdminOrdersController,
     AdminOpsController,
     AdminQueueController,

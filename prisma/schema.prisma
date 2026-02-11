@@ -83,6 +83,7 @@ model User {
   notificationPreference  NotificationPreference?
   termsAcceptances        TermsAcceptance[]
   couponRedemptions       CouponRedemption[]
+  analyticsEvents         AnalyticsEvent[]
 
   incidentsCreated        Incident[] @relation("IncidentCreatedBy")
   incidentsAssigned       Incident[] @relation("IncidentAssignedTo")
@@ -431,6 +432,20 @@ model AuditLog {
   meta      Json?
   createdAt DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
+}
+
+model AnalyticsEvent {
+  id        Int      @id @default(autoincrement())
+  name      String
+  userId    Int?
+  sessionId String?
+  props     Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([name, createdAt])
+  @@index([userId, createdAt])
 }
 
 model ServiceZone {

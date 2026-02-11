@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Put,
   Post,
@@ -30,6 +31,25 @@ const DEFAULT_MOBILE_TABS = [
 
 type MobileTabKey = (typeof DEFAULT_MOBILE_TABS)[number]['key'];
 type MobileIconPack = 'ion' | 'mci';
+
+function isSuperAdminEmail(email: unknown): boolean {
+  const e = String(email || '').trim().toLowerCase();
+  if (!e) return false;
+  const raw = String(process.env.SUPERADMIN_EMAILS || '').trim();
+  if (!raw) return false;
+  const allow = raw
+    .split(/[,;\s]+/g)
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return allow.includes(e);
+}
+
+function requireSuperAdmin(req: any) {
+  // If SUPERADMIN_EMAILS is configured, enforce allowlist for sensitive admin config changes.
+  if (!String(process.env.SUPERADMIN_EMAILS || '').trim()) return;
+  const email = req?.user?.email;
+  if (!isSuperAdminEmail(email)) throw new ForbiddenException('Access denied (superadmin required)');
+}
 
 function normalizeIconRef(raw: any): { pack: MobileIconPack; name: string } | null {
   // Preferred: { pack, name }
@@ -199,6 +219,7 @@ export class AdminAppConfigController {
 
   @Put('hero-banner')
   async setHeroBanner(@Body() body: { url?: string; banners?: any[] }, @Req() req: any) {
+    requireSuperAdmin(req);
     // Backward compatible: accept single URL
     if (body?.url !== undefined) {
       const url = typeof body?.url === 'string' ? body.url.trim() : '';
@@ -296,6 +317,7 @@ export class AdminAppConfigController {
     },
     @Req() req: any,
   ) {
+    requireSuperAdmin(req);
     const banners = normalizePromoBannersForAdmin({ banners: body?.banners || [] });
     const row = await this.appConfig.setConfig('promoBanners', { banners });
     await this.audit.logAdminAction({
@@ -313,7 +335,8 @@ export class AdminAppConfigController {
       limits: { fileSize: Number(process.env.UPLOAD_MAX_BYTES || 5 * 1024 * 1024) },
     }),
   )
-  async uploadPromoBannerImage(@UploadedFile() file: any) {
+  async uploadPromoBannerImage(@UploadedFile() file: any, @Req() req: any) {
+    requireSuperAdmin(req);
     if (!file) throw new BadRequestException('File required');
     if (!file.buffer) throw new BadRequestException('File buffer missing');
 
@@ -348,6 +371,7 @@ export class AdminAppConfigController {
         },
     @Req() req: any,
   ) {
+    requireSuperAdmin(req);
     const allowed = new Set(DEFAULT_MOBILE_TABS.map((t) => t.key));
 
     // Accept legacy string[]
@@ -423,6 +447,7 @@ export class AdminAppConfigController {
     },
     @Req() req: any,
   ) {
+    requireSuperAdmin(req);
     const categoriesRaw = Array.isArray(body?.categories) ? body.categories : [];
     const categories = categoriesRaw
       .map((c) => ({
