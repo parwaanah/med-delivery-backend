@@ -8,6 +8,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -16,6 +17,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { AppConfigService } from '../app-config/app-config.service';
 import { CloudinaryService } from '../uploads/cloudinary.service';
+import { AuditService } from '../utils/audit.service';
 
 const DEFAULT_MOBILE_TABS = [
   { key: 'index', title: 'Home', icon: 'home-outline', enabled: true },
@@ -185,6 +187,7 @@ export class AdminAppConfigController {
   constructor(
     private appConfig: AppConfigService,
     private cloud: CloudinaryService,
+    private audit: AuditService,
   ) {}
 
   @Get('hero-banner')
@@ -195,12 +198,18 @@ export class AdminAppConfigController {
   }
 
   @Put('hero-banner')
-  async setHeroBanner(@Body() body: { url?: string; banners?: any[] }) {
+  async setHeroBanner(@Body() body: { url?: string; banners?: any[] }, @Req() req: any) {
     // Backward compatible: accept single URL
     if (body?.url !== undefined) {
       const url = typeof body?.url === 'string' ? body.url.trim() : '';
       const value = url ? { url } : { url: null };
       const row = await this.appConfig.setConfig('heroBanner', value);
+      await this.audit.logAdminAction({
+        userId: req?.user?.id,
+        action: 'APP_CONFIG_SET',
+        resource: 'heroBanner',
+        meta: { mode: 'single_url', hasUrl: Boolean(url) },
+      });
       return {
         ok: true,
         value: row.value,
@@ -226,6 +235,12 @@ export class AdminAppConfigController {
     }
 
     const row = await this.appConfig.setConfig('heroBanner', { banners });
+    await this.audit.logAdminAction({
+      userId: req?.user?.id,
+      action: 'APP_CONFIG_SET',
+      resource: 'heroBanner',
+      meta: { mode: 'schedule', count: banners.length },
+    });
     return {
       ok: true,
       value: row.value,
@@ -279,9 +294,16 @@ export class AdminAppConfigController {
         ctaPath?: string | null;
       }>;
     },
+    @Req() req: any,
   ) {
     const banners = normalizePromoBannersForAdmin({ banners: body?.banners || [] });
     const row = await this.appConfig.setConfig('promoBanners', { banners });
+    await this.audit.logAdminAction({
+      userId: req?.user?.id,
+      action: 'APP_CONFIG_SET',
+      resource: 'promoBanners',
+      meta: { count: banners.length },
+    });
     return { ok: true, banners: normalizePromoBannersForAdmin(row.value), updatedAt: row.updatedAt };
   }
 
@@ -324,6 +346,7 @@ export class AdminAppConfigController {
             enabled?: boolean;
           }>;
         },
+    @Req() req: any,
   ) {
     const allowed = new Set(DEFAULT_MOBILE_TABS.map((t) => t.key));
 
@@ -335,6 +358,12 @@ export class AdminAppConfigController {
       );
       const next = DEFAULT_MOBILE_TABS.map((t) => ({ ...t, enabled: enabled.includes(t.key) }));
       const row = await this.appConfig.setConfig('mobileTabs', { tabs: next });
+      await this.audit.logAdminAction({
+        userId: req?.user?.id,
+        action: 'APP_CONFIG_SET',
+        resource: 'mobileTabs',
+        meta: { mode: 'legacy', enabled: enabled.length },
+      });
       return { ok: true, tabs: normalizeMobileTabsForAdmin(row.value), updatedAt: row.updatedAt };
     }
 
@@ -365,6 +394,12 @@ export class AdminAppConfigController {
     const next = DEFAULT_MOBILE_TABS.map((d) => byKey.get(d.key) || { ...d, enabled: false });
 
     const row = await this.appConfig.setConfig('mobileTabs', { tabs: next });
+    await this.audit.logAdminAction({
+      userId: req?.user?.id,
+      action: 'APP_CONFIG_SET',
+      resource: 'mobileTabs',
+      meta: { enabled: next.filter((t: any) => t.enabled !== false).length },
+    });
     return { ok: true, tabs: normalizeMobileTabsForAdmin(row.value), updatedAt: row.updatedAt };
   }
 
@@ -386,6 +421,7 @@ export class AdminAppConfigController {
         enabled?: boolean;
       }>;
     },
+    @Req() req: any,
   ) {
     const categoriesRaw = Array.isArray(body?.categories) ? body.categories : [];
     const categories = categoriesRaw
@@ -407,6 +443,12 @@ export class AdminAppConfigController {
     });
 
     const row = await this.appConfig.setConfig('mobileCategories', { categories: unique });
+    await this.audit.logAdminAction({
+      userId: req?.user?.id,
+      action: 'APP_CONFIG_SET',
+      resource: 'mobileCategories',
+      meta: { enabled: unique.filter((c: any) => c.enabled !== false).length, total: unique.length },
+    });
     return {
       ok: true,
       categories: normalizeMobileCategoriesForAdmin(row.value),

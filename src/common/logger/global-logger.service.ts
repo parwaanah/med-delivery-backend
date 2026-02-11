@@ -18,6 +18,47 @@ export class GlobalLogger implements LoggerService {
     fs.appendFileSync(filePath, message + '\n', { encoding: 'utf8' });
   }
 
+  private scrub(value: any): any {
+    const MAX_DEPTH = 6;
+    const redactKeys = new Set([
+      'password',
+      'pass',
+      'otp',
+      'token',
+      'accessToken',
+      'refreshToken',
+      'authorization',
+      'cookie',
+      'set-cookie',
+      'apiKey',
+      'secret',
+      'client_secret',
+      'webhook_secret',
+    ]);
+
+    const visit = (v: any, depth: number): any => {
+      if (depth > MAX_DEPTH) return '[Truncated]';
+      if (v == null) return v;
+      if (typeof v === 'string') return v;
+      if (typeof v === 'number' || typeof v === 'boolean') return v;
+      if (Array.isArray(v)) return v.slice(0, 100).map((x) => visit(x, depth + 1));
+      if (typeof v !== 'object') return String(v);
+
+      const out: any = {};
+      for (const [k, val] of Object.entries(v)) {
+        const key = String(k);
+        if (redactKeys.has(key) || redactKeys.has(key.toLowerCase())) {
+          out[key] = '[REDACTED]';
+        } else {
+          out[key] = visit(val, depth + 1);
+        }
+      }
+      return out;
+    };
+
+    return visit(value, 0);
+  }
+
   private format(level: string, message: any, context?: string): string {
     const ts = new Date().toISOString();
     const base: any = { ts, level };
@@ -25,7 +66,7 @@ export class GlobalLogger implements LoggerService {
     if (typeof message === 'string') {
       base.message = message;
     } else {
-      base.message = message;
+      base.message = this.scrub(message);
     }
     return JSON.stringify(base);
   }
