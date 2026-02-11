@@ -43,6 +43,7 @@ import { RefundsModule } from './refunds/refunds.module';
 import { AppConfigModule } from './app-config/app-config.module';
 import { LegalModule } from './legal/legal.module';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
+import { ImagesModule } from './images/images.module';
 
 /* LOGGER */
 import { GlobalLogger } from './common/logger/global-logger.service';
@@ -121,6 +122,7 @@ function forcedRedisUrl(config: ConfigService): string {
     AppConfigModule,
     LegalModule,
     PrescriptionsModule,
+    ImagesModule,
 
     ScheduleModule.forRoot(),
   ],
