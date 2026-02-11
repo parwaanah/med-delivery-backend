@@ -13,6 +13,7 @@ import { Request } from 'express';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
+import { UpdateMedicalProfileDto } from './dto/update-medical-profile.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -66,6 +67,45 @@ export class UsersController {
   exportMe(@Req() req: Request) {
     const user = req.user as { id: number };
     return this.usersService.exportMe(user.id);
+  }
+
+  /**
+   * Medical profile (allergies/conditions)
+   */
+  @Get('me/medical-profile')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.PHARMACY,
+    UserRole.RIDER,
+    UserRole.CUSTOMER,
+  )
+  getMedicalProfile(@Req() req: Request) {
+    const user = req.user as { id: number };
+    return this.usersService.getMedicalProfile(user.id);
+  }
+
+  @Put('me/medical-profile')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.PHARMACY,
+    UserRole.RIDER,
+    UserRole.CUSTOMER,
+  )
+  upsertMedicalProfile(@Req() req: Request, @Body() dto: UpdateMedicalProfileDto) {
+    const user = req.user as { id: number };
+    return this.usersService.upsertMedicalProfile(user.id, dto);
+  }
+
+  @Patch('me/medical-profile')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.PHARMACY,
+    UserRole.RIDER,
+    UserRole.CUSTOMER,
+  )
+  patchMedicalProfile(@Req() req: Request, @Body() dto: UpdateMedicalProfileDto) {
+    const user = req.user as { id: number };
+    return this.usersService.upsertMedicalProfile(user.id, dto);
   }
 
   /**

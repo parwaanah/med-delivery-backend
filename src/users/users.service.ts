@@ -3,6 +3,7 @@ import { PrismaService } from '../utils/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { AuditService } from '../utils/audit.service';
+import { UpdateMedicalProfileDto } from './dto/update-medical-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -105,6 +106,10 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('User not found');
 
+    const medicalProfile = await this.prisma.medicalProfile.findUnique({
+      where: { userId },
+    });
+
     const addresses = await this.prisma.userAddress.findMany({
       where: { userId },
     });
@@ -158,6 +163,7 @@ export class UsersService {
     return {
       exportedAt: new Date().toISOString(),
       user,
+      medicalProfile,
       addresses,
       orders,
       notifications,
@@ -173,6 +179,58 @@ export class UsersService {
     };
   }
 
+  async getMedicalProfile(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const profile = await this.prisma.medicalProfile.findUnique({
+      where: { userId },
+      select: { allergies: true, conditions: true, notes: true, updatedAt: true },
+    });
+
+    return (
+      profile ?? {
+        allergies: [],
+        conditions: [],
+        notes: null,
+        updatedAt: null,
+      }
+    );
+  }
+
+  async upsertMedicalProfile(userId: number, dto: UpdateMedicalProfileDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const normalizeList = (v: unknown) =>
+      Array.isArray(v)
+        ? v
+            .map((x) => String(x ?? '').trim())
+            .filter(Boolean)
+            .slice(0, 50)
+        : undefined;
+
+    const allergies = normalizeList(dto.allergies);
+    const conditions = normalizeList(dto.conditions);
+    const notes = typeof dto.notes === 'string' ? dto.notes.trim() : undefined;
+
+    return this.prisma.medicalProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        allergies: allergies ?? [],
+        conditions: conditions ?? [],
+        notes: notes ?? null,
+      },
+      update: {
+        ...(allergies ? { allergies } : {}),
+        ...(conditions ? { conditions } : {}),
+        ...(typeof notes !== 'undefined' ? { notes } : {}),
+      },
+      select: { allergies: true, conditions: true, notes: true, updatedAt: true },
+    });
+  }
+
   async deleteMe(userId: number) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -186,6 +244,7 @@ export class UsersService {
       this.prisma.refreshToken.deleteMany({ where: { userId } }),
       this.prisma.session.deleteMany({ where: { userId } }),
       this.prisma.userAddress.deleteMany({ where: { userId } }),
+      this.prisma.medicalProfile.deleteMany({ where: { userId } }),
       this.prisma.notification.deleteMany({
         where: { OR: [{ receiverId: userId }, { senderId: userId }] },
       }),
