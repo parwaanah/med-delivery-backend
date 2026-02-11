@@ -27,6 +27,60 @@ const DEFAULT_MOBILE_TABS = [
 ] as const;
 
 type MobileTabKey = (typeof DEFAULT_MOBILE_TABS)[number]['key'];
+type MobileIconPack = 'ion' | 'mci';
+
+function normalizeIconRef(raw: any): { pack: MobileIconPack; name: string } | null {
+  // Preferred: { pack, name }
+  if (raw && typeof raw === 'object') {
+    const pack = String((raw as any).pack || '').trim().toLowerCase();
+    const name = String((raw as any).name || '').trim();
+    if ((pack === 'ion' || pack === 'mci') && name) return { pack: pack as MobileIconPack, name };
+  }
+
+  // Legacy: "ion:medkit-outline" | "mci:pill"
+  if (typeof raw === 'string') {
+    const v = raw.trim();
+    const m = /^(ion|mci)\s*:\s*(.+)$/i.exec(v);
+    if (m) {
+      const pack = m[1].toLowerCase() as MobileIconPack;
+      const name = String(m[2] || '').trim();
+      if (name) return { pack, name };
+    }
+  }
+
+  return null;
+}
+
+function normalizeMobileCategoriesForAdmin(value: any) {
+  const categories = value && typeof value === 'object' && value ? (value as any).categories : null;
+  if (!Array.isArray(categories)) return [];
+
+  const seen = new Set<string>();
+  const out: Array<{
+    key: string;
+    label: string;
+    icon: { pack: MobileIconPack; name: string } | null;
+    enabled: boolean;
+  }> = [];
+
+  for (const c of categories) {
+    const key = String((c as any)?.key || '').trim();
+    const label = String((c as any)?.label || '').trim();
+    if (!key || !label) continue;
+    const k = key.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+
+    out.push({
+      key,
+      label,
+      icon: normalizeIconRef((c as any)?.icon),
+      enabled: (c as any)?.enabled !== false,
+    });
+  }
+
+  return out;
+}
 
 function normalizeMobileTabsForAdmin(value: any) {
   // Backward compatible: { tabs: string[] }
@@ -96,6 +150,32 @@ function resolveActiveBanner(value: any) {
     .sort((a: any, c: any) => (c.startsAt ?? 0) - (a.startsAt ?? 0));
 
   return { url: candidates[0]?.url ?? null };
+}
+
+function normalizePromoBannersForAdmin(value: any) {
+  const banners = value && typeof value === 'object' ? (value as any).banners : null;
+  if (!Array.isArray(banners)) return [];
+
+  const out = banners
+    .map((b: any) => ({
+      url: typeof b?.url === 'string' ? b.url.trim() : '',
+      enabled: b?.enabled !== false,
+      startsAt: toIsoOrNull(b?.startsAt),
+      endsAt: toIsoOrNull(b?.endsAt),
+      title: typeof b?.title === 'string' ? b.title.trim() : null,
+      subtitle: typeof b?.subtitle === 'string' ? b.subtitle.trim() : null,
+      ctaLabel: typeof b?.ctaLabel === 'string' ? b.ctaLabel.trim() : null,
+      ctaPath: typeof b?.ctaPath === 'string' ? b.ctaPath.trim() : null,
+    }))
+    .filter((b: any) => Boolean(b.url));
+
+  for (const b of out) {
+    if (b.startsAt && b.endsAt && new Date(b.startsAt) > new Date(b.endsAt)) {
+      throw new BadRequestException('Promo banner startsAt must be <= endsAt');
+    }
+  }
+
+  return out;
 }
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -177,6 +257,53 @@ export class AdminAppConfigController {
     return { url: uploaded.secure_url, publicId: uploaded.public_id };
   }
 
+  @Get('promo-banners')
+  async getPromoBanners() {
+    const row = await this.appConfig.getConfig('promoBanners');
+    const banners = normalizePromoBannersForAdmin(row?.value);
+    return { banners, updatedAt: row?.updatedAt || null };
+  }
+
+  @Put('promo-banners')
+  async setPromoBanners(
+    @Body()
+    body: {
+      banners?: Array<{
+        url?: string;
+        enabled?: boolean;
+        startsAt?: string | null;
+        endsAt?: string | null;
+        title?: string | null;
+        subtitle?: string | null;
+        ctaLabel?: string | null;
+        ctaPath?: string | null;
+      }>;
+    },
+  ) {
+    const banners = normalizePromoBannersForAdmin({ banners: body?.banners || [] });
+    const row = await this.appConfig.setConfig('promoBanners', { banners });
+    return { ok: true, banners: normalizePromoBannersForAdmin(row.value), updatedAt: row.updatedAt };
+  }
+
+  @Post('promo-banners/upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: Number(process.env.UPLOAD_MAX_BYTES || 5 * 1024 * 1024) },
+    }),
+  )
+  async uploadPromoBannerImage(@UploadedFile() file: any) {
+    if (!file) throw new BadRequestException('File required');
+    if (!file.buffer) throw new BadRequestException('File buffer missing');
+
+    const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!allowed.includes(file.mimetype)) {
+      throw new BadRequestException('Unsupported file type');
+    }
+
+    const uploaded = await this.cloud.uploadBuffer(file.buffer, 'mobile_promotions');
+    return { url: uploaded.secure_url, publicId: uploaded.public_id };
+  }
+
   @Get('mobile-tabs')
   async getMobileTabs() {
     const row = await this.appConfig.getConfig('mobileTabs');
@@ -244,10 +371,7 @@ export class AdminAppConfigController {
   @Get('mobile-categories')
   async getMobileCategories() {
     const row = await this.appConfig.getConfig('mobileCategories');
-    const categories =
-      row && typeof row.value === 'object' && row.value
-        ? (row.value as any).categories || null
-        : null;
+    const categories = normalizeMobileCategoriesForAdmin(row?.value);
     return { categories, updatedAt: row?.updatedAt || null };
   }
 
@@ -258,7 +382,7 @@ export class AdminAppConfigController {
       categories?: Array<{
         key?: string;
         label?: string;
-        icon?: string;
+        icon?: string | { pack?: string; name?: string } | null;
         enabled?: boolean;
       }>;
     },
@@ -268,7 +392,7 @@ export class AdminAppConfigController {
       .map((c) => ({
         key: String(c?.key || '').trim(),
         label: String(c?.label || '').trim(),
-        icon: c?.icon != null ? String(c.icon).trim() : null,
+        icon: normalizeIconRef((c as any)?.icon),
         enabled: c?.enabled !== false,
       }))
       .filter((c) => Boolean(c.key) && Boolean(c.label));
@@ -283,6 +407,10 @@ export class AdminAppConfigController {
     });
 
     const row = await this.appConfig.setConfig('mobileCategories', { categories: unique });
-    return { ok: true, categories: (row.value as any)?.categories || [], updatedAt: row.updatedAt };
+    return {
+      ok: true,
+      categories: normalizeMobileCategoriesForAdmin(row.value),
+      updatedAt: row.updatedAt,
+    };
   }
 }

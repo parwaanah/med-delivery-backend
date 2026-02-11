@@ -11,6 +11,57 @@ const DEFAULT_MOBILE_TABS = [
 ] as const;
 
 type MobileTabKey = (typeof DEFAULT_MOBILE_TABS)[number]['key'];
+type MobileIconPack = 'ion' | 'mci';
+
+function normalizeIconRef(raw: any): { pack: MobileIconPack; name: string } | null {
+  // Preferred: { pack, name }
+  if (raw && typeof raw === 'object') {
+    const pack = String((raw as any).pack || '').trim().toLowerCase();
+    const name = String((raw as any).name || '').trim();
+    if ((pack === 'ion' || pack === 'mci') && name) return { pack: pack as MobileIconPack, name };
+  }
+
+  // Legacy: "ion:medkit-outline" | "mci:pill"
+  if (typeof raw === 'string') {
+    const v = raw.trim();
+    const m = /^(ion|mci)\s*:\s*(.+)$/i.exec(v);
+    if (m) {
+      const pack = m[1].toLowerCase() as MobileIconPack;
+      const name = String(m[2] || '').trim();
+      if (name) return { pack, name };
+    }
+  }
+
+  return null;
+}
+
+function normalizeMobileCategories(value: any) {
+  const categories =
+    value && typeof value === 'object' && value ? (value as any).categories : null;
+  if (!Array.isArray(categories)) return [];
+
+  const seen = new Set<string>();
+  const out: Array<{ key: string; label: string; icon: { pack: MobileIconPack; name: string } | null; enabled: boolean }> =
+    [];
+
+  for (const c of categories) {
+    const key = String((c as any)?.key || '').trim();
+    const label = String((c as any)?.label || '').trim();
+    if (!key || !label) continue;
+    const k = key.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+
+    out.push({
+      key,
+      label,
+      icon: normalizeIconRef((c as any)?.icon),
+      enabled: (c as any)?.enabled !== false,
+    });
+  }
+
+  return out;
+}
 
 function normalizeMobileTabs(value: any) {
   // Backward compatible: stored as { tabs: string[] }
@@ -91,6 +142,41 @@ function resolveActiveBanner(value: any) {
   return { url: active?.url ?? null, active, banners };
 }
 
+function normalizePromoBanners(value: any) {
+  const banners = value && typeof value === 'object' ? (value as any).banners : null;
+  if (!Array.isArray(banners)) return [];
+
+  return banners
+    .map((b: any) => ({
+      url: typeof b?.url === 'string' ? b.url.trim() : '',
+      enabled: b?.enabled !== false,
+      startsAt: b?.startsAt ? new Date(b.startsAt).toISOString() : null,
+      endsAt: b?.endsAt ? new Date(b.endsAt).toISOString() : null,
+      title: typeof b?.title === 'string' ? b.title.trim() : null,
+      subtitle: typeof b?.subtitle === 'string' ? b.subtitle.trim() : null,
+      ctaLabel: typeof b?.ctaLabel === 'string' ? b.ctaLabel.trim() : null,
+      ctaPath: typeof b?.ctaPath === 'string' ? b.ctaPath.trim() : null,
+    }))
+    .filter((b: any) => Boolean(b.url));
+}
+
+function resolveActivePromoBanners(value: any) {
+  const banners = normalizePromoBanners(value);
+  const now = Date.now();
+  return banners
+    .filter((b: any) => b.enabled !== false)
+    .filter((b: any) => {
+      const startsAt = b.startsAt ? new Date(b.startsAt).getTime() : null;
+      const endsAt = b.endsAt ? new Date(b.endsAt).getTime() : null;
+      return (startsAt == null || startsAt <= now) && (endsAt == null || endsAt >= now);
+    })
+    .sort((a: any, c: any) => {
+      const as = a.startsAt ? new Date(a.startsAt).getTime() : 0;
+      const cs = c.startsAt ? new Date(c.startsAt).getTime() : 0;
+      return cs - as;
+    });
+}
+
 @Controller('config')
 export class AppConfigController {
   constructor(private appConfig: AppConfigService) {}
@@ -117,10 +203,15 @@ export class AppConfigController {
   @Get('mobile-categories')
   async getMobileCategories() {
     const row = await this.appConfig.getConfig('mobileCategories');
-    const categories =
-      row && typeof row.value === 'object' && row.value
-        ? (row.value as any).categories || null
-        : null;
-    return { categories, updatedAt: row?.updatedAt || null };
+    const categories = normalizeMobileCategories(row?.value);
+    // Return enabled categories only.
+    return { categories: categories.filter((c) => c.enabled !== false), updatedAt: row?.updatedAt || null };
+  }
+
+  @Get('promo-banners')
+  async getPromoBanners() {
+    const row = await this.appConfig.getConfig('promoBanners');
+    const active = resolveActivePromoBanners(row?.value);
+    return { banners: active, updatedAt: row?.updatedAt || null };
   }
 }
